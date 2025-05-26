@@ -58,8 +58,19 @@ def create_app(config_class=Config):
     csrf.init_app(app)
     
     # Инициализация хранилища Supabase
-    from app.supabase_storage import initialize_storage
-    initialize_storage()
+    if os.environ.get('SUPABASE_URL') and os.environ.get('SUPABASE_ANON_KEY'):
+        try:
+            from app.supabase_storage import initialize_storage
+            with app.app_context():
+                if initialize_storage():
+                    app.logger.info("Supabase Storage успешно инициализирован")
+                else:
+                    app.logger.warning("Supabase Storage не был инициализирован")
+        except Exception as e:
+            app.logger.error(f"Supabase Storage error: {e}")
+    else:
+        app.logger.warning("Supabase Storage не настроен (нет переменных окружения)")
+        app.logger.info("Файлы будут сохраняться локально")
 
     # Регистрируем функцию загрузки пользователя для Flask-Login
     from app.supabase_auth import User
@@ -85,6 +96,10 @@ def create_app(config_class=Config):
         
         from app.admin_routes import bp as admin_bp
         app.register_blueprint(admin_bp, url_prefix='/admin')
+        
+        # Регистрируем маршрут для учебных материалов с гибридным хранилищем
+        from app.materials_routes import materials as materials_bp
+        app.register_blueprint(materials_bp, url_prefix='/materials')
 
         # Регистрация обработчиков ошибок
         register_error_handlers(app)
