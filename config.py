@@ -41,10 +41,16 @@ class Config:
             sys.exit(1)
             
         # Формируем строку подключения к PostgreSQL в Supabase
-        # Формат URL: postgresql://postgres:[password]@db.[project_ref].supabase.co:5432/postgres
-        # Извлекаем проект из URL
-        project_ref = SUPABASE_URL.split('.')[-2].split('/')[-1]
-        SQLALCHEMY_DATABASE_URI = f"postgresql://postgres:{SUPABASE_SERVICE_KEY}@db.{project_ref}.supabase.co:5432/postgres?client_encoding=utf8"
+        # Извлекаем project_ref из URL
+        try:
+            # Пример URL: https://hgyboeyljkvjtavlqavv.supabase.co
+            project_ref = SUPABASE_URL.split('//')[1].split('.')[0]
+            print(f"Извлеченный project_ref: {project_ref}")
+            SQLALCHEMY_DATABASE_URI = f"postgresql://postgres:{SUPABASE_SERVICE_KEY}@db.{project_ref}.supabase.co:5432/postgres?client_encoding=utf8"
+            print(f"Строка подключения: {SQLALCHEMY_DATABASE_URI}")
+        except Exception as e:
+            print(f"Ошибка при формировании строки подключения: {e}")
+            sys.exit(1)
     else:
         # При локальной разработке используем SQLite
         print("Запуск в режиме разработки: используем SQLite")

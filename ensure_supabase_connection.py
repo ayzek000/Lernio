@@ -23,15 +23,20 @@ if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
 
 # Извлекаем project_ref из URL
 try:
-    project_ref = SUPABASE_URL.split('.')[-2].split('/')[-1]
+    # Пример URL: https://hgyboeyljkvjtavlqavv.supabase.co
+    project_ref = SUPABASE_URL.split('//')[1].split('.')[0]
     print(f"Определен project_ref: {project_ref}")
 except Exception as e:
     print(f"Ошибка при извлечении project_ref из URL: {e}")
     sys.exit(1)
 
 # Формируем строку подключения к PostgreSQL
-connection_string = f"postgresql://postgres:{SUPABASE_SERVICE_KEY}@db.{project_ref}.supabase.co:5432/postgres"
-print(f"Строка подключения сформирована.")
+connection_string = f"postgresql://postgres:{SUPABASE_SERVICE_KEY}@db.{project_ref}.supabase.co:5432/postgres?client_encoding=utf8"
+print(f"Строка подключения: {connection_string}")
+
+# Проверяем, что хост доступен
+host = f"db.{project_ref}.supabase.co"
+print(f"Проверка доступности хоста: {host}")
 
 def check_connection():
     """Проверяем соединение с базой данных Supabase."""
