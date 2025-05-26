@@ -49,11 +49,6 @@ class Config:
         # При локальной разработке используем SQLite
         print("Запуск в режиме разработки: используем SQLite")
         SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'instance/site.db')
-            print(f"Запуск на {CURRENT_OS}: используем PostgreSQL в Supabase")
-        else:
-            # Резервный вариант
-            SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'instance/site.db')
-            print(f"Запуск на {CURRENT_OS}: используем SQLite (DATABASE_URL не найден)")
 
     # Настройка часового пояса Ташкента (UTC+5)
     TIMEZONE = 'Asia/Tashkent'
