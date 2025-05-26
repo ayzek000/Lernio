@@ -1,5 +1,6 @@
 import os
 import platform
+import sys
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -22,23 +23,32 @@ class Config:
     # Максимальный размер загружаемого файла (16 MB)
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
-    # Определяем операционную систему
-    CURRENT_OS = platform.system()
+    # Определяем среду выполнения: локальная разработка или production (Render)
+    IS_PRODUCTION = os.environ.get('RENDER') == 'true'
     
-    # На Windows используем SQLite, на Linux/Unix - PostgreSQL
-    if CURRENT_OS == 'Windows':
-        print("Запуск на Windows: используем SQLite для избежания проблем с кодировкой")
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'instance/site.db')
+    # Настройка подключения к базе данных
+    if IS_PRODUCTION:
+        # В продакшене всегда используем Supabase PostgreSQL
+        print("Запуск в production: используем Supabase PostgreSQL")
+        
+        # Получаем параметры Supabase
+        SUPABASE_URL = os.environ.get('SUPABASE_URL')
+        SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY')
+        
+        if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+            print("КРИТИЧЕСКАЯ ОШИБКА: Не установлены переменные окружения SUPABASE_URL или SUPABASE_SERVICE_KEY")
+            print("Приложение не может быть запущено без этих параметров в production-режиме")
+            sys.exit(1)
+            
+        # Формируем строку подключения к PostgreSQL в Supabase
+        # Формат URL: postgresql://postgres:[password]@db.[project_ref].supabase.co:5432/postgres
+        # Извлекаем проект из URL
+        project_ref = SUPABASE_URL.split('.')[-2].split('/')[-1]
+        SQLALCHEMY_DATABASE_URI = f"postgresql://postgres:{SUPABASE_SERVICE_KEY}@db.{project_ref}.supabase.co:5432/postgres?client_encoding=utf8"
     else:
-        # На Linux/Unix используем PostgreSQL
-        database_url = os.environ.get('DATABASE_URL')
-        if database_url and database_url.startswith('postgresql'):
-            # Дополнительные параметры подключения для надежности
-            if '?' not in database_url:
-                database_url += '?client_encoding=utf8'
-            else:
-                database_url += '&client_encoding=utf8'
-            SQLALCHEMY_DATABASE_URI = database_url
+        # При локальной разработке используем SQLite
+        print("Запуск в режиме разработки: используем SQLite")
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'instance/site.db')
             print(f"Запуск на {CURRENT_OS}: используем PostgreSQL в Supabase")
         else:
             # Резервный вариант
