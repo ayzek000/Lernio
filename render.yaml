@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: sewing-lms
+    name: lernio
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn run:app
+    buildCommand: ./build.sh
+    startCommand: gunicorn run:app -c gunicorn_config.py
     envVars:
       - key: FLASK_APP
         value: run.py
