@@ -5,39 +5,43 @@ set -o errexit
 # Устанавливаем переменную окружения RENDER=true
 export RENDER=true
 
-# Выводим список переменных окружения для диагностики
+# Выводим диагностическую информацию
 echo "Environment variables:" 
-if [ -n "$SUPABASE_URL" ]; then
-    echo "SUPABASE_URL is set"
-else
-    echo "SUPABASE_URL is NOT set"
-fi
-
-if [ -n "$SUPABASE_SERVICE_KEY" ]; then
-    echo "SUPABASE_SERVICE_KEY is set"
-else
-    echo "SUPABASE_SERVICE_KEY is NOT set"
-fi
-
 echo "RENDER=$RENDER"
+echo "Running on: $(uname -a)"
 
 # Устанавливаем зависимости
+echo "Installing dependencies..."
 pip install -r requirements.txt
 
-# Проверяем соединение с Supabase и создаем необходимые таблицы
-echo "Starting Supabase connection test and table creation..."
-python ensure_supabase_connection.py
-
-# Создаем каталог instance на всякий случай
+# Создаем необходимые каталоги
+echo "Creating necessary directories..."
+mkdir -p data
 mkdir -p instance
+mkdir -p app/static/uploads
 
-# Даем права на чтение и запись для каталога статических файлов
+# Устанавливаем права на запись
+echo "Setting permissions..."
+chmod -R 777 data
+chmod -R 777 instance
 chmod -R 755 app/static
+
+# Инициализируем базу данных SQLite
+echo "Initializing SQLite database..."
+python init_sqlite.py
+
+# Проверяем создание базы данных
+if [ -f "data/site.db" ]; then
+    echo "Database file created successfully!"
+    ls -la data/
+else
+    echo "WARNING: Database file not found!"
+fi
 
 # Запускаем фласковые миграции, если они есть
 if [ -d "migrations" ]; then
     echo "Running database migrations..."
-    flask db upgrade
+    flask db upgrade || echo "Migrations failed, but continuing..."
 fi
 
 echo "Build completed successfully!"
