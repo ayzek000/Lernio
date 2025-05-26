@@ -1,0 +1,106 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Boshqaruv paneli</a></li>
+        <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-file-export me-1"></i>
+                    Ma'lumotlarni eksport qilish
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Foydalanuvchilar ro'yxatini eksport qilish</h5>
+                                    <p class="card-text">Platformadagi foydalanuvchilarning to'liq ro'yxatini CSV formatida yuklab olish.</p>
+                                    <a href="{{ url_for('admin.export_users') }}" class="btn btn-primary">
+                                        <i class="fas fa-download me-1"></i> CSV yuklab olish
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Tahlil</h5>
+                                    <p class="card-text">Ma'lumotlar vizualizatsiyasi va statistika sahifasiga o'tish.</p>
+                                    <a href="{{ url_for('admin.analytics') }}" class="btn btn-success">
+                                        <i class="fas fa-chart-line me-1"></i> Tahlilni ochish
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Kurslar bo'yicha hisobotlar -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-book me-1"></i>
+            Kurslar bo'yicha hisobotlar
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Kurs nomi</th>
+                            <th>Tavsif</th>
+                            <th>Harakatlar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>{{ course.id }}</td>
+                            <td>{{ course.title }}</td>
+                            <td>{{ course.description|truncate(100) }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.course_report', course_id=course.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-chart-pie me-1"></i> Hisobot
+                                </a>
+                                <a href="{{ url_for('admin.export_course_report', course_id=course.id) }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-file-excel me-1"></i> Excel
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">Mavjud kurslar yo'q</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Talabalar bo'yicha hisobotlar -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-users me-1"></i>
+            Talabalar bo'yicha hisobotlar
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-1"></i> Aniq talaba bo'yicha hisobotni ko'rish uchun <a href="{{ url_for('admin.users') }}">Foydalanuvchilar</a> bo'limiga o'ting va kerakli talabani tanlang.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

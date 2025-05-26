@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-journal-bookmark-fill me-2"></i>{{ title }}</h1>
+        {% if current_user.is_teacher %}
+             {# Кнопка добавления термина (ведет на форму добавления материала) #}
+             <a href="{{ url_for('teacher.add_material', lesson_id=0, material_type='glossary_term') }}" class="btn btn-success"> {# lesson_id=0 или ID спец. урока #}
+                 <i class="bi bi-plus-lg me-1"></i> Добавить термин
+             </a>
+        {% endif %}
+    </div>
+
+    {% if terms %}
+        {# Алфавитный указатель (опционально) #}
+        {% set letters = terms|map(attribute='title')|map('first')|map('upper')|unique|sort %}
+        <nav aria-label="Alphabetical index" class="mb-3">
+            <ul class="pagination pagination-sm flex-wrap justify-content-center">
+                 <li class="page-item"><a class="page-link" href="#">Все</a></li>
+                {% for letter in letters %}
+                    <li class="page-item"><a class="page-link" href="#letter-{{ letter }}">{{ letter }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        {# Группировка по буквам #}
+        {% for letter, group_terms in terms|groupby('title[0]|upper') %}
+            <h2 id="letter-{{ letter }}" class="mt-4 mb-3 display-6 border-bottom pb-2">{{ letter }}</h2>
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for term in group_terms %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ term.title }}</h5>
+                                <p class="card-text">{{ term.glossary_definition }}</p>
+                            </div>
+                            {% if current_user.is_teacher %}
+                                <div class="card-footer bg-transparent border-top-0 text-end">
+                                    <a href="{{ url_for('teacher.edit_material', material_id=term.id) }}" class="btn btn-sm btn-outline-secondary" title="Редактировать"><i class="bi bi-pencil"></i></a>
+                                     <form action="{{ url_for('teacher.delete_material', material_id=term.id) }}" method="POST" class="d-inline" data-confirm="Удалить термин '{{ term.title }}'?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="redirect_to" value="{{ url_for('main.glossary') }}"> {# Возврат на словарь #}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">Словарь пока пуст.</div>
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Плавная прокрутка к букве по клику на пагинацию
+document.querySelectorAll('.pagination a[href^="#letter-"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            targetElement.scrollIntoView({
+                behavior: 'smooth'
+            });
+            // Опционально: добавляем класс активности к нажатой букве
+             document.querySelectorAll('.pagination .page-item').forEach(li => li.classList.remove('active'));
+             this.closest('.page-item').classList.add('active');
+        }
+    });
+});
+ // Сброс на 'Все'
+ document.querySelector('.pagination a[href="#"]').addEventListener('click', function(e) {
+     e.preventDefault();
+     window.scrollTo({ top: 0, behavior: 'smooth' });
+     document.querySelectorAll('.pagination .page-item').forEach(li => li.classList.remove('active'));
+     this.closest('.page-item').classList.add('active');
+ });
+
+</script>
+{% endblock %}

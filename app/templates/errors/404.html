@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена (404){% endblock %}
+
+{% block content %}
+    <div class="text-center py-5">
+        <h1 class="display-1 text-danger">404</h1>
+        <h2>Страница не найдена</h2>
+        <p class="lead text-muted">
+            К сожалению, страница, которую вы ищете, не существует.
+            Возможно, она была удалена, переименована или адрес был введен неверно.
+        </p>
+        <hr class="my-4">
+        <p>Вы можете вернуться на главную страницу:</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg">
+           <i class="bi bi-house-door-fill me-1"></i> На главную
+        </a>
+    </div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {# Хлебные крошки #}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_students') }}">Управление студентами</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ student.full_name or student.username }}</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-person-lines-fill me-2"></i>Прогресс: {{ student.full_name or student.username }}</h1>
+         {# Кнопка оценки компетенций #}
+         <a href="{{ url_for('teacher.assess_transversal', student_id=student.id) }}" class="btn btn-outline-primary">
+            <i class="bi bi-check2-circle me-1"></i> Оценить компетенции
+        </a>
+    </div>
+    <p class="text-muted">Логин: {{ student.username }} | Зарегистрирован: {{ student.registration_date.strftime('%d.%m.%Y') if student.registration_date else '-' }}</p>
+    <hr>
+
+    {# ТАБЫ для разных разделов #}
+    <ul class="nav nav-tabs mb-3" id="progressTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="submissions-tab" data-bs-toggle="tab" data-bs-target="#submissions-panel" type="button" role="tab" aria-controls="submissions-panel" aria-selected="true">Результаты тестов</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="assessments-tab" data-bs-toggle="tab" data-bs-target="#assessments-panel" type="button" role="tab" aria-controls="assessments-panel" aria-selected="false">Оценки компетенций</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity-panel" type="button" role="tab" aria-controls="activity-panel" aria-selected="false">Активность</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="progressTabContent">
+      {# Панель с результатами тестов #}
+      <div class="tab-pane fade show active" id="submissions-panel" role="tabpanel" aria-labelledby="submissions-tab" tabindex="0">
+        <h4>Результаты тестов</h4>
+        {% if submissions %}
+            {% include 'results_table_partial.html' with context %} {# Включаем частичный шаблон с таблицей #}
+        {% else %}
+            <div class="alert alert-light">Студент еще не сдавал тесты.</div>
+        {% endif %}
+      </div>
+
+      {# Панель с оценками компетенций #}
+      <div class="tab-pane fade" id="assessments-panel" role="tabpanel" aria-labelledby="assessments-tab" tabindex="0">
+        <h4>Оценки компетенций</h4>
+         {% if assessments %}
+             {% include 'assessments_list_partial.html' with context %} {# Включаем частичный шаблон #}
+         {% else %}
+             <div class="alert alert-light">Оценок компетенций пока нет.</div>
+         {% endif %}
+      </div>
+
+      {# Панель с активностью #}
+      <div class="tab-pane fade" id="activity-panel" role="tabpanel" aria-labelledby="activity-tab" tabindex="0">
+        <h4>Последняя активность ({{ activity|length }} записей)</h4>
+        {% if activity %}
+            <ul class="list-group list-group-flush activity-log-list small">
+                 {% for log in activity %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ log.action }} {% if log.details %}<span class="text-muted">- {{ log.details|truncate(100) }}</span>{% endif %}</span>
+                        <span class="text-muted timestamp">{{ log.timestamp.strftime('%d.%m.%y %H:%M') }}</span>
+                    </li>
+                 {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-light">Нет записей об активности.</div>
+        {% endif %}
+      </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0"><i class="bi bi-graph-up me-2"></i>{{ title }}</h1>
+                    <p class="text-muted">Ma'lumotlarni vizualizatsiya qilish va platforma statistikasi</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-speedometer2 me-1"></i> Boshqaruv paneli
+                    </a>
+                    <a href="{{ url_for('admin.reports') }}" class="btn btn-primary">
+                        <i class="bi bi-file-earmark-bar-graph me-1"></i> Hisobotlar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Asosiy statistika kartochkalari -->
+    <div class="row mb-4">
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="admin-card-icon bg-primary-soft">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h5 class="card-title ms-3 mb-0">Foydalanuvchilar</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">{{ total_users }}</h2>
+                    <div class="d-flex justify-content-between mt-3">
+                        <div class="stat-item">
+                            <span class="stat-label">Talabalar</span>
+                            <span class="stat-value">{{ students }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">O'qituvchilar</span>
+                            <span class="stat-value">{{ teachers }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Adminlar</span>
+                            <span class="stat-value">{{ admins }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="admin-card-icon bg-success-soft">
+                            <i class="bi bi-book-fill"></i>
+                        </div>
+                        <h5 class="card-title ms-3 mb-0">Kurslar</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">{{ total_courses }}</h2>
+                    <div class="d-flex justify-content-between mt-3">
+                        <div class="stat-item">
+                            <span class="stat-label">Darslar</span>
+                            <span class="stat-value">{{ total_lessons }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Materiallar</span>
+                            <span class="stat-value">{{ total_materials }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="admin-card-icon bg-warning-soft">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                        </div>
+                        <h5 class="card-title ms-3 mb-0">Materiallar</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">{{ total_materials }}</h2>
+                    <div class="d-flex justify-content-between mt-3">
+                        <div class="stat-item">
+                            <span class="stat-label">Matnlar</span>
+                            <span class="stat-value">{{ total_materials }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Video</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="admin-card-icon bg-danger-soft">
+                            <i class="bi bi-check2-square"></i>
+                        </div>
+                        <h5 class="card-title ms-3 mb-0">Javoblar</h5>
+                    </div>
+                    <h2 class="display-6 mb-0">{{ total_submissions }}</h2>
+                    <div class="d-flex justify-content-between mt-3">
+                        <div class="stat-item">
+                            <span class="stat-label">Jami</span>
+                            <span class="stat-value">{{ total_submissions }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Tekshirilgan</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Grafiklar -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card admin-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-person-plus me-2"></i>Yangi foydalanuvchilar</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="newUsersChart" width="100%" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card admin-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-activity me-2"></i>Foydalanuvchilar faolligi</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" width="100%" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mashhur darslar -->
+    <div class="card admin-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Faollik bo'yicha eng yaxshi darslar</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Dars nomi</th>
+                            <th>Javoblar soni</th>
+                            <th>Harakatlar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in top_courses %}
+                        <tr>
+                            <td>{{ course.id }}</td>
+                            <td>{{ course.title }}</td>
+                            <td>{{ course.submission_count }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.lesson_details', lesson_id=course.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> Ko'rish
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">Ma'lumotlar yo'q</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Batafsil statistika -->
+    <div class="card admin-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Batafsil statistika</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Foydalanuvchilar statistikasi</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Jami foydalanuvchilar</td>
+                                <td><strong>{{ total_users }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Talabalar</td>
+                                <td><strong>{{ students }}</strong> ({{ (students / total_users * 100)|round|int if total_users > 0 else 0 }}%)</td>
+                            </tr>
+                            <tr>
+                                <td>O'qituvchilar</td>
+                                <td><strong>{{ teachers }}</strong> ({{ (teachers / total_users * 100)|round|int if total_users > 0 else 0 }}%)</td>
+                            </tr>
+                            <tr>
+                                <td>Administratorlar</td>
+                                <td><strong>{{ admins }}</strong> ({{ (admins / total_users * 100)|round|int if total_users > 0 else 0 }}%)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Kontent bo'yicha statistika</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Jami darslar</td>
+                                <td><strong>{{ total_lessons }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Jami materiallar</td>
+                                <td><strong>{{ total_materials }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Jami javoblar</td>
+                                <td><strong>{{ total_submissions }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Bir darsga o'rtacha materiallar soni</td>
+                                <td><strong>{{ (total_materials / total_lessons)|round(1) if total_lessons > 0 else 0 }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script>
+(function() {
+    // DOM yuklangandan so'ng grafiklarni ishga tushiramiz
+    document.addEventListener('DOMContentLoaded', function() {
+        // Shablondan ma'lumotlarni olamiz
+        var userDates = {{ user_dates|safe }};
+        var userCounts = {{ user_counts|safe }};
+        var activityDates = {{ activity_dates|safe }};
+        var activityCounts = {{ activity_counts|safe }};
+        
+        // Yangi foydalanuvchilar grafikini ishga tushiramiz
+        initNewUsersChart(userDates, userCounts);
+        
+        // Faollik grafikini ishga tushiramiz
+        initActivityChart(activityDates, activityCounts);
+    });
+    
+    // Yangi foydalanuvchilar grafikini ishga tushirish funksiyasi
+    function initNewUsersChart(dates, counts) {
+        var ctx = document.getElementById('newUsersChart');
+        if (!ctx) return;
+        
+        ctx = ctx.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Yangi foydalanuvchilar',
+                    data: counts,
+                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Oxirgi oy uchun yangi foydalanuvchilar ro\'yxatdan o\'tishi'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Faollik grafikini ishga tushirish funksiyasi
+    function initActivityChart(dates, counts) {
+        var ctx = document.getElementById('activityChart');
+        if (!ctx) return;
+        
+        ctx = ctx.getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Faollik',
+                    data: counts,
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Oxirgi oy uchun foydalanuvchilar faolligi'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

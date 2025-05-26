@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+     <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_students') }}">Студенты</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.view_student_progress', student_id=student.id) }}">{{ student.full_name or student.username }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Оценка компетенций</li>
+      </ol>
+    </nav>
+
+    <h1><i class="bi bi-check2-circle me-2"></i>{{ title }}</h1>
+    <hr>
+
+    <div class="row g-5">
+        {# Форма добавления оценки #}
+        <div class="col-md-5 col-lg-4 order-md-last">
+             <h4 class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-primary">Новая оценка</span>
+             </h4>
+             {{ wtf.quick_form(form, button_map={'submit': 'btn-primary w-100'}) }}
+        </div>
+
+        {# История оценок #}
+        <div class="col-md-7 col-lg-8">
+            <h4 class="mb-3">История оценок для {{ student.full_name }}</h4>
+            {% if previous_assessments %}
+                {% set assessments = previous_assessments %} {# Переименовываем для частичного шаблона #}
+                {% include 'assessments_list_partial.html' with context %}
+            {% else %}
+                <div class="alert alert-light">Предыдущих оценок компетенций нет.</div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,172 @@
+/* Стили для панели администратора */
+
+/* Карточки на панели управления */
+.admin-card {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+}
+
+.admin-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Иконки в карточках */
+.admin-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.bg-primary-soft {
+    background-color: rgba(var(--bs-primary-rgb), 0.15);
+    color: var(--primary-color);
+}
+
+.bg-success-soft {
+    background-color: rgba(var(--bs-success-rgb), 0.15);
+    color: rgba(var(--bs-success-rgb), 1);
+}
+
+.bg-info-soft {
+    background-color: rgba(var(--bs-info-rgb), 0.15);
+    color: rgba(var(--bs-info-rgb), 1);
+}
+
+.bg-warning-soft {
+    background-color: rgba(var(--bs-warning-rgb), 0.15);
+    color: rgba(var(--bs-warning-rgb), 1);
+}
+
+.bg-danger-soft {
+    background-color: rgba(var(--bs-danger-rgb), 0.15);
+    color: rgba(var(--bs-danger-rgb), 1);
+}
+
+/* Статистика */
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Таблицы в админке */
+.admin-card .table {
+    margin-bottom: 0;
+}
+
+.admin-card .table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-top: none;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-card .table td {
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-card .table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Кнопки в админке */
+.admin-btn {
+    border-radius: var(--radius-lg);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+}
+
+.admin-btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Модальные окна */
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1.25rem 1.5rem;
+}
+
+/* Формы в админке */
+.admin-form .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.admin-form .form-control,
+.admin-form .form-select {
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.admin-form .form-control:focus,
+.admin-form .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.15);
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .admin-card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+    
+    .display-6 {
+        font-size: 1.5rem;
+    }
+    
+    .admin-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .stat-item {
+        margin-bottom: 0.5rem;
+    }
+}

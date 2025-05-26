@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block head %}
+<!-- TinyMCE для форматирования текста как в Word -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0">
+                        {% if material %}
+                        <i class="bi bi-pencil-square me-2"></i>Редактирование материала
+                        {% else %}
+                        <i class="bi bi-plus-circle me-2"></i>Новый материал
+                        {% endif %}
+                    </h1>
+                    <p class="text-muted">
+                        {% if material %}
+                        Изменение материала "{{ material.title }}"
+                        {% else %}
+                        Создание нового материала для урока "{{ lesson.title }}"
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    {% if material %}
+                    <a href="{{ url_for('admin.material_details', material_id=material.id) }}" class="btn btn-outline-primary">
+                    {% else %}
+                    <a href="{{ url_for('admin.lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-primary">
+                    {% endif %}
+                        <i class="bi bi-arrow-left me-1"></i> Назад
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="post" enctype="multipart/form-data" id="materialForm">
+                <!-- Основная информация -->
+                <div class="card admin-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Основная информация</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Название материала <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ material.title if material else '' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Тип материала <span class="text-danger">*</span></label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="" disabled {% if not material %}selected{% endif %}>Выберите тип материала</option>
+                                <option value="text" {% if material and material.type == 'text' %}selected{% endif %}>Текст</option>
+                                <option value="video" {% if material and material.type == 'video' %}selected{% endif %}>Видео</option>
+                                <option value="file" {% if material and material.type == 'file' %}selected{% endif %}>Файл</option>
+                                <option value="quiz" {% if material and material.type == 'quiz' %}selected{% endif %}>Тест</option>
+                                <option value="glossary" {% if material and material.type == 'glossary' %}selected{% endif %}>Словарь</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Содержимое материала (зависит от типа) -->
+                <div class="card admin-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Содержимое материала</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Текстовый контент (для всех типов) -->
+                        <div class="mb-3 content-section" id="textContentSection">
+                            <label for="content" class="form-label">Текстовое содержимое</label>
+                            <textarea class="form-control rich-editor" id="content" name="content" rows="12">{{ material.content if material else '' }}</textarea>
+                            <div class="form-text">Используйте панель инструментов для форматирования текста (шрифт, размер, цвет, выравнивание и т.д.)</div>
+                        </div>
+                        
+                        <!-- Загрузка файла -->
+                        <div class="mb-3 content-section" id="fileUploadSection">
+                            <label for="file" class="form-label">Загрузка файла</label>
+                            <input class="form-control" type="file" id="file" name="file">
+                            <div class="form-text">Поддерживаемые форматы: PDF, DOC, XLS, PPT, изображения и др.</div>
+                            
+                            {% if material and material.file_path %}
+                            <div class="mt-2">
+                                <p class="mb-1">Текущий файл: <a href="{{ material.file_path }}" target="_blank">{{ material.file_path.split('/')[-1] }}</a></p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Видео -->
+                        <div class="mb-4 content-section" id="videoSection">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="isVideoLesson" name="is_video_lesson" 
+                                       {% if material and material.is_video_lesson %}checked{% endif %}>
+                                <label class="form-check-label" for="isVideoLesson">Это видеоурок</label>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="videoSource" class="form-label">Источник видео</label>
+                                <select class="form-select" id="videoSource" name="video_source">
+                                    <option value="youtube" {% if material and material.video_source == 'youtube' %}selected{% endif %}>YouTube</option>
+                                    <option value="vimeo" {% if material and material.video_source == 'vimeo' %}selected{% endif %}>Vimeo</option>
+                                    <option value="upload" {% if material and material.video_source == 'upload' %}selected{% endif %}>Загруженное видео</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="videoUrl" class="form-label">URL видео</label>
+                                <input type="text" class="form-control" id="videoUrl" name="video_url" 
+                                       value="{{ material.video_url if material else '' }}" 
+                                       placeholder="https://www.youtube.com/watch?v=...">
+                                <div class="form-text">Для YouTube или Vimeo вставьте URL видео</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Критерии оценивания -->
+                <div class="card admin-card mb-4" id="evaluationCriteriaCard">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Критерии оценивания</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="evaluationCriteria" class="form-label">Критерии оценивания</label>
+                            <textarea class="form-control rich-editor" id="evaluationCriteria" name="evaluation_criteria" rows="6">{{ material.evaluation_criteria if material else '' }}</textarea>
+                            <div class="form-text">Укажите критерии оценивания с использованием форматирования и цветов</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вопросы к материалу -->
+                <div class="card admin-card mb-4" id="questionsCard">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Вопросы к материалу</h5>
+                        <button type="button" class="btn btn-sm btn-primary" id="addQuestionBtn">
+                            <i class="bi bi-plus-circle me-1"></i> Добавить вопрос
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> Добавьте вопросы, на которые студенты должны будут ответить после изучения материала.
+                            Ответы студентов будут отправлены вам через чат.
+                        </div>
+                        
+                        <div id="questionsContainer">
+                            <!-- Здесь будут динамически добавляться вопросы -->
+                            {% if material and material.questions.count() > 0 %}
+                                {% for question in material.questions %}
+                                <div class="question-item mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Вопрос {{ loop.index }}</span>
+                                        <input type="text" class="form-control" name="questions[]" value="{{ question.question_text }}">
+                                        <button type="button" class="btn btn-outline-danger remove-question">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Словарь -->
+                <div class="card admin-card mb-4" id="glossaryCard">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-book me-2"></i>Словарь</h5>
+                        <button type="button" class="btn btn-sm btn-primary" id="addGlossaryItemBtn">
+                            <i class="bi bi-plus-circle me-1"></i> Добавить слово
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> Добавьте слова и их переводы для словаря. 
+                            Система автоматически сгенерирует варианты ответов для тестирования.
+                        </div>
+                        
+                        <div id="glossaryContainer">
+                            <!-- Здесь будут динамически добавляться элементы словаря -->
+                            {% if material and material.glossary_items.count() > 0 %}
+                                {% for item in material.glossary_items %}
+                                <div class="glossary-item mb-3">
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span>Слово {{ loop.index }}</span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-glossary-item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Слово</label>
+                                                    <input type="text" class="form-control" name="glossary_word[]" value="{{ item.word }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Перевод (рус.)</label>
+                                                    <input type="text" class="form-control" name="glossary_ru[]" value="{{ item.definition_ru }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Перевод (узб.)</label>
+                                                    <input type="text" class="form-control" name="glossary_uz[]" value="{{ item.definition_uz }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Кнопки формы -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+                    {% if material %}
+                    <a href="{{ url_for('admin.material_details', material_id=material.id) }}" class="btn btn-outline-secondary me-md-2">Отмена</a>
+                    {% else %}
+                    <a href="{{ url_for('admin.lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-secondary me-md-2">Отмена</a>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">
+                        {% if material %}
+                        <i class="bi bi-save me-1"></i> Сохранить изменения
+                        {% else %}
+                        <i class="bi bi-plus-circle me-1"></i> Создать материал
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card admin-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Подсказки</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Рекомендации:</h6>
+                    <ul>
+                        <li>Выберите подходящий тип материала</li>
+                        <li>Для видеоурока укажите корректную ссылку</li>
+                        <li>Добавьте критерии оценивания, если это задание</li>
+                        <li>Вопросы помогут проверить понимание материала</li>
+                        <li>Словарь полезен для изучения новых терминов</li>
+                    </ul>
+                    <hr>
+                    <p class="mb-0">
+                        <i class="bi bi-lightbulb me-1 text-warning"></i>
+                        <strong>Совет:</strong> Используйте предпросмотр, чтобы увидеть, как материал будет выглядеть для студентов.
+                    </p>
+                </div>
+            </div>
+            
+            {% if material %}
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Предпросмотр</h5>
+                </div>
+                <div class="card-body">
+                    <p>Посмотрите, как материал будет выглядеть для студентов:</p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('admin.preview_material', material_id=material.id) }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="bi bi-display me-1"></i> Предпросмотр материала
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Инициализация TinyMCE редактора для форматирования текста как в Word
+    document.addEventListener('DOMContentLoaded', function() {
+        tinymce.init({
+            selector: '.rich-editor',
+            plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
+            menubar: 'file edit view insert format tools table help',
+            toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen preview save print | insertfile image media template link anchor codesample | ltr rtl',
+            toolbar_sticky: true,
+            autosave_ask_before_unload: true,
+            autosave_interval: '30s',
+            autosave_prefix: '{path}{query}-{id}-',
+            autosave_restore_when_empty: false,
+            autosave_retention: '2m',
+            image_advtab: true,
+            height: 400,
+            image_caption: true,
+            quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
+            noneditable_class: 'mceNonEditable',
+            toolbar_mode: 'sliding',
+            contextmenu: 'link image table',
+            skin: 'oxide',
+            content_css: 'default',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+            language: 'ru',
+            language_url: 'https://cdn.jsdelivr.net/npm/tinymce-lang/langs/ru.js',
+            setup: function(editor) {
+                editor.on('change', function() {
+                    editor.save();
+                });
+            }
+        });
+        
+        // Остальной JavaScript код
+        
+        // Показ/скрытие секций в зависимости от типа материала
+        const typeSelect = document.getElementById('type');
+        const textContentSection = document.getElementById('textContentSection');
+        const fileUploadSection = document.getElementById('fileUploadSection');
+        const videoSection = document.getElementById('videoSection');
+        const evaluationCriteriaCard = document.getElementById('evaluationCriteriaCard');
+        const questionsCard = document.getElementById('questionsCard');
+        const glossaryCard = document.getElementById('glossaryCard');
+        
+        function updateSections() {
+            const selectedType = typeSelect.value;
+            
+            // Скрываем все секции по умолчанию
+            textContentSection.style.display = 'none';
+            fileUploadSection.style.display = 'none';
+            videoSection.style.display = 'none';
+            
+            // Показываем соответствующие секции в зависимости от типа
+            switch(selectedType) {
+                case 'text':
+                    textContentSection.style.display = 'block';
+                    break;
+                case 'video':
+                    textContentSection.style.display = 'block';
+                    videoSection.style.display = 'block';
+                    break;
+                case 'file':
+                    textContentSection.style.display = 'block';
+                    fileUploadSection.style.display = 'block';
+                    break;
+                case 'quiz':
+                    textContentSection.style.display = 'block';
+                    break;
+                case 'glossary':
+                    textContentSection.style.display = 'block';
+                    glossaryCard.style.display = 'block';
+                    break;
+                default:
+                    textContentSection.style.display = 'block';
+            }
+            
+            // Показываем/скрываем карточку словаря
+            glossaryCard.style.display = selectedType === 'glossary' ? 'block' : 'none';
+        }
+        
+        typeSelect.addEventListener('change', updateSections);
+        updateSections(); // Вызываем при загрузке страницы
+        
+        // Добавление вопросов
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        const questionsContainer = document.getElementById('questionsContainer');
+        
+        addQuestionBtn.addEventListener('click', function() {
+            const questionCount = questionsContainer.querySelectorAll('.question-item').length + 1;
+            const questionItem = document.createElement('div');
+            questionItem.className = 'question-item mb-3';
+            questionItem.innerHTML = `
+                <div class="input-group">
+                    <span class="input-group-text">Вопрос ${questionCount}</span>
+                    <input type="text" class="form-control" name="questions[]" placeholder="Введите вопрос...">
+                    <button type="button" class="btn btn-outline-danger remove-question">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            questionsContainer.appendChild(questionItem);
+            
+            // Добавляем обработчик для кнопки удаления
+            questionItem.querySelector('.remove-question').addEventListener('click', function() {
+                questionItem.remove();
+                // Обновляем нумерацию
+                const questions = questionsContainer.querySelectorAll('.question-item');
+                questions.forEach((q, index) => {
+                    q.querySelector('.input-group-text').textContent = `Вопрос ${index + 1}`;
+                });
+            });
+        });
+        
+        // Обработчики для существующих кнопок удаления вопросов
+        document.querySelectorAll('.remove-question').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.question-item').remove();
+                // Обновляем нумерацию
+                const questions = questionsContainer.querySelectorAll('.question-item');
+                questions.forEach((q, index) => {
+                    q.querySelector('.input-group-text').textContent = `Вопрос ${index + 1}`;
+                });
+            });
+        });
+        
+        // Добавление элементов словаря
+        const addGlossaryItemBtn = document.getElementById('addGlossaryItemBtn');
+        const glossaryContainer = document.getElementById('glossaryContainer');
+        
+        addGlossaryItemBtn.addEventListener('click', function() {
+            const itemCount = glossaryContainer.querySelectorAll('.glossary-item').length + 1;
+            const glossaryItem = document.createElement('div');
+            glossaryItem.className = 'glossary-item mb-3';
+            glossaryItem.innerHTML = `
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Слово ${itemCount}</span>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-glossary-item">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Слово</label>
+                                <input type="text" class="form-control" name="glossary_word[]" placeholder="Например: apple">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Перевод (рус.)</label>
+                                <input type="text" class="form-control" name="glossary_ru[]" placeholder="Например: яблоко">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Перевод (узб.)</label>
+                                <input type="text" class="form-control" name="glossary_uz[]" placeholder="Например: olma">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            glossaryContainer.appendChild(glossaryItem);
+            
+            // Добавляем обработчик для кнопки удаления
+            glossaryItem.querySelector('.remove-glossary-item').addEventListener('click', function() {
+                glossaryItem.remove();
+                // Обновляем нумерацию
+                const items = glossaryContainer.querySelectorAll('.glossary-item');
+                items.forEach((item, index) => {
+                    item.querySelector('.card-header span').textContent = `Слово ${index + 1}`;
+                });
+            });
+        });
+        
+        // Обработчики для существующих кнопок удаления элементов словаря
+        document.querySelectorAll('.remove-glossary-item').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.glossary-item').remove();
+                // Обновляем нумерацию
+                const items = glossaryContainer.querySelectorAll('.glossary-item');
+                items.forEach((item, index) => {
+                    item.querySelector('.card-header span').textContent = `Слово ${index + 1}`;
+                });
+            });
+        });
+        
+        // Проверка формы перед отправкой
+        const form = document.getElementById('materialForm');
+        form.addEventListener('submit', function(e) {
+            const title = document.getElementById('title').value.trim();
+            const type = document.getElementById('type').value;
+            
+            if (!title || !type) {
+                e.preventDefault();
+                alert('Пожалуйста, заполните все обязательные поля (название и тип материала)');
+                return;
+            }
+            
+            // Проверка для видео
+            if (type === 'video') {
+                const videoUrl = document.getElementById('videoUrl').value.trim();
+                const videoSource = document.getElementById('videoSource').value;
+                
+                if (videoSource !== 'upload' && !videoUrl) {
+                    e.preventDefault();
+                    alert('Пожалуйста, укажите URL видео');
+                    return;
+                }
+            }
+            
+            // Проверка для словаря
+            if (type === 'glossary') {
+                const glossaryItems = glossaryContainer.querySelectorAll('.glossary-item');
+                if (glossaryItems.length === 0) {
+                    e.preventDefault();
+                    alert('Пожалуйста, добавьте хотя бы одно слово в словарь');
+                    return;
+                }
+                
+                // Проверяем, что все поля словаря заполнены
+                let allFilled = true;
+                glossaryItems.forEach(item => {
+                    const inputs = item.querySelectorAll('input[type="text"]');
+                    inputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            allFilled = false;
+                        }
+                    });
+                });
+                
+                if (!allFilled) {
+                    e.preventDefault();
+                    alert('Пожалуйста, заполните все поля для каждого слова в словаре');
+                    return;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

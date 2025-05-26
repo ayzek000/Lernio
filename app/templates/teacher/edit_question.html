@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+     <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_tests') }}">Управление тестами</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}">{{ test.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ legend }}</li>
+      </ol>
+    </nav>
+
+    <h1><i class="bi bi-patch-plus-fill me-2"></i>{{ legend }}</h1>
+    <hr>
+
+     <div class="row">
+        <div class="col-md-10 col-lg-8">
+             {# Используем id для JS валидации/обновления #}
+             <form id="questionForm" method="POST" action="" novalidate>
+                {{ form.hidden_tag() }} {# CSRF #}
+
+                {{ wtf.render_field(form.text, rows=4) }} {# Увеличим поле текста #}
+                {{ wtf.render_field(form.type, id='type') }} {# Добавляем ID для JS #}
+
+                <fieldset class="border p-3 mb-3 rounded">
+                    <legend class="float-none w-auto px-2 h6">Варианты ответа</legend>
+                     {# Добавляем ID к полям вариантов для JS #}
+                     {{ wtf.render_field(form.option_a, id='option_a') }}
+                     {{ wtf.render_field(form.option_b, id='option_b') }}
+                     {{ wtf.render_field(form.option_c, id='option_c') }}
+                     {{ wtf.render_field(form.option_d, id='option_d') }}
+                     {{ wtf.render_field(form.option_e, id='option_e') }}
+                </fieldset>
+
+                 <div class="row">
+                     {# Поле для выбора одного правильного ответа #}
+                     {# V--- УБРАН АТРИБУТ style="..." ---V #}
+                     <div class="col-md-6 mb-3" id="singleChoiceGroup">
+                         {{ form.correct_answer_single.label(class="form-label") }}
+                         {# Добавляем ID #}
+                         {{ form.correct_answer_single(class="form-select" + (" is-invalid" if form.correct_answer_single.errors else ""), id='correct_answer_single') }}
+                         {% if form.correct_answer_single.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.correct_answer_single.errors %}{{ error }}{% endfor %}
+                            </div>
+                         {% endif %}
+                     </div>
+
+                    {# Поле для выбора нескольких правильных ответов #}
+                     {# V--- УБРАН АТРИБУТ style="..." ---V #}
+                     <div class="col-md-6 mb-3" id="multipleChoiceGroup">
+                        {{ form.correct_answer_multiple.label(class="form-label") }}
+                         {# ID нужен для JS, который будет генерировать чекбоксы #}
+                        <div id="correct_answer_multiple" class="{{ 'is-invalid' if form.correct_answer_multiple.errors else '' }}">
+                         {# Чекбоксы будут добавлены/обновлены через JS #}
+                         {% for subfield in form.correct_answer_multiple %}
+                            <div class="form-check">
+                                {{ subfield(class="form-check-input") }}
+                                {{ subfield.label(class="form-check-label") }}
+                            </div>
+                         {% endfor %}
+                         {% if not form.correct_answer_multiple.choices and request.method == 'GET' %}
+                            <p class="text-muted small">Заполните варианты ответов, чтобы выбрать правильные.</p>
+                         {% endif %}
+                        </div>
+                        {% if form.correct_answer_multiple.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.correct_answer_multiple.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                     </div>
+                 </div>
+
+                 {{ wtf.render_field(form.submit, class="btn btn-success") }}
+             </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{# JS для показа/скрытия полей выбора правильного ответа и обновления опций #}
+{# Убедитесь, что этот файл подключен и содержит функцию updateCorrectAnswerChoices #}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

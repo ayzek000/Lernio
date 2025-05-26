@@ -1,0 +1,16 @@
+# Supabase Configuration
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
+
+# Database URL for Supabase (используйте простой пароль без специальных символов)
+DATABASE_URL=postgresql://postgres:password@db.your-project-id.supabase.co:5432/postgres
+
+# Flask Configuration
+SECRET_KEY=your-secret-key
+FLASK_APP=run.py
+FLASK_ENV=development
+FLASK_DEBUG=1
+
+# Timezone
+TIMEZONE=Asia/Tashkent

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-arrow-clockwise me-2"></i>{{ title }}</h1>
+    </div>
+
+    {% if requests %}
+        <div class="list-group shadow-sm">
+            {% for req_data in requests %}
+                 {% set req = req_data.submission %} {# Получаем объект Submission #}
+                 <div class="list-group-item">
+                     <div class="row align-items-center">
+                         {# Информация о запросе #}
+                         <div class="col-md-7 col-lg-8">
+                             <h5 class="mb-1">
+                                Студент: <a href="{{ url_for('teacher.view_student_progress', student_id=req.student_id) }}">{{ req_data.student_name }}</a>
+                            </h5>
+                            <p class="mb-1">
+                                Тест: <strong>{{ req_data.test_title }}</strong>
+                                {% if req.test and req.test.lesson %}(Урок: {{ req.test.lesson.title }}){% endif %}
+                            </p>
+                            <p class="mb-1">
+                                Результат сдачи:
+                                {% if req.is_graded %}
+                                    {% set score_val = req.score|float %}
+                                    {% set score_percent = (score_val * 10)|float if score_val <= 10 else score_val %}
+                                    {% set points_display = "%.1f/10"|format(score_val) if score_val <= 10 else "%.1f"|format(score_val) %}
+                                    {% set percent_display = "%.0f"|format(score_percent) if score_val <= 10 else "%.0f"|format(score_val) %}
+                                    <span class="fw-bold">{{ points_display }} ({{ percent_display }}%)</span>
+                                {% else %}
+                                    Не оценен
+                                {% endif %}
+                                (от {{ req.submitted_at.strftime('%d.%m.%Y %H:%M') if req.submitted_at else 'N/A' }})
+                            </p>
+                            <small class="text-muted">Запрос отправлен: {{ req.retake_requested_at.strftime('%d.%m.%Y %H:%M') if req.retake_requested_at else 'N/A' }}</small>
+                            {# TODO: Показать комментарий студента, если он есть #}
+                         </div>
+                         {# Кнопки одобрения/отклонения #}
+                         <div class="col-md-5 col-lg-4 text-md-end mt-2 mt-md-0">
+                             <div class="mb-2">
+                                <a href="{{ url_for('teacher.view_submission_details', submission_id=req.id) }}" class="btn btn-sm btn-info w-100 w-md-auto mb-1"><i class="bi bi-eye"></i> Посмотреть детали</a>
+                             </div>
+                             <form action="{{ url_for('teacher.approve_retake', submission_id=req.id) }}" method="POST" class="d-inline-block mb-1" data-confirm="Одобрить пересдачу? Старая попытка будет УДАЛЕНА!">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-success w-100 w-md-auto"><i class="bi bi-check-lg"></i> Одобрить</button>
+                            </form>
+                            <form action="{{ url_for('teacher.reject_retake', submission_id=req.id) }}" method="POST" class="d-inline-block" data-confirm="Отклонить запрос на пересдачу?">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {# Можно добавить поле для комментария при отклонении #}
+                                {# <textarea name="comment" placeholder="Причина (опц.)" rows="1" class="form-control form-control-sm mb-1"></textarea> #}
+                                <button type="submit" class="btn btn-sm btn-danger w-100 w-md-auto"><i class="bi bi-x-lg"></i> Отклонить</button>
+                            </form>
+                         </div>
+                     </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>Нет активных запросов на пересдачу.
+        </div>
+    {% endif %}
+
+{% endblock %}

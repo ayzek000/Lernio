@@ -1,0 +1,34 @@
+{# --- Частичный шаблон: Список оценок компетенций --- #}
+{# Ожидает переменную 'assessments' в контексте #}
+<div class="list-group">
+    {% for assessment in assessments %}
+        <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm p-3">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1 fw-bold">{{ assessment.competency_name }}</h6>
+              <small class="text-muted" title="{{ assessment.assessment_date.strftime('%d.%m.%Y %H:%M:%S') }}">{{ assessment.assessment_date.strftime('%d.%m.%Y') }}</small>
+            </div>
+            <p class="mb-1">
+                <strong>Уровень:</strong>
+                {% set level_lower = assessment.level|lower if assessment.level else '' %}
+                {% if 'превосходный' in level_lower or 'высокий' in level_lower %} {% set level_color = 'success' %}
+                {% elif 'средний' in level_lower %} {% set level_color = 'primary' %}
+                {% elif 'базовый' in level_lower %} {% set level_color = 'info' %}
+                {% else %} {% set level_color = 'secondary' %}
+                {% endif %}
+                 <span class="badge bg-{{ level_color }} ms-1">{{ assessment.level if assessment.level else '-' }}</span>
+            </p>
+            <p class="mb-1"><small><strong>Комментарий:</strong> {{ assessment.comments }}</small></p>
+            {# Показываем преподавателя только если смотрим не свои оценки #}
+            {% if not current_user or current_user.id != assessment.student_id %}
+                <small class="text-muted">Оценил(а): {{ assessment.assessor.full_name if assessment.assessor else 'Неизвестно' }}</small>
+            {% endif %}
+            {# Ссылка на урок/тест, если есть #}
+             {% if assessment.related_lesson %}
+                <span class="badge bg-light text-dark ms-2">Урок: {{ assessment.related_lesson.title }}</span>
+             {% elif assessment.related_test %}
+                <span class="badge bg-light text-dark ms-2">Тест: {{ assessment.related_test.title }}</span>
+             {% endif %}
+              {# TODO: Кнопка удаления оценки для преподавателя #}
+        </div>
+    {% endfor %}
+ </div>

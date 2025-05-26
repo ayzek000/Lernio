@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+         <h1><i class="bi bi-speedometer2 me-2"></i>{{ title }}</h1>
+         {# Можно добавить кнопку быстрого действия, например, добавить урок #}
+         <a href="{{ url_for('teacher.add_lesson') }}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-plus-lg"></i> Добавить урок
+         </a>
+    </div>
+
+    {# --- Карточки со статистикой --- #}
+    <div class="row g-4 mb-4">
+        {# Студенты #}
+        <div class="col-md-6 col-xl-3">
+            <div class="card text-white bg-primary shadow h-100"> {# h-100 для одинаковой высоты #}
+                <div class="card-body d-flex flex-column"> {# flex-column для кнопки внизу #}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h5 class="card-title mb-0">Студенты</h5>
+                            <p class="card-text fs-2 fw-bold">{{ stats.get('students', 0) }}</p>
+                        </div>
+                        <i class="bi bi-people-fill fs-1 opacity-50"></i>
+                    </div>
+                    <a href="{{ url_for('teacher.manage_students') }}" class="text-white stretched-link small mt-auto">Управлять <i class="bi bi-arrow-right-circle"></i></a> {# mt-auto прижимает ссылку вниз #}
+                </div>
+            </div>
+        </div>
+        {# Уроки #}
+        <div class="col-md-6 col-xl-3">
+             <div class="card text-white bg-success shadow h-100">
+                 <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h5 class="card-title mb-0">Уроки</h5>
+                            <p class="card-text fs-2 fw-bold">{{ stats.get('lessons', 0) }}</p>
+                        </div>
+                        <i class="bi bi-book-half fs-1 opacity-50"></i>
+                    </div>
+                     <a href="{{ url_for('teacher.manage_lessons') }}" class="text-white stretched-link small mt-auto">Управлять <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            </div>
+        </div>
+        {# Тесты #}
+         <div class="col-md-6 col-xl-3">
+             <div class="card text-white bg-info shadow h-100">
+                 <div class="card-body d-flex flex-column">
+                     <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h5 class="card-title mb-0">Тесты</h5>
+                            <p class="card-text fs-2 fw-bold">{{ stats.get('tests', 0) }}</p>
+                        </div>
+                        <i class="bi bi-clipboard-check-fill fs-1 opacity-50"></i>
+                    </div>
+                     <a href="{{ url_for('teacher.manage_tests') }}" class="text-white stretched-link small mt-auto">Управлять <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            </div>
+        </div>
+        {# Запросы на пересдачу #}
+        <div class="col-md-6 col-xl-3">
+             <div class="card text-dark bg-warning shadow h-100"> {# Изменили цвет для запросов #}
+                 <div class="card-body d-flex flex-column">
+                     <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h5 class="card-title mb-0">Запросы на пересдачу</h5>
+                            <p class="card-text fs-2 fw-bold">{{ stats.get('pending_retakes', 0) }}</p>
+                        </div>
+                         <i class="bi bi-arrow-clockwise fs-1 opacity-50"></i>
+                    </div>
+                     <a href="{{ url_for('teacher.manage_retake_requests') }}" class="text-dark stretched-link small mt-auto">Просмотреть <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Списки недавних событий --- #}
+    <div class="row g-4">
+        {# Последние сдачи тестов #}
+        <div class="col-lg-6">
+             <h4><i class="bi bi-file-earmark-check me-2"></i>Последние сдачи тестов</h4>
+             {% if recent_submissions %} {# Переменная должна передаваться из роута #}
+                <div class="list-group shadow-sm">
+                {% for sub in recent_submissions %}
+                     <a href="{{ url_for('teacher.view_student_progress', student_id=sub.student_id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ sub.student.full_name or sub.student.username }} - {{ sub.test.title if sub.test else 'Тест удален' }}</h6>
+                            <small class="text-muted">{{ sub.submitted_at.strftime('%d.%m.%y %H:%M') if sub.submitted_at else '-'}}</small>
+                        </div>
+                        <small class="text-muted">Результат: {% if sub.is_graded %}{{ "%.1f"|format(sub.score|float) }}%{% else %}Не оценен{% endif %}</small>
+                    </a>
+                {% endfor %}
+                </div>
+             {% else %}
+                <div class="alert alert-light">Нет недавних сдач тестов.</div>
+             {% endif %}
+        </div>
+
+         {# Последняя активность (оставляем как есть или улучшаем) #}
+        <div class="col-lg-6">
+            <h4><i class="bi bi-activity me-2"></i>Последняя активность</h4>
+            {% if recent_activity %}
+                <ul class="list-group shadow-sm activity-log-list">
+                    {% for log in recent_activity %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if log.user %}
+                                    <span class="fw-bold">{{ log.user.full_name or log.user.username }}</span>
+                                {% else %}
+                                    <span class="text-muted">Аноним</span>
+                                {% endif %}
+                                 - {{ log.action }}
+                                {% if log.details %}<small class="text-muted ms-2">({{ log.details|truncate(50) }})</small>{% endif %}
+                            </div>
+                            <span class="badge bg-light text-dark timestamp">{{ log.timestamp.strftime('%d.%m.%y %H:%M') }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                 <div class="alert alert-light">Нет записей об активности.</div>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}

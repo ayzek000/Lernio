@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0">
+                        {% if lesson %}
+                        <i class="bi bi-pencil-square me-2"></i>Редактирование урока
+                        {% else %}
+                        <i class="bi bi-plus-circle me-2"></i>Новый урок
+                        {% endif %}
+                    </h1>
+                    <p class="text-muted">
+                        {% if lesson %}
+                        Изменение информации об уроке "{{ lesson.title }}"
+                        {% else %}
+                        Создание нового урока для курса "{{ course.title }}"
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    {% if lesson %}
+                    <a href="{{ url_for('admin.lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-primary">
+                    {% else %}
+                    <a href="{{ url_for('admin.course_details', course_id=course.id) }}" class="btn btn-outline-primary">
+                    {% endif %}
+                        <i class="bi bi-arrow-left me-1"></i> Назад
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        {% if lesson %}
+                        <i class="bi bi-pencil me-2"></i>Форма редактирования
+                        {% else %}
+                        <i class="bi bi-file-earmark-text me-2"></i>Форма создания урока
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Название урока <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ lesson.title if lesson else '' }}" required>
+                            <div class="form-text">Введите название урока (до 100 символов)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Описание урока</label>
+                            <textarea class="form-control" id="description" name="description" rows="4">{{ lesson.description if lesson else '' }}</textarea>
+                            <div class="form-text">Краткое описание содержания урока</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="objectives" class="form-label">Цели урока</label>
+                            <textarea class="form-control" id="objectives" name="objectives" rows="3">{{ lesson.objectives if lesson else '' }}</textarea>
+                            <div class="form-text">Что студенты должны узнать или уметь после прохождения урока</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="duration" class="form-label">Продолжительность (минуты)</label>
+                            <input type="number" class="form-control" id="duration" name="duration" 
+                                   value="{{ lesson.duration if lesson else '60' }}" min="1">
+                            <div class="form-text">Примерное время для прохождения урока</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Дополнительные настройки</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isPublished" name="is_published" 
+                                       {% if lesson and lesson.is_published %}checked{% endif %}>
+                                <label class="form-check-label" for="isPublished">Опубликовать урок</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="requiresCompletion" name="requires_completion"
+                                       {% if lesson and lesson.requires_completion %}checked{% endif %}>
+                                <label class="form-check-label" for="requiresCompletion">Требуется завершение для перехода к следующему уроку</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            {% if lesson %}
+                            <a href="{{ url_for('admin.lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-secondary me-md-2">Отмена</a>
+                            {% else %}
+                            <a href="{{ url_for('admin.course_details', course_id=course.id) }}" class="btn btn-outline-secondary me-md-2">Отмена</a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                {% if lesson %}
+                                <i class="bi bi-save me-1"></i> Сохранить изменения
+                                {% else %}
+                                <i class="bi bi-plus-circle me-1"></i> Создать урок
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card admin-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Подсказки</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Рекомендации по созданию урока:</h6>
+                    <ul>
+                        <li>Используйте четкое и информативное название</li>
+                        <li>Укажите конкретные цели обучения</li>
+                        <li>Добавьте подробное описание содержания</li>
+                        <li>Опубликуйте урок только когда он полностью готов</li>
+                    </ul>
+                    <hr>
+                    <p class="mb-0">
+                        <i class="bi bi-lightbulb me-1 text-warning"></i>
+                        <strong>Совет:</strong> После создания урока вы сможете добавить к нему материалы, видео, тесты и другие элементы.
+                    </p>
+                </div>
+            </div>
+            
+            {% if lesson %}
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Предпросмотр</h5>
+                </div>
+                <div class="card-body">
+                    <p>Посмотрите, как урок будет выглядеть для студентов:</p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('admin.preview_lesson', lesson_id=lesson.id) }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="bi bi-display me-1"></i> Предпросмотр урока
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Проверка формы перед отправкой
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const title = document.getElementById('title').value.trim();
+            if (!title) {
+                e.preventDefault();
+                alert('Пожалуйста, введите название урока');
+                document.getElementById('title').focus();
+            }
+        });
+    });
+</script>
+{% endblock %}

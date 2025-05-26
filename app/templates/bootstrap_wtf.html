@@ -1,0 +1,113 @@
+{# Макрос для быстрой отрисовки форм Flask-WTF с использованием Bootstrap 5 #}
+{% macro render_field(field, form_type="basic", horizontal_columns=('lg', 2, 10), button_map={}) %}
+    {# Определяем классы в зависимости от типа формы #}
+    {% if form_type == "horizontal" %}
+        <div class="row mb-3 {% if field.flags.required %}required{% endif %}">
+            <label for="{{ field.id }}" class="col-{{ horizontal_columns[0] }}-{{ horizontal_columns[1] }} col-form-label">{{ field.label }}</label>
+            <div class="col-{{ horizontal_columns[0] }}-{{ horizontal_columns[2] }}">
+                {{ field(class="form-control" + (" is-invalid" if field.errors else ""), **kwargs) }}
+                {% if field.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                {% if field.description %}
+                    <div class="form-text">{{ field.description }}</div>
+                {% endif %}
+            </div>
+        </div>
+    {% elif form_type == "floating" %}
+        <div class="form-floating mb-3">
+            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), placeholder=field.label.text, **kwargs) }}
+            <label for="{{ field.id }}">{{ field.label }}</label>
+            {% if field.errors %}
+                <div class="invalid-feedback">
+                    {% for error in field.errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+             {% if field.description %}
+                <div class="form-text ms-2">{{ field.description }}</div> {# Отступ для плавающего лейбла #}
+            {% endif %}
+        </div>
+    {% else %} {# basic form_type #}
+         <div class="mb-3 {% if field.type == 'BooleanField' %}form-check{% endif %}">
+             {% if field.type != 'BooleanField' and field.type != 'SubmitField' and field.type != 'HiddenField' %}
+                {{ field.label(class="form-label" + (" required" if field.flags.required else "")) }}
+             {% endif %}
+
+             {% if field.type == 'RadioField' %}
+                {# Special handling for RadioField #}
+                {% for subfield in field %}
+                    <div class="form-check">
+                        {{ subfield(class="form-check-input" + (" is-invalid" if field.errors else "")) }}
+                        {{ subfield.label(class="form-check-label") }}
+                    </div>
+                {% endfor %}
+                 {% if field.errors %}
+                    <div class="invalid-feedback d-block"> {# d-block для radio/checkbox #}
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                 {% endif %}
+             {% elif field.type == 'SelectMultipleField' %}
+                {# Special handling for SelectMultipleField (assuming checkboxes) #}
+                <div class="{{ 'is-invalid' if field.errors else '' }}">
+                    {% for subfield in field %}
+                        <div class="form-check">
+                            {{ subfield(class="form-check-input") }}
+                            {{ subfield.label(class="form-check-label") }}
+                        </div>
+                    {% endfor %}
+                </div>
+                 {% if field.errors %}
+                    <div class="invalid-feedback d-block"> {# d-block для radio/checkbox #}
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                 {% endif %}
+             {% elif field.type == 'BooleanField' %}
+                 {{ field(class="form-check-input" + (" is-invalid" if field.errors else ""), **kwargs) }}
+                 {{ field.label(class="form-check-label") }}
+                 {% if field.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                 {% endif %}
+             {% elif field.type == 'SubmitField' %}
+                {% set button_class = "btn " + button_map.get(field.id, 'btn-primary') %}
+                 {{ field(class=button_class, **kwargs) }}
+             {% elif field.type == 'HiddenField' %}
+                 {{ field(**kwargs) }}
+             {% else %} {# Default input types #}
+                {% set field_class = "form-control custom-input" %}
+                {% if field.type == 'SelectField' %}
+                    {% set field_class = "form-select custom-select" %}
+                {% endif %}
+                 {{ field(class=field_class + (" is-invalid" if field.errors else ""), style="display: block !important; width: 100% !important; opacity: 1 !important; visibility: visible !important;", **kwargs) }}
+                 {% if field.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                 {% endif %}
+             {% endif %}
+
+             {% if field.description and field.type != 'SubmitField' and field.type != 'HiddenField' %}
+                <div class="form-text">{{ field.description }}</div>
+             {% endif %}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+
+{# Макрос для отрисовки всей формы #}
+{% macro quick_form(form, method="post", action="", enctype=None, form_type="basic", horizontal_columns=('lg', 2, 10), button_map={}, extra_classes=None, role="form", novalidate=False) %}
+    <form method="{{ method }}"
+          action="{{ action }}"
+          {% if enctype %}enctype="{{ enctype }}"{% endif %}
+          {% if extra_classes %}class="{{ extra_classes }}"{% endif %}
+          {% if role %}role="{{ role }}"{% endif %}
+          {% if novalidate %}novalidate{% endif %}>
+        {{ form.hidden_tag() }}
+        {% for field in form if not field.flags.hidden %}
+             {{ render_field(field, form_type=form_type, horizontal_columns=horizontal_columns, button_map=button_map) }}
+        {% endfor %}
+    </form>
+{% endmacro %}

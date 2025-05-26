@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_lessons') }}">Управление уроками</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ legend }}</li>
+      </ol>
+    </nav>
+
+    <h1>{{ legend }}</h1>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-8">
+             {# Используем макрос quick_form для отрисовки формы #}
+             {{ wtf.quick_form(form, button_map={'submit': 'btn-success'}) }}
+        </div>
+    </div>
+{% endblock %}

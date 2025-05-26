@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %} {# Импорт макроса для форм #}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {# Хлебные крошки для навигации #}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        {# Ссылка на управление студентами #}
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_students') }}">Управление студентами</a></li>
+        {# Текущая страница (Добавить или Редактировать) #}
+        <li class="breadcrumb-item active" aria-current="page">{{ legend }}</li>
+      </ol>
+    </nav>
+
+    <h1><i class="bi bi-person-fill-gear me-2"></i>{{ legend }}</h1>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-8 col-lg-6"> {# Ограничиваем ширину формы #}
+            {# Используем макрос quick_form для отрисовки формы UserForm #}
+            {# Передаем form из роута, button_map стилизует кнопку submit #}
+            {{ wtf.quick_form(form, button_map={'submit': 'btn-success'}) }}
+        </div>
+    </div>
+{% endblock %}

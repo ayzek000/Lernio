@@ -1,0 +1,47 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Lernio с Supabase</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                .container { max-width: 800px; margin: 0 auto; }
+                .btn { display: inline-block; padding: 10px 15px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; }
+                .flash { padding: 10px; background-color: #f8d7da; color: #721c24; margin-bottom: 15px; border-radius: 4px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Lernio с Supabase</h1>
+                
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="flash">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% if current_user.is_authenticated %}
+                    <p>Вы вошли как: <strong>{{ current_user.username }}</strong> ({{ current_user.role }})</p>
+                    <a href="{{ url_for('logout') }}" class="btn">Выйти</a>
+                {% else %}
+                    <p>Вы не авторизованы</p>
+                    <a href="{{ url_for('login') }}" class="btn">Войти</a>
+                {% endif %}
+                
+                <hr>
+                
+                <h2>Настройка</h2>
+                <p>Нажмите кнопку ниже, чтобы настроить базу данных и создать администратора:</p>
+                <a href="{{ url_for('setup') }}" class="btn">Настроить базу данных</a>
+                
+                <hr>
+                
+                <h2>Информация о базе данных</h2>
+                <p>База данных: <strong>PostgreSQL (Supabase)</strong></p>
+                <p>URL: <code>{{ config.SQLALCHEMY_DATABASE_URI }}</code></p>
+            </div>
+        </body>
+        </html>
+        

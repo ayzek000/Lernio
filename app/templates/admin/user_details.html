@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0"><i class="bi bi-person-circle me-2"></i>{{ user.username }}</h1>
+                    <p class="text-muted">Детальная информация о пользователе</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-people-fill me-1"></i> Все пользователи
+                    </a>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-speedometer2 me-1"></i> Панель управления
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация о пользователе -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card admin-card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Основная информация</h5>
+                </div>
+                <div class="card-body">
+                    <div class="user-profile">
+                        <div class="user-avatar mb-4">
+                            <div class="avatar-placeholder">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        </div>
+                        <div class="user-info">
+                            <div class="info-item">
+                                <span class="info-label">ID:</span>
+                                <span class="info-value">{{ user.id }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Имя пользователя:</span>
+                                <span class="info-value">{{ user.username }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Полное имя:</span>
+                                <span class="info-value">{{ user.full_name or 'Не указано' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Роль:</span>
+                                <span class="info-value">
+                                    {% if user.role == 'admin' %}
+                                        <span class="badge bg-danger">Администратор</span>
+                                    {% elif user.role == 'teacher' %}
+                                        <span class="badge bg-primary">Преподаватель</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Студент</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Дата регистрации:</span>
+                                <span class="info-value">{{ user.registration_date.strftime('%d.%m.%Y') }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Последний вход:</span>
+                                <span class="info-value">{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else 'Никогда' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#editUserModal">
+                            <i class="bi bi-pencil me-1"></i> Редактировать пользователя
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card admin-card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-activity me-2"></i>Активность пользователя</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Действие</th>
+                                    <th>Время</th>
+                                    <th>Детали</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in activities %}
+                                <tr>
+                                    <td>{{ activity.action }}</td>
+                                    <td>{{ activity.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
+                                    <td>{{ activity.details or '-' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Нет записей о действиях</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тесты пользователя -->
+    {% if user.role == 'student' %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Выполненные тесты</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Тест</th>
+                                    <th>Дата сдачи</th>
+                                    <th>Оценка</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for submission in submissions %}
+                                <tr>
+                                    <td>{{ submission.test.title if submission.test else 'Удаленный тест' }}</td>
+                                    <td>{{ submission.submitted_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                    <td>{{ submission.score if submission.score is not none else 'Не оценено' }}</td>
+                                    <td>
+                                        {% if submission.is_graded %}
+                                            <span class="badge bg-success">Оценено</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Ожидает оценки</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Нет выполненных тестов</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Модальное окно редактирования пользователя -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Редактировать пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" action="{{ url_for('admin.user_details', user_id=user.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Полное имя</label>
+                        <input type="text" class="form-control" id="fullName" name="full_name" value="{{ user.full_name or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Новый пароль (оставьте пустым, чтобы не менять)</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Роль</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="student" {% if user.role == 'student' %}selected{% endif %}>Студент</option>
+                            <option value="teacher" {% if user.role == 'teacher' %}selected{% endif %}>Преподаватель</option>
+                            <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Администратор</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" form="editUserForm" class="btn btn-primary">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Дополнительные скрипты для страницы пользователя
+    });
+</script>
+{% endblock %}

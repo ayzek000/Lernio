@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0"><i class="bi bi-book me-2"></i>Kurslarni boshqarish</h1>
+                    <p class="text-muted">Lernio platformasida kurslarni yaratish va tahrirlash</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-speedometer2 me-1"></i> Boshqaruv paneli
+                    </a>
+                    <a href="{{ url_for('admin.new_course') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Yangi kurs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtr va qidirish -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card admin-card">
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="courseSearch" placeholder="Kurslarni qidirish...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="sortCourses">
+                                <option value="newest">Avval yangilari</option>
+                                <option value="oldest">Avval eskilari</option>
+                                <option value="name_asc">Nom bo'yicha (A-Z)</option>
+                                <option value="name_desc">Nom bo'yicha (Z-A)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-outline-primary w-100" id="refreshCourses">
+                                <i class="bi bi-arrow-repeat me-1"></i> Yangilash
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kurslar ro'yxati -->
+    <div class="row" id="coursesList">
+        {% if courses %}
+            {% for course in courses %}
+            <div class="col-md-6 col-lg-4 mb-4 course-item">
+                <div class="card admin-card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-truncate">{{ course.title }}</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('admin.course_details', course_id=course.id) }}">
+                                    <i class="bi bi-info-circle me-2"></i>Tafsilotlar
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.edit_course', course_id=course.id) }}">
+                                    <i class="bi bi-pencil me-2"></i>Tahrirlash
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.new_lesson', course_id=course.id) }}">
+                                    <i class="bi bi-plus-circle me-2"></i>Dars qo'shish
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ url_for('admin.delete_course', course_id=course.id) }}" method="post" class="d-inline delete-form">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash me-2"></i>O'chirish
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text course-description">{{ course.description|truncate(100) }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary">{{ course.children.count() }} dars</span>
+                            <small class="text-muted">ID: {{ course.id }}</small>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('admin.course_details', course_id=course.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i> Kursni ko'rish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i> Kurslar hali yaratilmagan. Birinchi kursni yaratish uchun "Yangi kurs" tugmasini bosing.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // O'chirishni tasdiqlash
+        const deleteForms = document.querySelectorAll('.delete-form');
+        deleteForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (confirm('Siz ushbu kursni o\'chirishni xohlaysizmi? Bu amalni bekor qilib bo\'lmaydi.')) {
+                    this.submit();
+                }
+            });
+        });
+
+        // Kurslarni qidirish
+        const courseSearch = document.getElementById('courseSearch');
+        courseSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const courseItems = document.querySelectorAll('.course-item');
+            
+            courseItems.forEach(item => {
+                const title = item.querySelector('.card-header h5').textContent.toLowerCase();
+                const description = item.querySelector('.course-description').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Kurslarni saralash
+        const sortSelect = document.getElementById('sortCourses');
+        sortSelect.addEventListener('change', function() {
+            const coursesList = document.getElementById('coursesList');
+            const courseItems = Array.from(document.querySelectorAll('.course-item'));
+            
+            courseItems.sort((a, b) => {
+                const titleA = a.querySelector('.card-header h5').textContent;
+                const titleB = b.querySelector('.card-header h5').textContent;
+                const idA = parseInt(a.querySelector('.text-muted').textContent.replace('ID: ', ''));
+                const idB = parseInt(b.querySelector('.text-muted').textContent.replace('ID: ', ''));
+                
+                switch(this.value) {
+                    case 'newest':
+                        return idB - idA;
+                    case 'oldest':
+                        return idA - idB;
+                    case 'name_asc':
+                        return titleA.localeCompare(titleB);
+                    case 'name_desc':
+                        return titleB.localeCompare(titleA);
+                    default:
+                        return 0;
+                }
+            });
+            
+            courseItems.forEach(item => coursesList.appendChild(item));
+        });
+
+        // Обновление списка курсов
+        document.getElementById('refreshCourses').addEventListener('click', function() {
+            location.reload();
+        });
+    });
+</script>
+{% endblock %}

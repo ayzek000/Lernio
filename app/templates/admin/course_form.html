@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0">
+                        {% if course %}
+                        <i class="bi bi-pencil-square me-2"></i>Kursni tahrirlash
+                        {% else %}
+                        <i class="bi bi-plus-circle me-2"></i>Yangi kurs
+                        {% endif %}
+                    </h1>
+                    <p class="text-muted">
+                        {% if course %}
+                        "{{ course.title }}" kursi haqidagi ma'lumotlarni o'zgartirish
+                        {% else %}
+                        Lernio platformasida yangi kurs yaratish
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Kurslarga qaytish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        {% if course %}
+                        <i class="bi bi-pencil me-2"></i>Tahrirlash shakli
+                        {% else %}
+                        <i class="bi bi-file-earmark-text me-2"></i>Kurs yaratish shakli
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Kurs nomi <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ course.title if course else '' }}" required>
+                            <div class="form-text">Kurs nomini kiriting (100 ta belgigacha)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Kurs tavsifi</label>
+                            <textarea class="form-control" id="description" name="description" rows="5">{{ course.description if course else '' }}</textarea>
+                            <div class="form-text">Kurs mazmuni va maqsadlarining batafsil tavsifi</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="coverImage" class="form-label">Kurs muqovasi</label>
+                            <input class="form-control" type="file" id="coverImage" name="cover_image" accept="image/*">
+                            <div class="form-text">Tavsiya etilgan o'lcham: 1200x630 piksel (16:9 nisbati)</div>
+                            
+                            {% if course and course.cover_image %}
+                            <div class="mt-2">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ course.cover_image }}" alt="Joriy muqova" class="img-thumbnail me-3" style="max-height: 100px;">
+                                    <div>
+                                        <p class="mb-1">Joriy muqova</p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="removeCover" name="remove_cover">
+                                            <label class="form-check-label" for="removeCover">
+                                                Joriy muqovani o'chirish
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Qo'shimcha sozlamalar</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isPublished" name="is_published" 
+                                       {% if course and course.is_published %}checked{% endif %}>
+                                <label class="form-check-label" for="isPublished">Kursni e'lon qilish</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isFeatured" name="is_featured"
+                                       {% if course and course.is_featured %}checked{% endif %}>
+                                <label class="form-check-label" for="isFeatured">Tavsiya etilgan kurs</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-secondary me-md-2">Bekor qilish</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if course %}
+                                <i class="bi bi-save me-1"></i> O'zgarishlarni saqlash
+                                {% else %}
+                                <i class="bi bi-plus-circle me-1"></i> Kurs yaratish
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card admin-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Maslahatlar</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Kurs yaratish bo'yicha tavsiyalar:</h6>
+                    <ul>
+                        <li>Aniq va ma'lumotli nom ishlatish</li>
+                        <li>Kurs mazmunining batafsil tavsifini qo'shing</li>
+                        <li>Jozibali muqovani yuklang</li>
+                        <li>Kursni faqat tayyor bo'lganda e'lon qiling</li>
+                    </ul>
+                    <hr>
+                    <p class="mb-0">
+                        <i class="bi bi-lightbulb me-1 text-warning"></i>
+                        <strong>Maslahat:</strong> Kursni yaratgandan so'ng, unga darslar va materiallarni qo'shishingiz mumkin.
+                    </p>
+                </div>
+            </div>
+            
+            {% if course %}
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Ko'rib chiqish</h5>
+                </div>
+                <div class="card-body">
+                    <p>Kurs talabalar uchun qanday ko'rinishini ko'ring:</p>
+                    <div class="d-grid">
+                        <a href="{{ url_for('admin.preview_course', course_id=course.id) }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="bi bi-display me-1"></i> Kursni ko'rib chiqish
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Проверка формы перед отправкой
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const title = document.getElementById('title').value.trim();
+            if (!title) {
+                e.preventDefault();
+                alert('Пожалуйста, введите название курса');
+                document.getElementById('title').focus();
+            }
+        });
+        
+        // Обработка загрузки изображения
+        const coverImage = document.getElementById('coverImage');
+        const removeCover = document.getElementById('removeCover');
+        
+        if (coverImage && removeCover) {
+            coverImage.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    removeCover.checked = false;
+                    removeCover.disabled = true;
+                } else {
+                    removeCover.disabled = false;
+                }
+            });
+            
+            removeCover.addEventListener('change', function() {
+                if (this.checked) {
+                    coverImage.value = '';
+                    coverImage.disabled = true;
+                } else {
+                    coverImage.disabled = false;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

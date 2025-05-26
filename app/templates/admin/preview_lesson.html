@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Предпросмотр: {{ lesson.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Панель предпросмотра -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-eye-fill me-2"></i>
+                <strong>Режим предпросмотра:</strong> Вы просматриваете урок глазами студента.
+                Это не настоящая страница студента, а только предпросмотр для преподавателей и администраторов.
+            </div>
+            <div>
+                <a href="{{ url_for('admin.lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Вернуться к редактированию
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Заголовок урока -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">{{ lesson.parent.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ lesson.title }}</li>
+                </ol>
+            </nav>
+            <h1 class="display-5 mb-3">{{ lesson.title }}</h1>
+            <div class="d-flex align-items-center text-muted mb-4">
+                <span class="me-3">
+                    <i class="bi bi-journal-text me-1"></i> Урок {{ lesson.position or 1 }}
+                </span>
+                <span class="me-3">
+                    <i class="bi bi-clock me-1"></i> Продолжительность: {{ lesson.duration or 60 }} минут
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Описание урока -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>Описание урока</h4>
+                    <p>{{ lesson.description or 'Описание урока отсутствует.' }}</p>
+                    
+                    {% if lesson.objectives %}
+                    <h5 class="mt-4">Цели урока:</h5>
+                    <div class="objectives">
+                        {{ lesson.objectives|safe }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Материалы урока -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Материалы урока</h5>
+                </div>
+                <div class="card-body">
+                    {% if materials %}
+                    <div class="list-group">
+                        {% for material in materials %}
+                        <a href="{{ url_for('admin.preview_material', material_id=material.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if material.type == 'text' %}
+                                <i class="bi bi-file-text me-2 text-primary"></i>
+                                {% elif material.type == 'video' %}
+                                <i class="bi bi-film me-2 text-danger"></i>
+                                {% elif material.type == 'file' %}
+                                <i class="bi bi-file-earmark me-2 text-success"></i>
+                                {% elif material.type == 'quiz' %}
+                                <i class="bi bi-question-circle me-2 text-warning"></i>
+                                {% elif material.type == 'glossary' %}
+                                <i class="bi bi-book me-2 text-info"></i>
+                                {% else %}
+                                <i class="bi bi-file me-2 text-secondary"></i>
+                                {% endif %}
+                                {{ material.title }}
+                                
+                                {% if material.is_video_lesson %}
+                                <span class="badge bg-danger ms-2">Видеоурок</span>
+                                {% endif %}
+                                
+                                {% if material.questions.count() > 0 %}
+                                <span class="badge bg-info ms-2">{{ material.questions.count() }} вопр.</span>
+                                {% endif %}
+                                
+                                {% if material.glossary_items.count() > 0 %}
+                                <span class="badge bg-success ms-2">{{ material.glossary_items.count() }} слов</span>
+                                {% endif %}
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i> В этом уроке еще нет материалов.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Кнопки навигации -->
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" disabled>
+                    <i class="bi bi-arrow-left me-1"></i> Предыдущий урок
+                </button>
+                <button type="button" class="btn btn-outline-primary" disabled>
+                    Следующий урок <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Информация о курсе -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">О курсе</h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ lesson.parent.title }}</h6>
+                    <p class="text-muted">{{ lesson.parent.description }}</p>
+                    
+                    <hr>
+                    
+                    <h6>Уроки курса:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for sibling in lesson.parent.children %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span {% if sibling.id == lesson.id %}class="fw-bold"{% endif %}>{{ sibling.title }}</span>
+                            {% if sibling.id == lesson.id %}
+                            <span class="badge bg-primary rounded-pill">Текущий</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Прогресс -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Ваш прогресс</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Прогресс по уроку</label>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Прогресс по курсу</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 15%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">15%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-secondary">
+                        <i class="bi bi-info-circle me-2"></i> Это демонстрационные данные для предпросмотра
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Примечания -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Заметки</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <textarea class="form-control" rows="4" placeholder="Здесь вы можете делать заметки..." disabled></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-outline-primary" disabled>
+                            <i class="bi bi-save me-1"></i> Сохранить заметки
+                        </button>
+                        <div class="form-text text-center mt-2">
+                            В режиме предпросмотра сохранение заметок недоступно
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Предупреждение при попытке взаимодействия с элементами
+        const buttons = document.querySelectorAll('button:not([data-bs-toggle])');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.disabled) {
+                    alert('Это режим предпросмотра. Функциональность недоступна.');
+                }
+            });
+        });
+        
+        // Подсветка текущего урока в списке
+        const listItems = document.querySelectorAll('.list-group-item');
+        listItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (!this.querySelector('a')) {
+                    e.preventDefault();
+                    alert('Это режим предпросмотра. Навигация ограничена.');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

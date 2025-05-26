@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %} {# Для кнопки submit #}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {# Хлебные крошки #}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        {% if test.lesson %}
+            <li class="breadcrumb-item"><a href="{{ url_for('main.list_lessons') }}">Уроки</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.lesson_detail', lesson_id=test.lesson_id) }}">{{ test.lesson.title }}</a></li>
+        {% else %}
+             <li class="breadcrumb-item">Тесты</li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ test.title }}</li>
+      </ol>
+    </nav>
+
+    {# --- ЛОГИКА ОТОБРАЖЕНИЯ --- #}
+    {% if submission and submission.retake_status != 'rejected' %} {# Если тест УЖЕ СДАН и статус НЕ 'rejected' #}
+
+        <h1><i class="bi bi-check-circle-fill text-success me-2"></i>Тест сдан: {{ test.title }}</h1>
+        <p class="lead">Вы уже проходили этот тест.</p>
+        <hr>
+        <div class="alert alert-info shadow-sm">
+            <h4>Ваш результат:</h4>
+            <p class="display-4">
+                {% if submission.is_graded %}
+                    {% set score_val = submission.score|float %}
+                    {% set score_percent = (score_val * 10)|float if score_val <= 10 else score_val %}
+                    {% if score_val >= 8.5 or score_percent >= 85 %} {% set score_color = 'success' %}
+                    {% elif score_val >= 6.5 or score_percent >= 65 %} {% set score_color = 'primary' %}
+                    {% elif score_val >= 4.5 or score_percent >= 45 %} {% set score_color = 'warning' %}
+                    {% else %} {% set score_color = 'danger' %}
+                    {% endif %}
+                    {% set points_display = "%.1f/10"|format(score_val) if score_val <= 10 else "%.1f"|format(score_val) %}
+                    {% set percent_display = "%.0f"|format(score_percent) if score_val <= 10 else "%.0f"|format(score_val) %}
+                    <span class="text-{{ score_color }} fw-bold">{{ points_display }}</span>
+                    <small class="text-muted">({{ percent_display }}%)</small>
+                {% else %}
+                    <span class="text-secondary">Ожидает оценки</span>
+                {% endif %}
+            </p>
+            <p class="mb-0">Дата сдачи: {{ submission.submitted_at.strftime('%d.%m.%Y %H:%M') if submission.submitted_at else '-' }}</p>
+        </div>
+
+        {# --- КНОПКА/СТАТУС ЗАПРОСА НА ПЕРЕСДАЧУ --- #}
+        {% if submission.retake_status == 'requested' %}
+             <div class="alert alert-warning mt-4">
+                <i class="bi bi-hourglass-split me-1"></i> Ваш запрос на пересдачу ожидает рассмотрения преподавателем.
+            </div>
+             <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary mt-2">К моим результатам</a>
+        {% elif submission.retake_status != 'approved' %} {# Показываем кнопку, если статус None (т.е. просто сдан) #}
+            <form action="{{ url_for('student.request_retake', test_id=test.id) }}" method="POST" class="mt-4"
+                  data-confirm="Отправить преподавателю запрос на пересдачу этого теста? Вам может потребоваться объяснить причину.">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                 <button type="submit" class="btn btn-warning">
+                     <i class="bi bi-arrow-clockwise me-1"></i> Запросить пересдачу
+                 </button>
+                 <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary ms-2">К моим результатам</a>
+            </form>
+        {% else %} {# Статус approved - этого не должно быть здесь #}
+            <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary mt-4">К моим результатам</a>
+        {% endif %}
+        {# --- КОНЕЦ БЛОКА КНОПКИ/СТАТУСА ЗАПРОСА --- #}
+
+
+    {% else %} {# Если тест ЕЩЕ НЕ СДАН ИЛИ ЗАПРОС ОТКЛОНЕН #}
+
+        {# Показываем сообщение, если это повторная попытка после отклонения #}
+        {% if submission and submission.retake_status == 'rejected' %}
+            <div class="alert alert-danger">Ваш предыдущий запрос на пересдачу был отклонен. Пожалуйста, пройдите тест внимательнее.</div>
+        {% endif %}
+
+        <h1 class="mb-3"><i class="bi bi-clipboard-check me-2"></i>Тест: {{ test.title }}</h1>
+        {% if test.description %}
+            <p class="lead">{{ test.description }}</p>
+        {% endif %}
+        <hr>
+
+        {% if questions %}
+             {# Форма прохождения теста #}
+             <form id="testForm" method="POST" action="{{ url_for('student.take_test', test_id=test.id) }}" novalidate>
+                 {{ form.hidden_tag() }}
+                 <input type="hidden" name="start_time" value="{{ now.timestamp() }}">
+                 <!-- Добавляем скрытое поле для CSRF-токена, чтобы избежать проблем с валидацией формы -->
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                 <!-- Скрытое поле для принудительной отправки теста -->
+                 <input type="hidden" id="forceSubmitInput" name="force_submit" value="0">
+
+                {% for question in questions %}
+                     <div class="card mb-4 shadow-sm question-card">
+                         <div class="card-header bg-light">
+                            <h5 class="my-0 fw-normal">Вопрос {{ loop.index }}</h5>
+                         </div>
+                         <div class="card-body">
+                             <p class="card-text fs-5 mb-3">{{ question.text|safe }}</p>
+                             {% set options = question.get_options_dict() %}
+                             <div id="q_group_{{ question.id }}">
+                                {% if question.type == 'single_choice' and options %}
+                                    {% for key, value in options.items() %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="q{{ question.id }}_{{ key }}" value="{{ key }}" required>
+                                            <label class="form-check-label" for="q{{ question.id }}_{{ key }}">{{ value|safe }}</label>
+                                        </div>
+                                    {% endfor %}
+                                {% elif question.type == 'multiple_choice' and options %}
+                                     {% for key, value in options.items() %}
+                                        <div class="form-check mb-2">
+                                          <input class="form-check-input" type="checkbox" name="question_{{ question.id }}" value="{{ key }}" id="q{{ question.id }}_{{ key }}">
+                                          <label class="form-check-label" for="q{{ question.id }}_{{ key }}">{{ value|safe }}</label>
+                                        </div>
+                                     {% endfor %}
+                                {% elif question.type == 'text_input' %}
+                                     <textarea class="form-control" name="question_{{ question.id }}" id="q{{ question.id }}_text" rows="3" required></textarea>
+                                {% else %}
+                                    <p class="text-danger">Ошибка: неверный тип вопроса или отсутствуют варианты.</p>
+                                {% endif %}
+                             </div>
+                             <div class="invalid-feedback" id="q_error_{{ question.id }}" style="display: none;">Пожалуйста, дайте ответ на этот вопрос.</div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="d-grid gap-2 mt-4 mb-5">
+                    {{ form.submit(class="btn btn-primary btn-lg", id="submitTestBtn") }}
+                    <button type="button" class="btn btn-outline-secondary mt-2" id="submitIncompleteBtn">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Завершить тест без проверки
+                    </button>
+                    <input type="hidden" name="force_submit" id="forceSubmitInput" value="0">
+                </div>
+            </form>
+        {% else %}
+            <div class="alert alert-warning">В этом тесте пока нет вопросов. Пожалуйста, сообщите преподавателю.</div>
+        {% endif %}
+
+    {% endif %} {# Конец if submission #}
+{% endblock %} {# Конец block content #}
+
+{% block scripts %}
+{# Подключаем скрипт для перемешивания вариантов ответов и исправления отображения результатов #}
+<script src="{{ url_for('static', filename='js/savollar-fix.js') }}"></script>
+
+{# Подключаем скрипт только если форма теста отображается #}
+{% if not submission or submission.retake_status == 'rejected' %}
+    {% if questions %} {# Убедимся, что вопросы есть, чтобы JS имел смысл #}
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const testForm = document.getElementById('testForm');
+            const forceSubmitInput = document.getElementById('forceSubmitInput');
+            const submitIncompleteBtn = document.getElementById('submitIncompleteBtn');
+            
+            // Код для перемешивания вариантов ответов перенесен в файл savollar-fix.js
+            
+            if (!testForm) { console.error("Form 'testForm' not found!"); return; }
+            
+            // Обработчик для кнопки "Завершить тест без проверки"
+            if (submitIncompleteBtn) {
+                submitIncompleteBtn.addEventListener('click', function() {
+                    if (confirm('Вы уверены, что хотите завершить тест? Все неотвеченные вопросы будут считаться неправильными.')) {
+                        // Устанавливаем флаг force_submit в 1
+                        if (forceSubmitInput) {
+                            forceSubmitInput.value = '1';
+                        }
+                        
+                        // Отключаем кнопки и показываем индикатор загрузки
+                        const submitBtn = document.getElementById('submitTestBtn');
+                        if (submitBtn) { 
+                            submitBtn.disabled = true; 
+                            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Отправка...'; 
+                        }
+                        submitIncompleteBtn.disabled = true;
+                        submitIncompleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Отправка...';
+                        
+                        // Отправляем форму
+                        testForm.submit();
+                    }
+                });
+            }
+            
+            // Обработчик для стандартной отправки формы
+            testForm.addEventListener('submit', function(event) {
+                // Если установлен флаг force_submit, пропускаем проверку
+                if (forceSubmitInput && forceSubmitInput.value === '1') {
+                    return true; // Разрешаем отправку формы
+                }
+                
+                let allRequiredAnswered = true;
+                const questionIds = {{ questions|map(attribute='id')|list|tojson|safe }};
+                questionIds.forEach((qId) => {
+                    const group = document.getElementById(`q_group_${qId}`);
+                    const errorDiv = document.getElementById(`q_error_${qId}`);
+                    let answered = false;
+                    let isRequired = false;
+                    if (!group) { 
+                        console.warn(`Group q_${qId} not found`); 
+                        return; 
+                    }
+                    const inputs = group.querySelectorAll(`input[name="question_${qId}"], textarea[name="question_${qId}"]`);
+                    if (inputs.length > 0) {
+                        isRequired = Array.from(inputs).some(input => input.hasAttribute('required'));
+                        if (inputs[0].type === 'radio'){
+                            answered = Array.from(inputs).some(i => i.checked);
+                        }
+                        else if (inputs[0].type === 'checkbox'){
+                            answered = !isRequired || Array.from(inputs).some(i => i.checked);
+                        }
+                        else if (inputs[0].tagName === 'TEXTAREA'){
+                            answered = inputs[0].value.trim() !== '';
+                        }
+                    } else { 
+                        answered = true; 
+                        isRequired = false; 
+                    }
+                    const card = group.closest('.card');
+                    if (isRequired && !answered) {
+                        allRequiredAnswered = false;
+                        if(errorDiv) { errorDiv.textContent = "Ответ обязателен."; errorDiv.style.display = 'block'; }
+                        if(card) { card.classList.add('border-danger'); }
+                    } else {
+                        if(errorDiv) { errorDiv.style.display = 'none'; }
+                        if(card) { card.classList.remove('border-danger'); }
+                    }
+                }); // end forEach
+                if (!allRequiredAnswered) {
+                    event.preventDefault();
+                    alert('Пожалуйста, ответьте на все обязательные вопросы или используйте кнопку "Завершить тест без проверки".');
+                    const firstErrorCard = document.querySelector('.question-card.border-danger');
+                    if (firstErrorCard) { 
+                        setTimeout(() => { 
+                            firstErrorCard.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            }); 
+                        }, 50); 
+                    }
+                } else {
+                     const submitBtn = document.getElementById('submitTestBtn');
+                     if (submitBtn) { 
+                         submitBtn.disabled = true; 
+                         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Отправка...'; 
+                     }
+                }
+            }); // end submit listener
+        }); // end DOMContentLoaded
+        </script>
+    {% endif %} {# end if questions #}
+{% endif %} {# end if not submission #}
+{# Основной скрипт для data-confirm и др. #}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %} {# Конец block scripts #}

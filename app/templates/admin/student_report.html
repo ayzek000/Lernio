@@ -1,0 +1,213 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Boshqaruv paneli</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.reports') }}">Hisobotlar</a></li>
+        <li class="breadcrumb-item active">{{ student.username }}</li>
+    </ol>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-user me-1"></i>
+                        Talaba haqida ma'lumot
+                    </div>
+                    <div>
+                        <a href="{{ url_for('admin.export_student_report', student_id=student.id) }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-excel me-1"></i> Excel formatiga eksport
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>ID:</strong> {{ student.id }}</p>
+                            <p><strong>Foydalanuvchi nomi:</strong> {{ student.username }}</p>
+                            <p><strong>Email:</strong> {{ student.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Ro'yxatdan o'tish sanasi:</strong> {{ student.registration_date.strftime('%d.%m.%Y %H:%M') if student.registration_date else 'Ma\'lumot yo\'q' }}</p>
+                            <p><strong>Jami urinishlar:</strong> {{ submissions|length }}</p>
+                            <p><strong>Oxirgi faollik:</strong> {{ submissions[0].submitted_at.strftime('%d.%m.%Y %H:%M') if submissions else 'Ma\'lumot yo\'q' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Faollik grafigi -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Talaba faolligi
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Kurslar bo'yicha statistika -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-book me-1"></i>
+            Kurslar bo'yicha statistika
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Kurs nomi</th>
+                            <th>Urinishlar soni</th>
+                            <th>O'rtacha ball</th>
+                            <th>Oxirgi faollik</th>
+                            <th>Harakatlar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in course_stats %}
+                        <tr>
+                            <td>{{ stat.course.id }}</td>
+                            <td>{{ stat.course.title }}</td>
+                            <td>{{ stat.submissions }}</td>
+                            <td>{{ "%.2f"|format(stat.avg_score) }}</td>
+                            <td>{{ stat.last_activity.strftime('%d.%m.%Y %H:%M') if stat.last_activity else 'Ma\'lumot yo\'q' }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.course_report', course_id=stat.course.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-chart-pie me-1"></i> Kurs bo'yicha hisobot
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Kurslar haqida ma'lumot yo'q</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- История попыток -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-history me-1"></i>
+            История попыток
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="submissionsTable">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Курс</th>
+                            <th>Урок</th>
+                            <th>Материал</th>
+                            <th>Оценка</th>
+                            <th>Комментарий</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions %}
+                        {% set material = submission.material %}
+                        {% if material and material.lesson %}
+                        {% set lesson = material.lesson %}
+                        {% set course = lesson.parent if lesson.parent else lesson %}
+                        <tr>
+                            <td>{{ submission.submitted_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ course.title }}</td>
+                            <td>{{ lesson.title }}</td>
+                            <td>{{ material.title }}</td>
+                            <td>
+                                {% if submission.score is not none %}
+                                <span class="badge {% if submission.score >= 80 %}bg-success{% elif submission.score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ submission.score }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">Не оценено</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ submission.feedback or 'Нет комментария' }}</td>
+                        </tr>
+                        {% endif %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Нет данных о попытках</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script>
+    // Данные для графика активности
+    const activityDates = {{ activity_dates|safe }};
+    const activityCounts = {{ activity_counts|safe }};
+    
+    // График активности
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: activityDates,
+            datasets: [{
+                label: 'Количество попыток',
+                data: activityCounts,
+                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: 'Активность студента за последний месяц'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+    
+    // Таблица попыток
+    $(document).ready(function() {
+        $('#submissionsTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Russian.json'
+            },
+            order: [[0, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

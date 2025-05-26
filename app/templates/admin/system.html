@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0"><i class="bi bi-gear-fill me-2"></i>Системные настройки</h1>
+                    <p class="text-muted">Управление настройками платформы Lernio</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-speedometer2 me-1"></i> Панель управления
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Настройки сайта -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-globe me-2"></i>Настройки сайта</h5>
+                </div>
+                <div class="card-body">
+                    <form id="siteSettingsForm">
+                        <div class="mb-3">
+                            <label for="siteName" class="form-label">Название сайта</label>
+                            <input type="text" class="form-control" id="siteName" value="Lernio">
+                        </div>
+                        <div class="mb-3">
+                            <label for="siteDescription" class="form-label">Описание сайта</label>
+                            <textarea class="form-control" id="siteDescription" rows="3">Современная образовательная платформа</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactEmail" class="form-label">Контактный email</label>
+                            <input type="email" class="form-control" id="contactEmail" value="info@lernio.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="footerText" class="form-label">Текст в футере</label>
+                            <input type="text" class="form-control" id="footerText" value="© 2025 Lernio. Все права защищены">
+                        </div>
+                        <button type="button" class="btn btn-primary">Сохранить настройки</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Настройки безопасности -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Настройки безопасности</h5>
+                </div>
+                <div class="card-body">
+                    <form id="securitySettingsForm">
+                        <div class="mb-3">
+                            <label for="sessionTimeout" class="form-label">Таймаут сессии (минуты)</label>
+                            <input type="number" class="form-control" id="sessionTimeout" value="60">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enableRegistration" checked>
+                                <label class="form-check-label" for="enableRegistration">Разрешить регистрацию новых пользователей</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enableCaptcha" checked>
+                                <label class="form-check-label" for="enableCaptcha">Использовать CAPTCHA при входе</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enableTwoFactor">
+                                <label class="form-check-label" for="enableTwoFactor">Включить двухфакторную аутентификацию</label>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary">Сохранить настройки</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Резервное копирование -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-cloud-arrow-up me-2"></i>Резервное копирование</h5>
+                </div>
+                <div class="card-body">
+                    <p>Управление резервными копиями базы данных и файлов.</p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary">
+                            <i class="bi bi-download me-1"></i> Создать резервную копию
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary">
+                            <i class="bi bi-clock-history me-1"></i> История резервных копий
+                        </button>
+                    </div>
+                    <hr>
+                    <h6>Автоматическое резервное копирование</h6>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enableAutoBackup" checked>
+                            <label class="form-check-label" for="enableAutoBackup">Включить автоматическое резервное копирование</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="backupFrequency" class="form-label">Частота</label>
+                        <select class="form-select" id="backupFrequency">
+                            <option value="daily">Ежедневно</option>
+                            <option value="weekly" selected>Еженедельно</option>
+                            <option value="monthly">Ежемесячно</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary">Сохранить настройки</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Информация о системе -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Информация о системе</h5>
+                </div>
+                <div class="card-body">
+                    <div class="system-info">
+                        <div class="info-item">
+                            <span class="info-label">Версия Lernio:</span>
+                            <span class="info-value">1.0.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Версия Python:</span>
+                            <span class="info-value">3.12.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Версия Flask:</span>
+                            <span class="info-value">2.3.3</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">База данных:</span>
+                            <span class="info-value">SQLite</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Размер базы данных:</span>
+                            <span class="info-value">2.4 MB</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Дата установки:</span>
+                            <span class="info-value">17.05.2025</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Последнее обновление:</span>
+                            <span class="info-value">17.05.2025</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-repeat me-1"></i> Проверить обновления
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработчики для форм настроек
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            const submitButton = form.querySelector('button[type="button"]');
+            if (submitButton) {
+                submitButton.addEventListener('click', function() {
+                    // Здесь будет отправка формы через AJAX
+                    // Пока просто показываем уведомление
+                    alert('Настройки сохранены!');
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

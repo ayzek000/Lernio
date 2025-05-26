@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">{{ title }}</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Управление порядком материалов</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-4">
+                Установите порядок отображения материалов в уроке. Чем больше значение, тем выше будет отображаться материал.
+                Материалы с одинаковым значением будут отсортированы по типу и названию.
+            </p>
+            
+            {% if materials %}
+                <form method="POST" action="{{ url_for('teacher.order_materials', lesson_id=lesson.id if lesson else 0) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Тип</th>
+                                    <th>Порядок (больше = выше)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materials-list">
+                                {% for material in materials %}
+                                <tr data-id="{{ material.id }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if material.type == 'lecture' %}
+                                                <i class="bi bi-file-text-fill text-primary me-2"></i>
+                                            {% elif material.type == 'presentation' %}
+                                                <i class="bi bi-file-slides-fill text-warning me-2"></i>
+                                            {% elif material.type == 'video_url' %}
+                                                <i class="bi bi-youtube text-danger me-2"></i>
+                                            {% elif material.type == 'file' %}
+                                                <i class="bi bi-paperclip text-info me-2"></i>
+                                            {% elif material.type == 'glossary_term' %}
+                                                <i class="bi bi-book-half text-success me-2"></i>
+                                            {% elif material.type == 'consolidation_question' %}
+                                                <i class="bi bi-patch-question-fill text-secondary me-2"></i>
+                                            {% else %}
+                                                <i class="bi bi-file-earmark me-2"></i>
+                                            {% endif %}
+                                            {{ material.title }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if material.type == 'lecture' %}Лекция
+                                        {% elif material.type == 'presentation' %}Презентация
+                                        {% elif material.type == 'video_url' %}Видео
+                                        {% elif material.type == 'file' %}Файл
+                                        {% elif material.type == 'glossary_term' %}Термин словаря
+                                        {% elif material.type == 'consolidation_question' %}Вопрос для закрепления
+                                        {% else %}{{ material.type }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <input type="hidden" name="material_id[]" value="{{ material.id }}">
+                                        <input type="number" name="position[]" class="form-control" value="{{ material.position }}" min="0" max="1000">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{{ url_for('teacher.manage_materials', lesson_id=lesson.id if lesson else 0) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Назад к материалам
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" id="auto-sort">
+                                <i class="bi bi-sort-numeric-down me-1"></i> Автоматически распределить
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-save me-1"></i> Сохранить порядок
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i> Нет материалов для сортировки.
+                </div>
+                <a href="{{ url_for('teacher.manage_materials', lesson_id=lesson.id if lesson else 0) }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Назад к материалам
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Кнопка автоматического распределения порядка
+    const autoSortBtn = document.getElementById('auto-sort');
+    if (autoSortBtn) {
+        autoSortBtn.addEventListener('click', function() {
+            const rows = document.querySelectorAll('#materials-list tr');
+            const total = rows.length;
+            
+            // Распределяем значения от большего к меньшему (от total до 1)
+            rows.forEach((row, index) => {
+                const positionInput = row.querySelector('input[name="position[]"]');
+                positionInput.value = total - index;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Предпросмотр: {{ material.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Панель предпросмотра -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-eye-fill me-2"></i>
+                <strong>Режим предпросмотра:</strong> Вы просматриваете материал глазами студента.
+                Это не настоящая страница студента, а только предпросмотр для преподавателей и администраторов.
+            </div>
+            <div>
+                <a href="{{ url_for('admin.material_details', material_id=material.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Вернуться к редактированию
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Заголовок материала -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="#">{{ material.lesson.parent.title }}</a></li>
+                    <li class="breadcrumb-item"><a href="#">{{ material.lesson.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ material.title }}</li>
+                </ol>
+            </nav>
+            <h1 class="display-5 mb-3">{{ material.title }}</h1>
+            <div class="d-flex align-items-center text-muted mb-4">
+                <span class="me-3">
+                    {% if material.type == 'text' %}
+                    <i class="bi bi-file-text me-1"></i> Текстовый материал
+                    {% elif material.type == 'video' %}
+                    <i class="bi bi-film me-1"></i> Видеоматериал
+                    {% elif material.type == 'file' %}
+                    <i class="bi bi-file-earmark me-1"></i> Файл
+                    {% elif material.type == 'quiz' %}
+                    <i class="bi bi-question-circle me-1"></i> Тест
+                    {% elif material.type == 'glossary' %}
+                    <i class="bi bi-book me-1"></i> Словарь
+                    {% else %}
+                    <i class="bi bi-file me-1"></i> {{ material.type }}
+                    {% endif %}
+                </span>
+                <span class="me-3">
+                    <i class="bi bi-clock me-1"></i> Примерное время: 15 минут
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Основное содержимое материала -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    {% if material.is_video_lesson and material.video_url %}
+                    <div class="ratio ratio-16x9 mb-4">
+                        {% if 'youtube.com' in material.video_url or 'youtu.be' in material.video_url %}
+                            {% set video_id = material.video_url.split('v=')[-1].split('&')[0] if 'v=' in material.video_url else material.video_url.split('/')[-1] %}
+                            <iframe src="https://www.youtube.com/embed/{{ video_id }}" title="YouTube video" allowfullscreen></iframe>
+                        {% elif 'vimeo.com' in material.video_url %}
+                            {% set video_id = material.video_url.split('/')[-1] %}
+                            <iframe src="https://player.vimeo.com/video/{{ video_id }}" title="Vimeo video" allowfullscreen></iframe>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i> Предпросмотр недоступен для данного URL видео.
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if material.content %}
+                    <div class="material-content">
+                        {{ material.content|safe }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if material.file_path and not material.is_video_lesson %}
+                        {% if material.file_path.lower().endswith('.pdf') %}
+                            <!-- Улучшенный просмотрщик PDF -->
+                            <div class="mt-4">
+                                <div class="card">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-file-pdf text-danger me-2"></i>
+                                            Прикрепленный PDF-документ
+                                        </h5>
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#pdfViewer" aria-expanded="true" aria-controls="pdfViewer">
+                                            <i class="bi bi-arrows-collapse"></i> Свернуть/Развернуть
+                                        </button>
+                                    </div>
+                                    <div class="collapse show" id="pdfViewer">
+                                        <div class="card-body p-0">
+                                            <div class="pdf-custom-viewer">
+                                                <div class="pdf-controls bg-white p-2 border-bottom d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <button id="prevPage" class="btn btn-sm btn-outline-primary me-1">
+                                                            <i class="bi bi-arrow-left"></i> Предыдущая
+                                                        </button>
+                                                        <button id="nextPage" class="btn btn-sm btn-outline-primary">
+                                                            Следующая <i class="bi bi-arrow-right"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        <span id="pageNum" class="me-2">1</span> из <span id="pageCount" class="ms-2">?</span>
+                                                    </div>
+                                                    <div>
+                                                        <button id="zoomIn" class="btn btn-sm btn-outline-secondary me-1">
+                                                            <i class="bi bi-zoom-in"></i>
+                                                        </button>
+                                                        <button id="zoomOut" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="bi bi-zoom-out"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div id="pdfContainer" style="width:100%; height:700px; background-color: #f8f9fa; overflow: auto;">
+                                                    <canvas id="pdfCanvas" style="display: block; margin: 0 auto;"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Скрытый iframe для загрузки PDF -->
+                            <div style="display: none;">
+                                <iframe id="pdfSource" src="{{ url_for('main.download_file', filename=material.file_path) }}" style="width:0; height:0;"></iframe>
+                            </div>
+                        {% else %}
+                            <!-- Другие типы файлов -->
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-file-earmark fs-1 me-3"></i>
+                                    <div>
+                                        <h5 class="mb-1">Прикрепленный файл</h5>
+                                        <p class="mb-2">{{ material.file_path.split('/')[-1] }}</p>
+                                        <a href="{{ url_for('main.download_file', filename=material.file_path) }}" class="btn btn-primary" target="_blank">
+                                            <i class="bi bi-download me-1"></i> Скачать
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Критерии оценивания -->
+            {% if material.evaluation_criteria %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Критерии оценивания</h5>
+                </div>
+                <div class="card-body">
+                    <div class="evaluation-criteria">
+                        {{ material.evaluation_criteria|safe }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Вопросы к материалу -->
+            {% if questions %}
+            <div class="card mb-4">
+                <div class="card-header bg-info bg-opacity-10">
+                    <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Вопросы к материалу</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">Ответьте на следующие вопросы после изучения материала:</p>
+                    
+                    <form id="questionsForm">
+                        {% for question in questions %}
+                        <div class="mb-4">
+                            <label for="answer{{ loop.index }}" class="form-label fw-bold">{{ loop.index }}. {{ question.question_text }}</label>
+                            <textarea class="form-control" id="answer{{ loop.index }}" rows="3" placeholder="Введите ваш ответ здесь..."></textarea>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" disabled>
+                                <i class="bi bi-send me-1"></i> Отправить ответы
+                            </button>
+                            <div class="form-text text-center mt-2">
+                                В режиме предпросмотра отправка ответов недоступна
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Словарь -->
+            {% if glossary_items %}
+            <div class="card mb-4">
+                <div class="card-header bg-success bg-opacity-10">
+                    <h5 class="mb-0"><i class="bi bi-book me-2"></i>Словарь</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">Изучите следующие слова и их переводы:</p>
+                    
+                    <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+                        {% for item in glossary_items %}
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.word }}</h5>
+                                    <p class="card-text mb-1"><strong>Русский:</strong> {{ item.definition_ru }}</p>
+                                    <p class="card-text"><strong>Узбекский:</strong> {{ item.definition_uz }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-success" disabled>
+                            <i class="bi bi-play-circle me-1"></i> Начать упражнение
+                        </button>
+                        <div class="form-text text-center mt-2">
+                            В режиме предпросмотра упражнения недоступны
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Кнопки навигации -->
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" disabled>
+                    <i class="bi bi-arrow-left me-1"></i> Предыдущий материал
+                </button>
+                <button type="button" class="btn btn-outline-primary" disabled>
+                    Следующий материал <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Информация об уроке -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Об уроке</h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ material.lesson.title }}</h6>
+                    <p class="text-muted">{{ material.lesson.description }}</p>
+                    
+                    <hr>
+                    
+                    <h6>Материалы урока:</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="fw-bold">{{ material.title }}</span>
+                            <span class="badge bg-primary rounded-pill">Текущий</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Пример материала 1</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Пример материала 2</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Прогресс -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Ваш прогресс</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Прогресс по уроку</label>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100">33%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Прогресс по курсу</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 15%;" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">15%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-secondary">
+                        <i class="bi bi-info-circle me-2"></i> Это демонстрационные данные для предпросмотра
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Примечания -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Заметки</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <textarea class="form-control" rows="4" placeholder="Здесь вы можете делать заметки..." disabled></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-outline-primary" disabled>
+                            <i class="bi bi-save me-1"></i> Сохранить заметки
+                        </button>
+                        <div class="form-text text-center mt-2">
+                            В режиме предпросмотра сохранение заметок недоступно
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Подключаем PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script>
+    // Устанавливаем путь к рабочим файлам PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Предупреждение при попытке взаимодействия с элементами
+        const buttons = document.querySelectorAll('button:not([data-bs-toggle]):not(#prevPage):not(#nextPage):not(#zoomIn):not(#zoomOut)');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.disabled) {
+                    alert('Это режим предпросмотра. Функциональность недоступна.');
+                }
+            });
+        });
+        
+        // Подсветка текущего материала в списке
+        const listItems = document.querySelectorAll('.list-group-item');
+        listItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Это режим предпросмотра. Навигация недоступна.');
+            });
+        });
+
+        // Код для работы с PDF-файлами
+        const pdfContainer = document.getElementById('pdfContainer');
+        const pdfCanvas = document.getElementById('pdfCanvas');
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
+        const pageNumSpan = document.getElementById('pageNum');
+        const pageCountSpan = document.getElementById('pageCount');
+        const zoomInButton = document.getElementById('zoomIn');
+        const zoomOutButton = document.getElementById('zoomOut');
+        const pdfSource = document.getElementById('pdfSource');
+
+        // Если нет элементов PDF-вьюера, выходим
+        if (!pdfContainer || !pdfCanvas) return;
+
+        let pdfDoc = null;
+        let pageNum = 1;
+        let pageRendering = false;
+        let pageNumPending = null;
+        let scale = 1.0;
+        const ctx = pdfCanvas.getContext('2d');
+
+        // Получаем URL PDF-файла
+        const pdfUrl = pdfSource ? pdfSource.src : null;
+        if (!pdfUrl) return;
+
+        /**
+         * Отображаем страницу PDF
+         */
+        function renderPage(num) {
+            pageRendering = true;
+            
+            // Получаем страницу
+            pdfDoc.getPage(num).then(function(page) {
+                // Устанавливаем масштаб для отображения
+                const viewport = page.getViewport({ scale: scale });
+                pdfCanvas.height = viewport.height;
+                pdfCanvas.width = viewport.width;
+
+                // Рендерим PDF на канвасе
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+
+                const renderTask = page.render(renderContext);
+
+                // После завершения рендеринга
+                renderTask.promise.then(function() {
+                    pageRendering = false;
+                    if (pageNumPending !== null) {
+                        // Если есть ожидающая страница, отображаем ее
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+                });
+            });
+
+            // Обновляем номер текущей страницы
+            pageNumSpan.textContent = num;
+        }
+
+        /**
+         * Если идет рендеринг, ставим страницу в очередь, иначе отображаем сразу
+         */
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        /**
+         * Предыдущая страница
+         */
+        function onPrevPage() {
+            if (pageNum <= 1) {
+                return;
+            }
+            pageNum--;
+            queueRenderPage(pageNum);
+        }
+
+        /**
+         * Следующая страница
+         */
+        function onNextPage() {
+            if (pageNum >= pdfDoc.numPages) {
+                return;
+            }
+            pageNum++;
+            queueRenderPage(pageNum);
+        }
+
+        /**
+         * Увеличить масштаб
+         */
+        function onZoomIn() {
+            scale += 0.2;
+            queueRenderPage(pageNum);
+        }
+
+        /**
+         * Уменьшить масштаб
+         */
+        function onZoomOut() {
+            if (scale <= 0.4) return;
+            scale -= 0.2;
+            queueRenderPage(pageNum);
+        }
+
+        // Добавляем обработчики событий
+        if (prevPageButton) prevPageButton.addEventListener('click', onPrevPage);
+        if (nextPageButton) nextPageButton.addEventListener('click', onNextPage);
+        if (zoomInButton) zoomInButton.addEventListener('click', onZoomIn);
+        if (zoomOutButton) zoomOutButton.addEventListener('click', onZoomOut);
+
+        // Загружаем PDF
+        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+            pdfDoc = pdf;
+            pageCountSpan.textContent = pdf.numPages;
+
+            // Отображаем первую страницу
+            renderPage(pageNum);
+        }).catch(function(error) {
+            console.error('Error loading PDF:', error);
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'alert alert-danger';
+            errorMessage.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i> Ошибка загрузки PDF: ' + error.message;
+            pdfContainer.innerHTML = '';
+            pdfContainer.appendChild(errorMessage);
+        });
+    });
+</script>
+{% endblock %}

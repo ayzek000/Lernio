@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0"><i class="bi bi-people-fill me-2"></i>Foydalanuvchilarni boshqarish</h1>
+                    <p class="text-muted">Tizimdagi barcha foydalanuvchilarni ko'rish va boshqarish</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Foydalanuvchi qo'shish
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtrlar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card admin-card">
+                <div class="card-body">
+                    <form class="row g-3">
+                        <div class="col-md-4">
+                            <label for="roleFilter" class="form-label">Rol</label>
+                            <select id="roleFilter" class="form-select">
+                                <option value="">Barcha rollar</option>
+                                <option value="admin">Administratorlar</option>
+                                <option value="teacher">O'qituvchilar</option>
+                                <option value="student">Talabalar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchFilter" class="form-label">Qidirish</label>
+                            <input type="text" class="form-control" id="searchFilter" placeholder="Foydalanuvchi nomi yoki to'liq ism">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary me-2" id="applyFilters">Qo'llash</button>
+                            <button type="button" class="btn btn-outline-secondary" id="resetFilters">Qayta o'rnatish</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Foydalanuvchilar jadvali -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card admin-card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Foydalanuvchi nomi</th>
+                                    <th>To'liq ism</th>
+                                    <th>Rol</th>
+                                    <th>Ro'yxatdan o'tish sanasi</th>
+                                    <th>Oxirgi kirish</th>
+                                    <th>Harakatlar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.full_name or '-' }}</td>
+                                    <td>
+                                        {% if user.role == 'admin' %}
+                                            <span class="badge bg-danger">Administrator</span>
+                                        {% elif user.role == 'teacher' %}
+                                            <span class="badge bg-primary">O'qituvchi</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Talaba</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.registration_date.strftime('%d.%m.%Y') }}</td>
+                                    <td>{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else 'Hech qachon' }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('admin.user_details', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal" 
+                                                    data-user-id="{{ user.id }}" data-username="{{ user.username }}" 
+                                                    data-fullname="{{ user.full_name or '' }}" data-role="{{ user.role }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            {% if user.id != current_user.id %}
+                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal" 
+                                                    data-user-id="{{ user.id }}" data-username="{{ user.username }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Foydalanuvchilar yo'q</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Foydalanuvchi qo'shish modal oynasi -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">Foydalanuvchi qo'shish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Foydalanuvchi nomi</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">To'liq ism</label>
+                        <input type="text" class="form-control" id="fullName" name="fullName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Parol</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Parolni tasdiqlash</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Rol</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="student">Talaba</option>
+                            <option value="teacher">O'qituvchi</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" id="saveNewUser">Saqlash</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Foydalanuvchini tahrirlash modal oynasi -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Foydalanuvchini tahrirlash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId" name="userId">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">Foydalanuvchi nomi</label>
+                        <input type="text" class="form-control" id="editUsername" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editFullName" class="form-label">To'liq ism</label>
+                        <input type="text" class="form-control" id="editFullName" name="fullName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword" class="form-label">Yangi parol (o'zgartirmaslik uchun bo'sh qoldiring)</label>
+                        <input type="password" class="form-control" id="editPassword" name="password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label">Rol</label>
+                        <select class="form-select" id="editRole" name="role" required>
+                            <option value="student">Talaba</option>
+                            <option value="teacher">O'qituvchi</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" id="updateUser">O'zgarishlarni saqlash</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Foydalanuvchini o'chirish modal oynasi -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Foydalanuvchini o'chirish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Siz <strong id="deleteUserName"></strong> foydalanuvchisini o'chirishni xohlaysizmi?</p>
+                <p class="text-danger">Bu amalni bekor qilib bo'lmaydi. Foydalanuvchining barcha ma'lumotlari o'chiriladi.</p>
+                <input type="hidden" id="deleteUserId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">O'chirish</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal oynalar uchun ishlov beruvchilar
+        const editUserModal = document.getElementById('editUserModal');
+        if (editUserModal) {
+            editUserModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const username = button.getAttribute('data-username');
+                const fullname = button.getAttribute('data-fullname');
+                const role = button.getAttribute('data-role');
+                
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUsername').value = username;
+                document.getElementById('editFullName').value = fullname;
+                document.getElementById('editRole').value = role;
+            });
+        }
+        
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            deleteUserModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const username = button.getAttribute('data-username');
+                
+                document.getElementById('deleteUserId').value = userId;
+                document.getElementById('deleteUserName').textContent = username;
+            });
+        }
+        
+        // Фильтрация пользователей
+        const applyFilters = document.getElementById('applyFilters');
+        if (applyFilters) {
+            applyFilters.addEventListener('click', function() {
+                const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
+                const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+                
+                const rows = document.querySelectorAll('#usersTable tbody tr');
+                rows.forEach(row => {
+                    const username = row.cells[1].textContent.toLowerCase();
+                    const fullname = row.cells[2].textContent.toLowerCase();
+                    const role = row.cells[3].textContent.toLowerCase();
+                    
+                    const matchesRole = !roleFilter || role.includes(roleFilter);
+                    const matchesSearch = !searchFilter || username.includes(searchFilter) || fullname.includes(searchFilter);
+                    
+                    row.style.display = matchesRole && matchesSearch ? '' : 'none';
+                });
+            });
+        }
+        
+        const resetFilters = document.getElementById('resetFilters');
+        if (resetFilters) {
+            resetFilters.addEventListener('click', function() {
+                document.getElementById('roleFilter').value = '';
+                document.getElementById('searchFilter').value = '';
+                
+                const rows = document.querySelectorAll('#usersTable tbody tr');
+                rows.forEach(row => {
+                    row.style.display = '';
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

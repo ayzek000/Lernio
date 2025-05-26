@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0">
+                        <i class="bi bi-book me-2"></i>{{ course.title }}
+                    </h1>
+                    <p class="text-muted">Kurs mazmunini boshqarish</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-arrow-left me-1"></i> Kurslar ro'yxatiga
+                    </a>
+                    <a href="{{ url_for('admin.edit_course', course_id=course.id) }}" class="btn btn-primary me-2">
+                        <i class="bi bi-pencil me-1"></i> Kursni tahrirlash
+                    </a>
+                    <a href="{{ url_for('admin.new_lesson', course_id=course.id) }}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-1"></i> Добавить урок
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Kurs haqida ma'lumot</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <strong>Kurs ID:</strong>
+                                <p>{{ course.id }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Holat:</strong>
+                                <p>
+                                    {% if course.is_published %}
+                                    <span class="badge bg-success">Опубликован</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Черновик</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Tavsiya etilgan:</strong>
+                                <p>
+                                    {% if course.is_featured %}
+                                    <span class="badge bg-primary">Ha</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Yo'q</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <strong>Tavsif:</strong>
+                                <p>{{ course.description or 'Tavsif mavjud emas' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Darslar soni:</strong>
+                                <p>{{ lessons|length }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <a href="{{ url_for('admin.preview_course', course_id=course.id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                    <i class="bi bi-eye me-1"></i> Talabalar uchun ko'rib chiqish
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Harakatlar</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin.edit_course', course_id=course.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i> Ma'lumotlarni tahrirlash
+                        </a>
+                        <a href="{{ url_for('admin.new_lesson', course_id=course.id) }}" class="btn btn-outline-success">
+                            <i class="bi bi-plus-circle me-1"></i> Dars qo'shish
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#reorderLessonsModal">
+                            <i class="bi bi-arrow-down-up me-1"></i> Darslar tartibini o'zgartirish
+                        </button>
+                        <form action="{{ url_for('admin.delete_course', course_id=course.id) }}" method="post" class="delete-form">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-trash me-1"></i> Kursni o'chirish
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Darslar ro'yxati -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card admin-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Kurs darslari</h5>
+                    <a href="{{ url_for('admin.new_lesson', course_id=course.id) }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Добавить урок
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if lessons %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="40%">Dars nomi</th>
+                                    <th width="15%">Materiallar</th>
+                                    <th width="15%">Holat</th>
+                                    <th width="25%">Harakatlar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lesson in lessons %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.lesson_details', lesson_id=lesson.id) }}">{{ lesson.title }}</a>
+                                        {% if lesson.description %}
+                                        <p class="small text-muted mb-0">{{ lesson.description|truncate(50) }}</p>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ lesson.materials.count() }} materiallar</span>
+                                    </td>
+                                    <td>
+                                        {% if lesson.is_published %}
+                                        <span class="badge bg-success">E'lon qilingan</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Qoralama</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('admin.lesson_details', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.preview_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-info" target="_blank">
+                                                <i class="bi bi-display"></i>
+                                            </a>
+                                            <form action="{{ url_for('admin.delete_lesson', lesson_id=lesson.id) }}" method="post" class="d-inline delete-lesson-form">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i> Bu kursda hali darslar yo'q. 
+                        <a href="{{ url_for('admin.new_lesson', course_id=course.id) }}" class="alert-link">Birinchi darsni qo'shish</a>.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Darslar tartibini o'zgartirish uchun modal oyna -->
+<div class="modal fade" id="reorderLessonsModal" tabindex="-1" aria-labelledby="reorderLessonsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reorderLessonsModalLabel">Darslar tartibini o'zgartirish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if lessons %}
+                <p>Tartibini o'zgartirish uchun darslarni sudrab o'ting:</p>
+                <div class="list-group sortable-lessons" id="sortableLessons">
+                    {% for lesson in lessons %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ lesson.id }}">
+                        <div>
+                            <i class="bi bi-grip-vertical me-2 text-muted"></i>
+                            <span>{{ lesson.title }}</span>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ loop.index }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i> Bu kursda hali darslar yo'q.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" id="saveOrder" {% if not lessons %}disabled{% endif %}>Tartibni saqlash</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Kursni o'chirishni tasdiqlash
+        const deleteForm = document.querySelector('.delete-form');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (confirm('Siz ushbu kursni o\'chirishni xohlaysizmi? Bu amalni bekor qilib bo\'lmaydi.')) {
+                    this.submit();
+                }
+            });
+        }
+        
+        // Darsni o'chirishni tasdiqlash
+        const deleteLessonForms = document.querySelectorAll('.delete-lesson-form');
+        deleteLessonForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (confirm('Siz ushbu darsni o\'chirishni xohlaysizmi? Bu amalni bekor qilib bo\'lmaydi.')) {
+                    this.submit();
+                }
+            });
+        });
+        
+        // Darslarni saralash
+        const sortableList = document.getElementById('sortableLessons');
+        if (sortableList) {
+            new Sortable(sortableList, {
+                animation: 150,
+                ghostClass: 'bg-light'
+            });
+            
+            // Yangi tartibni saqlash
+            document.getElementById('saveOrder').addEventListener('click', function() {
+                const items = sortableList.querySelectorAll('.list-group-item');
+                const order = Array.from(items).map((item, index) => {
+                    return {
+                        id: item.dataset.id,
+                        position: index + 1
+                    };
+                });
+                
+                // Ma'lumotlarni serverga yuborish
+                fetch('{{ url_for("admin.reorder_lessons", course_id=course.id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ lessons: order })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Darslar tartibi muvaffaqiyatli yangilandi');
+                        location.reload();
+                    } else {
+                        alert('Darslar tartibini yangilashda xatolik yuz berdi');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Darslar tartibini yangilashda xatolik yuz berdi');
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

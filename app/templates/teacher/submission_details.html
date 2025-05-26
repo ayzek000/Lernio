@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.dashboard') }}">Панель управления</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-card-checklist me-2"></i>{{ title }}</h1>
+        <a href="{{ url_for('teacher.view_student_progress', student_id=student.id) }}" class="btn btn-outline-primary">
+            <i class="bi bi-person-badge"></i> Профиль студента
+        </a>
+    </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Информация о тесте</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Студент:</strong> {{ student.full_name or student.username }}</p>
+                    <p><strong>Тест:</strong> {{ test.title }}</p>
+                    {% if test.lesson %}
+                        <p><strong>Урок:</strong> {{ test.lesson.title }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Дата сдачи:</strong> {{ submission.submitted_at.strftime('%d.%m.%Y %H:%M') if submission.submitted_at else 'Неизвестно' }}</p>
+                    <p><strong>Статус:</strong> {% if submission.is_graded %}<span class="text-success">Оценено</span>{% else %}<span class="text-muted">Ожидает оценки</span>{% endif %}</p>
+                    <p><strong>Результат:</strong>
+                        {% if submission.is_graded %}
+                            {% set score_color = 'success' if score_percent >= 85 else ('primary' if score_percent >= 65 else ('warning' if score_percent >= 45 else 'danger')) %}
+                            <span class="badge bg-{{ score_color }} fs-6">{{ "%.1f"|format(score_10) }}/10 ({{ "%.0f"|format(score_percent) }}%)</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Не оценено</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Результаты по вопросам</h5>
+            <span class="badge bg-primary">Правильно: {{ correct_count }} из {{ total_count }}</span>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                {% for qa in questions %}
+                    <div class="list-group-item list-group-item-action flex-column align-items-start p-3 {% if qa.is_correct %}border-success{% else %}border-danger{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-2">
+                            <h5 class="mb-1">Вопрос {{ loop.index }}</h5>
+                            {% if qa.is_correct %}
+                                <span class="badge bg-success"><i class="bi bi-check-lg"></i> Правильно</span>
+                            {% else %}
+                                <span class="badge bg-danger"><i class="bi bi-x-lg"></i> Неправильно</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="mb-2"><strong>{{ qa.question.text }}</strong></p>
+                        
+                        {% if qa.question.type == 'single_choice' %}
+                            <p class="mb-1"><strong>Тип вопроса:</strong> Один правильный ответ</p>
+                            <div class="mb-2">
+                                <strong>Варианты ответов:</strong>
+                                <ul class="list-group mt-2">
+                                    {% for option_key, option_value in qa.options.items() %}
+                                        <li class="list-group-item {% if option_key == qa.correct_answer[0] %}list-group-item-success{% endif %} {% if qa.student_answer == option_key and qa.student_answer != qa.correct_answer[0] %}list-group-item-danger{% endif %}">
+                                            {{ option_value }}
+                                            {% if option_key == qa.correct_answer[0] %}
+                                                <span class="badge bg-success float-end"><i class="bi bi-check-circle"></i> Правильный ответ</span>
+                                            {% endif %}
+                                            {% if qa.student_answer == option_key and qa.student_answer != qa.correct_answer[0] %}
+                                                <span class="badge bg-danger float-end"><i class="bi bi-x-circle"></i> Ответ студента</span>
+                                            {% elif qa.student_answer == option_key %}
+                                                <span class="badge bg-success float-end"><i class="bi bi-check-circle"></i> Ответ студента</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% elif qa.question.type == 'multiple_choice' %}
+                            <p class="mb-1"><strong>Тип вопроса:</strong> Несколько правильных ответов</p>
+                            <div class="mb-2">
+                                <strong>Варианты ответов:</strong>
+                                <ul class="list-group mt-2">
+                                    {% for option_key, option_value in qa.options.items() %}
+                                        <li class="list-group-item 
+                                            {% if option_key in qa.correct_answer %}list-group-item-success{% endif %} 
+                                            {% if qa.student_answer and option_key in qa.student_answer and option_key not in qa.correct_answer %}list-group-item-danger{% endif %}">
+                                            {{ option_value }}
+                                            {% if option_key in qa.correct_answer %}
+                                                <span class="badge bg-success float-end"><i class="bi bi-check-circle"></i> Правильный ответ</span>
+                                            {% endif %}
+                                            {% if qa.student_answer and option_key in qa.student_answer and option_key not in qa.correct_answer %}
+                                                <span class="badge bg-danger float-end"><i class="bi bi-x-circle"></i> Ответ студента</span>
+                                            {% elif qa.student_answer and option_key in qa.student_answer %}
+                                                <span class="badge bg-success float-end"><i class="bi bi-check-circle"></i> Ответ студента</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% elif qa.question.type == 'text_input' %}
+                            <p class="mb-1"><strong>Тип вопроса:</strong> Ввод текста</p>
+                            <div class="mb-2">
+                                <p><strong>Правильный ответ:</strong> {{ qa.correct_answer[0] }}</p>
+                                <p><strong>Ответ студента:</strong> 
+                                    {% if qa.student_answer %}
+                                        <span class="{% if qa.is_correct %}text-success{% else %}text-danger{% endif %}">{{ qa.student_answer }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Нет ответа</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
