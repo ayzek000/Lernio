@@ -1,22 +1,4 @@
-2025-05-19 20:51:27,295 ERROR: Exception on /favicon.ico [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
-Traceback (most recent call last):
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 891, in dispatch_request
-    self.raise_routing_exception(req)
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 500, in raise_routing_exception
-    raise request.routing_exception  # type: ignore[misc]
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\ctx.py", line 362, in match_request
-    result = self.url_adapter.match(return_rule=True)  # type: ignore
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 629, in match
-    raise NotFound() from None
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-During handling of the above exception, another exception occurred:
-
+2025-05-26 22:45:42,081 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:188]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -24,15 +6,21 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
     rv = self.handle_user_exception(e)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 802, in handle_user_exception
-    return self.handle_http_exception(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 777, in handle_http_exception
-    return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py", line 96, in page_not_found
-    return render_template('errors/404.html'), 404
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 40, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 101, in dashboard
+    return render_template('teacher/dashboard.html', title='Панель преподавателя',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
     return _render(app, template, context)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -43,34 +31,26 @@ Traceback (most recent call last):
     self.environment.handle_exception()
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
     raise rewrite_traceback_stack(source=source)
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\errors\404.html", line 1, in top-level template code
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\teacher\dashboard.html", line 1, in top-level template code
     {% extends "base.html" %}
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 35, in top-level template code
-    <a class="nav-link {% if request.endpoint.startswith('main.list_lessons') or request.endpoint.startswith('main.lesson_detail') %}active{% endif %}" href="{{ url_for('main.list_lessons') }}">
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 57, in top-level template code
+    <li><a class="dropdown-item {% if request.endpoint == 'main.list_student_works' %}active{% endif %}" href="{{ url_for('main.list_student_works') }}"><i class="bi bi-file-earmark-text me-2"></i>Talabalar ishlari</a></li>
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\utils.py", line 92, in from_obj
-    if hasattr(obj, "jinja_pass_arg"):
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-jinja2.exceptions.UndefinedError: 'None' has no attribute 'startswith'
-2025-05-19 20:51:27,323 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:102]
-Traceback (most recent call last):
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 891, in dispatch_request
-    self.raise_routing_exception(req)
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 500, in raise_routing_exception
-    raise request.routing_exception  # type: ignore[misc]
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\ctx.py", line 362, in match_request
-    result = self.url_adapter.match(return_rule=True)  # type: ignore
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 629, in match
-    raise NotFound() from None
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-During handling of the above exception, another exception occurred:
-
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.list_student_works'. Did you mean 'admin.student_report' instead?
+2025-05-26 22:45:46,215 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:45:46,216 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
+2025-05-26 22:45:46,231 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:45:46,232 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
+2025-05-26 22:45:46,246 INFO: [2025-05-26 22:45:46] User 1: view_teacher_dashboard [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
+2025-05-26 22:45:46,249 ERROR: Exception on /teacher/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -78,15 +58,21 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
     rv = self.handle_user_exception(e)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 802, in handle_user_exception
-    return self.handle_http_exception(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 777, in handle_http_exception
-    return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py", line 96, in page_not_found
-    return render_template('errors/404.html'), 404
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 40, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 101, in dashboard
+    return render_template('teacher/dashboard.html', title='Панель преподавателя',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
     return _render(app, template, context)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -97,12 +83,17 @@ Traceback (most recent call last):
     self.environment.handle_exception()
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
     raise rewrite_traceback_stack(source=source)
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\errors\404.html", line 1, in top-level template code
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\teacher\dashboard.html", line 1, in top-level template code
     {% extends "base.html" %}
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 35, in top-level template code
-    <a class="nav-link {% if request.endpoint.startswith('main.list_lessons') or request.endpoint.startswith('main.lesson_detail') %}active{% endif %}" href="{{ url_for('main.list_lessons') }}">
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 57, in top-level template code
+    <li><a class="dropdown-item {% if request.endpoint == 'main.list_student_works' %}active{% endif %}" href="{{ url_for('main.list_student_works') }}"><i class="bi bi-file-earmark-text me-2"></i>Talabalar ishlari</a></li>
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\utils.py", line 92, in from_obj
-    if hasattr(obj, "jinja_pass_arg"):
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-jinja2.exceptions.UndefinedError: 'None' has no attribute 'startswith'
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.list_student_works'. Did you mean 'admin.student_report' instead?

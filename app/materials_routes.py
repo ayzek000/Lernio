@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify, current_app, render_template, flash, redirect, url_for
 from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
-from .models import Material, db
+from .models import Material, MaterialLink, db
 from .utils.storage import upload_file, delete_file
+from .forms import MaterialForm
 import os
 import uuid
 
@@ -24,36 +25,28 @@ def list_materials():
 @login_required
 def upload_material():
     """Маршрут для загрузки нового материала."""
-    if request.method == 'POST':
-        # Проверяем, есть ли файл в запросе
-        if 'file' not in request.files:
-            flash('Файл не выбран', 'error')
-            return redirect(request.url)
-        
-        file = request.files['file']
-        
-        # Если пользователь не выбрал файл, браузер отправляет пустой файл
-        if file.filename == '':
-            flash('Файл не выбран', 'error')
-            return redirect(request.url)
-        
-        if file and allowed_file(file.filename):
-            # Безопасное имя файла
-            filename = secure_filename(file.filename)
+    form = MaterialForm()
+    
+    if form.validate_on_submit():
+        try:
+            file = form.file.data
             
-            # Формируем уникальный путь
-            unique_filename = f"{uuid.uuid4()}_{filename}"
-            
-            # Определяем бакет в зависимости от типа файла
-            file_ext = filename.rsplit('.', 1)[1].lower()
-            if file_ext in ['jpg', 'jpeg', 'png', 'gif']:
-                bucket_name = 'images'
-            elif file_ext in ['mp4', 'avi', 'mov']:
-                bucket_name = 'videos'
-            else:
-                bucket_name = 'materials'
-            
-            try:
+            if file and allowed_file(file.filename):
+                # Безопасное имя файла
+                filename = secure_filename(file.filename)
+                
+                # Формируем уникальный путь
+                unique_filename = f"{uuid.uuid4()}_{filename}"
+                
+                # Определяем бакет в зависимости от типа файла
+                file_ext = filename.rsplit('.', 1)[1].lower()
+                if file_ext in ['jpg', 'jpeg', 'png', 'gif']:
+                    bucket_name = 'images'
+                elif file_ext in ['mp4', 'avi', 'mov']:
+                    bucket_name = 'videos'
+                else:
+                    bucket_name = 'materials'
+                
                 # Гибридный подход: используем Supabase Storage для файлов
                 file_data = file.read()
                 file_url = upload_file(
@@ -66,12 +59,12 @@ def upload_material():
                 if file_url:
                     # Сохраняем информацию в SQLite
                     material = Material(
-                        title=request.form.get('title', filename),
-                        description=request.form.get('description', ''),
+                        title=form.title.data,
+                        description=form.content.data if form.content.data else '',
                         file_path=file_url,  # Сохраняем URL вместо локального пути
                         file_type=file.content_type,
                         author_id=current_user.id,
-                        lesson_id=request.form.get('lesson_id')
+                        lesson_id=request.form.get('lesson_id') if 'lesson_id' in request.form else None
                     )
                     
                     db.session.add(material)
@@ -81,13 +74,13 @@ def upload_material():
                     return redirect(url_for('materials.list_materials'))
                 else:
                     flash('Ошибка при загрузке файла в облачное хранилище', 'error')
-            except Exception as e:
-                current_app.logger.error(f"Ошибка при загрузке материала: {e}")
-                flash(f'Произошла ошибка при загрузке материала: {str(e)}', 'error')
-        else:
-            flash('Недопустимый тип файла', 'error')
+            else:
+                flash('Недопустимый тип файла', 'error')
+        except Exception as e:
+            current_app.logger.error(f"Ошибка при загрузке материала: {e}")
+            flash(f'Произошла ошибка при загрузке материала: {str(e)}', 'error')
     
-    return render_template('materials/upload.html')
+    return render_template('materials/upload.html', form=form)
 
 @materials.route('/materials/<int:material_id>/delete', methods=['POST'])
 @login_required

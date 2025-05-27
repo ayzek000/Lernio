@@ -217,7 +217,11 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">O'chirish</button>
+                <form id="deleteUserForm" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="deleteUserId" name="user_id">
+                    <button type="submit" class="btn btn-danger" id="confirmDelete">O'chirish</button>
+                </form>
             </div>
         </div>
     </div>
@@ -244,6 +248,121 @@
             });
         }
         
+        // Yangi foydalanuvchi qo'shish tugmasi uchun ishlov beruvchi qo'shamiz
+        const saveNewUserButton = document.getElementById('saveNewUser');
+        if (saveNewUserButton) {
+            saveNewUserButton.addEventListener('click', function() {
+                // Получаем данные из формы
+                const username = document.getElementById('username').value;
+                const fullName = document.getElementById('fullName').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const role = document.getElementById('role').value;
+                
+                // Parollar mos kelishini tekshiramiz
+                if (password !== confirmPassword) {
+                    alert('Parollar mos kelmaydi!');
+                    return;
+                }
+                
+                // Создаем объект с данными пользователя
+                const userData = {
+                    username: username,
+                    full_name: fullName,
+                    password: password,
+                    role: role
+                };
+                
+                // Получаем CSRF-токен
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                // Отправляем запрос на сервер
+                fetch('/admin/add_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Foydalanuvchini qo\'shishda xatolik yuz berdi');
+                })
+                .then(data => {
+                    // Закрываем модальное окно
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                    modal.hide();
+                    
+                    // Перезагружаем страницу
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+            });
+        }
+        
+        // Foydalanuvchini tahrirlash tugmasi uchun ishlov beruvchi qo'shamiz
+        const updateUserButton = document.getElementById('updateUser');
+        if (updateUserButton) {
+            updateUserButton.addEventListener('click', function() {
+                // Получаем данные из формы
+                const userId = document.getElementById('editUserId').value;
+                const username = document.getElementById('editUsername').value;
+                const fullName = document.getElementById('editFullName').value;
+                const password = document.getElementById('editPassword').value;
+                const role = document.getElementById('editRole').value;
+                
+                // Создаем объект с данными пользователя
+                const userData = {
+                    user_id: userId,
+                    username: username,
+                    full_name: fullName,
+                    role: role
+                };
+                
+                // Agar parol kiritilgan bo'lsa, uni qo'shamiz
+                if (password) {
+                    userData.password = password;
+                }
+                
+                // Получаем CSRF-токен
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                // Отправляем запрос на сервер
+                fetch('/admin/update_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Foydalanuvchini tahrirlashda xatolik yuz berdi');
+                })
+                .then(data => {
+                    // Закрываем модальное окно
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    modal.hide();
+                    
+                    // Перезагружаем страницу
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+            });
+        }
+        
         const deleteUserModal = document.getElementById('deleteUserModal');
         if (deleteUserModal) {
             deleteUserModal.addEventListener('show.bs.modal', function(event) {
@@ -253,6 +372,12 @@
                 
                 document.getElementById('deleteUserId').value = userId;
                 document.getElementById('deleteUserName').textContent = username;
+                
+                // Устанавливаем action для формы удаления пользователя
+                const deleteUserForm = document.getElementById('deleteUserForm');
+                if (deleteUserForm) {
+                    deleteUserForm.action = '/admin/delete_user/' + userId;
+                }
             });
         }
         

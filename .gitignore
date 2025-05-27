@@ -15,10 +15,13 @@ venv/
 env/
 .venv/
 
-# Instance folder (contains secrets, DB)
-instance/
-*.db
-*.sqlite
+# Instance folder (contains secrets)
+# Включаем базу данных и загруженные файлы в репозиторий
+# instance/
+# *.db
+# *.sqlite
+# uploads/
+# app/static/uploads/
 *.sqlite3
 
 # Environment variables

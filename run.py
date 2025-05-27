@@ -1,3 +1,11 @@
+import os
+
+# Проверяем, включен ли режим разработки
+DEV_MODE = os.environ.get('FLASK_ENV') == 'development'
+print(f"\nРежим разработки: {'ВКЛЮЧЕН' if DEV_MODE else 'ВЫКЛЮЧЕН'}\n")
+
+# Используем локальную аутентификацию
+print("\nИспользуем локальную аутентификацию и хранение файлов...\n")
 from app import create_app, db
 from app.models import User, Lesson, Material, Test, Question, Submission, ActivityLog, TransversalAssessment
 from config import Config

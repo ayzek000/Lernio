@@ -1,12 +1,77 @@
 from flask import Blueprint, render_template, redirect, url_for, abort, request, current_app, send_from_directory, flash, g, send_file, make_response
-from werkzeug.utils import safe_join
+from werkzeug.utils import safe_join, secure_filename
 from flask_login import current_user, login_required
 from app import db
-from app.models import Lesson, Material, Test, Submission
+from app.models import Lesson, Material, Test, Submission, User, StudentWork
 from app.translations import translate
+from app.forms import UserProfileForm, UserSettingsForm, UploadWorkForm, GradeWorkForm
 import os
+import uuid
+import mimetypes
+from datetime import datetime
 
 bp = Blueprint('main', __name__)
+
+# Маршруты для профиля и настроек пользователя
+@bp.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    """Страница профиля пользователя."""
+    form = UserProfileForm()
+    
+    # Предзаполняем форму текущими данными пользователя
+    if request.method == 'GET':
+        form.full_name.data = current_user.full_name
+        form.email.data = getattr(current_user, 'email', '')
+        form.bio.data = getattr(current_user, 'bio', '')
+    
+    if form.validate_on_submit():
+        # Обновляем данные пользователя
+        current_user.full_name = form.full_name.data
+        if hasattr(current_user, 'email'):
+            current_user.email = form.email.data
+        if hasattr(current_user, 'bio'):
+            current_user.bio = form.bio.data
+        
+        # Сохраняем изменения в базе данных
+        db.session.commit()
+        flash('Profil muvaffaqiyatli yangilandi!', 'success')
+        return redirect(url_for('main.profile'))
+    
+    return render_template('profile.html', title='Profil', form=form)
+
+@bp.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    """Страница настроек пользователя."""
+    form = UserSettingsForm()
+    
+    # Предзаполняем форму текущими настройками пользователя
+    if request.method == 'GET':
+        form.language.data = getattr(current_user, 'language', 'uz')
+        form.notifications.data = getattr(current_user, 'notifications', True)
+    
+    if form.validate_on_submit():
+        # Обновляем пароль, если он был изменен
+        if form.password.data:
+            current_user.set_password(form.password.data)
+        
+        # Обновляем настройки пользователя
+        if hasattr(current_user, 'language'):
+            current_user.language = form.language.data
+        if hasattr(current_user, 'notifications'):
+            current_user.notifications = form.notifications.data
+        
+        # Сохраняем изменения в базе данных
+        db.session.commit()
+        flash('Sozlamalar muvaffaqiyatli yangilandi!', 'success')
+        return redirect(url_for('main.settings'))
+    
+    return render_template('settings.html', title='Sozlamalar', form=form)
+
+# Маршруты для работы со студенческими загрузками перенесены в student_work_routes.py
+
+# Маршрут grade_work перенесен в student_work_routes.py
 
 @bp.route('/view-pdf/<path:filename>')
 @login_required
@@ -70,13 +135,27 @@ def lesson_detail(lesson_id):
     materials = lesson.materials.order_by(Material.position.desc(), Material.type, Material.title).all()
     tests = lesson.tests.order_by(Test.title).all()
     consolidation_questions = lesson.materials.filter_by(type='consolidation_question').order_by(Material.position.desc(), Material.id).all()
+    
+    # Получаем данные о сданных тестах для текущего пользователя
+    from app.models import Submission
+    user_submissions = {}
+    if not current_user.is_teacher:
+        test_ids = [test.id for test in tests]
+        if test_ids:
+            submissions = Submission.query.filter(
+                Submission.student_id == current_user.id,
+                Submission.test_id.in_(test_ids)
+            ).all()
+            for submission in submissions:
+                user_submissions[submission.test_id] = submission
 
     return render_template('lesson_detail.html',
                            title=lesson.title,
                            lesson=lesson,
                            materials=materials,
                            tests=tests,
-                           consolidation_questions=consolidation_questions)
+                           consolidation_questions=consolidation_questions,
+                           user_submissions=user_submissions)
 
 @bp.route('/glossary')
 @login_required
@@ -85,6 +164,12 @@ def glossary():
     terms = Material.query.filter_by(type='glossary_term').order_by(Material.title).all()
     # Убрали log_activity отсюда
     return render_template('glossary.html', title='Словарь терминов', terms=terms)
+
+# --- Специальные страницы ---
+@bp.route('/coming-soon')
+def error_coming_soon():
+    """Страница 'Скоро будет доступно'."""
+    return render_template('errors/coming_soon.html')
 
 # --- Отдача загруженных файлов ---
 @bp.route('/uploads/<path:filename>')

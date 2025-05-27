@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Учебные материалы{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Учебные материалы</h1>
+            <p class="lead">Здесь вы можете найти все доступные учебные материалы</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('materials.upload_material') }}" class="btn btn-primary">
+                <i class="fas fa-upload"></i> Загрузить материал
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        {% if materials %}
+            {% for material in materials %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ material.title }}</h5>
+                            {% if material.description %}
+                                <p class="card-text">{{ material.description }}</p>
+                            {% endif %}
+                            <p class="card-text text-muted">
+                                <small>
+                                    Тип: {{ material.file_type }}
+                                    <br>
+                                    Загружен: {{ material.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                </small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ material.file_path }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download"></i> Скачать
+                            </a>
+                            
+                            {% if current_user.role == 'admin' or current_user.id == material.author_id %}
+                                <form action="{{ url_for('materials.delete_material', material_id=material.id) }}" method="post" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Вы уверены, что хотите удалить этот материал?');">
+                                        <i class="fas fa-trash"></i> Удалить
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Пока нет доступных материалов. Будьте первым, кто загрузит материал!
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

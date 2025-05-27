@@ -1,4 +1,3 @@
-from app.supabase_client import get_supabase_client, get_supabase_admin_client
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from datetime import datetime

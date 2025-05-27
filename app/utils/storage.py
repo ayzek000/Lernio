@@ -1,138 +1,146 @@
 import os
-from supabase import create_client, Client
-from flask import current_app
+from flask import current_app, url_for
 import uuid
+import shutil
+from werkzeug.utils import secure_filename
 
-def get_supabase_client():
-    """Создает и возвращает клиент Supabase для работы с хранилищем."""
-    supabase_url = os.environ.get("SUPABASE_URL")
-    supabase_key = os.environ.get("SUPABASE_ANON_KEY")
-    
-    if not supabase_url or not supabase_key:
-        current_app.logger.warning("Переменные окружения SUPABASE_URL или SUPABASE_ANON_KEY не установлены")
-        return None
-    
-    try:
-        return create_client(supabase_url, supabase_key)
-    except Exception as e:
-        current_app.logger.error(f"Ошибка при создании клиента Supabase: {e}")
-        return None
+# Определяем корневую директорию для локального хранения файлов
+def get_storage_dir():
+    """Возвращает путь к директории для хранения файлов"""
+    storage_dir = os.path.join(current_app.instance_path, 'storage')
+    if not os.path.exists(storage_dir):
+        os.makedirs(storage_dir)
+    return storage_dir
+
+def get_bucket_dir(bucket_name):
+    """Возвращает путь к директории бакета"""
+    bucket_dir = os.path.join(get_storage_dir(), bucket_name)
+    if not os.path.exists(bucket_dir):
+        os.makedirs(bucket_dir)
+    return bucket_dir
 
 def upload_file(file_data, bucket_name, file_path=None, content_type=None):
     """
-    Загружает файл в Supabase Storage.
+    Загружает файл в локальное хранилище.
     
     Args:
         file_data: Данные файла (байты)
-        bucket_name: Название бакета в Supabase Storage
+        bucket_name: Название бакета (папки)
         file_path: Путь к файлу в бакете (если не указан, генерируется UUID)
-        content_type: MIME-тип файла
+        content_type: MIME-тип файла (не используется в локальной версии)
         
     Returns:
         str: URL загруженного файла или None в случае ошибки
     """
-    supabase = get_supabase_client()
-    if not supabase:
-        current_app.logger.error("Не удалось получить клиент Supabase")
-        return None
-    
-    # Если путь не указан, генерируем уникальный
-    if not file_path:
-        unique_id = str(uuid.uuid4())
-        file_path = f"{unique_id}"
-    
     try:
-        # Загружаем файл
-        file_options = {"content-type": content_type} if content_type else None
-        response = supabase.storage.from_(bucket_name).upload(
-            path=file_path,
-            file=file_data,
-            file_options=file_options
-        )
+        # Получаем путь к директории бакета
+        bucket_dir = get_bucket_dir(bucket_name)
         
-        # Получаем публичный URL
-        file_url = supabase.storage.from_(bucket_name).get_public_url(file_path)
+        # Если путь не указан, генерируем уникальный
+        if not file_path:
+            unique_id = str(uuid.uuid4())
+            file_path = f"{unique_id}"
+        
+        # Обеспечиваем безопасность имени файла
+        file_path = secure_filename(file_path)
+        full_path = os.path.join(bucket_dir, file_path)
+        
+        # Создаем папки, если необходимо
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        
+        # Записываем файл
+        with open(full_path, 'wb') as f:
+            f.write(file_data)
+        
+        # Формируем URL для доступа к файлу
+        file_url = f"/static/storage/{bucket_name}/{file_path}"
         current_app.logger.info(f"Файл успешно загружен: {file_url}")
         return file_url
     except Exception as e:
-        current_app.logger.error(f"Ошибка загрузки файла в Supabase Storage: {e}")
+        current_app.logger.error(f"Ошибка загрузки файла: {e}")
         return None
 
 def delete_file(bucket_name, file_path):
     """
-    Удаляет файл из Supabase Storage.
+    Удаляет файл из локального хранилища.
     
     Args:
-        bucket_name: Название бакета
+        bucket_name: Название бакета (папки)
         file_path: Путь к файлу в бакете
         
     Returns:
         bool: True если удаление успешно, иначе False
     """
-    supabase = get_supabase_client()
-    if not supabase:
-        return False
-    
     try:
-        supabase.storage.from_(bucket_name).remove([file_path])
-        current_app.logger.info(f"Файл успешно удален: {file_path}")
-        return True
+        bucket_dir = get_bucket_dir(bucket_name)
+        full_path = os.path.join(bucket_dir, secure_filename(file_path))
+        
+        if os.path.exists(full_path):
+            os.remove(full_path)
+            current_app.logger.info(f"Файл успешно удален: {bucket_name}/{file_path}")
+            return True
+        else:
+            current_app.logger.warning(f"Файл не найден: {bucket_name}/{file_path}")
+            return False
     except Exception as e:
-        current_app.logger.error(f"Ошибка удаления файла из Supabase Storage: {e}")
+        current_app.logger.error(f"Ошибка удаления файла: {e}")
         return False
 
 def get_file_url(bucket_name, file_path):
     """
-    Получает публичный URL файла.
+    Получает URL файла из локального хранилища.
     
     Args:
-        bucket_name: Название бакета
+        bucket_name: Название бакета (папки)
         file_path: Путь к файлу в бакете
         
     Returns:
-        str: Публичный URL файла
+        str: URL файла или None в случае ошибки
     """
-    supabase = get_supabase_client()
-    if not supabase:
-        return None
-    
     try:
-        return supabase.storage.from_(bucket_name).get_public_url(file_path)
+        bucket_dir = get_bucket_dir(bucket_name)
+        full_path = os.path.join(bucket_dir, secure_filename(file_path))
+        
+        if os.path.exists(full_path):
+            # Формируем URL для доступа к файлу
+            return f"/static/storage/{bucket_name}/{file_path}"
+        else:
+            current_app.logger.warning(f"Файл не найден: {bucket_name}/{file_path}")
+            return None
     except Exception as e:
         current_app.logger.error(f"Ошибка получения URL файла: {e}")
         return None
 
 def init_storage():
     """
-    Инициализирует хранилище, создавая необходимые бакеты.
+    Инициализирует хранилище, создавая необходимые папки для бакетов.
     Вызывается при запуске приложения.
     """
-    supabase = get_supabase_client()
-    if not supabase:
-        current_app.logger.warning("Не удалось инициализировать хранилище: нет соединения с Supabase")
-        return False
-    
-    buckets = ["materials", "images", "videos", "avatars", "attachments"]
-    success = True
-    
     try:
-        # Получаем список существующих бакетов
-        existing_buckets = supabase.storage.list_buckets()
-        existing_bucket_names = [bucket['name'] for bucket in existing_buckets]
+        # Создаем корневую директорию хранилища
+        storage_dir = get_storage_dir()
+        current_app.logger.info(f"Создана директория хранилища: {storage_dir}")
         
-        for bucket_name in buckets:
-            if bucket_name not in existing_bucket_names:
-                try:
-                    # Создаем бакет, если он не существует
-                    supabase.storage.create_bucket(bucket_name, {'public': True})
-                    current_app.logger.info(f"Создан бакет: {bucket_name}")
-                except Exception as e:
-                    current_app.logger.error(f"Ошибка создания бакета {bucket_name}: {e}")
-                    success = False
-            else:
-                current_app.logger.info(f"Бакет {bucket_name} уже существует")
+        # Создаем директории для бакетов
+        buckets = ['materials', 'images', 'videos', 'avatars', 'attachments']
         
-        return success
+        for bucket in buckets:
+            bucket_dir = get_bucket_dir(bucket)
+            current_app.logger.info(f"Создан бакет: {bucket} в {bucket_dir}")
+        
+        # Создаем символическую ссылку из static/storage на наше хранилище
+        static_dir = os.path.join(current_app.static_folder, 'storage')
+        if not os.path.exists(static_dir):
+            try:
+                # Пытаемся создать символическую ссылку (symlink)
+                os.symlink(storage_dir, static_dir)
+                current_app.logger.info(f"Создана символическая ссылка: {static_dir} -> {storage_dir}")
+            except OSError:
+                # Если не удалось создать символическую ссылку, просто создаем директорию
+                os.makedirs(static_dir, exist_ok=True)
+                current_app.logger.info(f"Создана директория: {static_dir}")
+        
+        return True
     except Exception as e:
-        current_app.logger.error(f"Ошибка инициализации хранилища: {e}")
+        current_app.logger.error(f"Ошибка при инициализации хранилища: {e}")
         return False

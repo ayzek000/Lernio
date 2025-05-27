@@ -7,8 +7,16 @@ if path not in sys.path:
     sys.path.append(path)
 
 # Импортируем приложение
-from run import app as application
+from run import app
 
-# PythonAnywhere будет искать переменную application
+# Для Vercel
+app.config.update(
+    SERVER_NAME=None
+)
+
+# Для WSGI серверов (PythonAnywhere, Vercel)
+application = app
+
+# Для локального запуска
 if __name__ == '__main__':
-    application.run()
+    app.run()

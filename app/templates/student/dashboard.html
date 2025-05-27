@@ -3,19 +3,19 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Добро пожаловать, {{ current_user.full_name or current_user.username }}!</h1>
+    <h1 class="mb-4">Xush kelibsiz, {{ current_user.full_name or current_user.username }}!</h1>
     <hr>
 
-    <div class="row g-4">
-        {# Блок с доступными тестами #}
+    <div class="row g-4 mb-4">
+        {# Mavjud testlar bloki #}
         <div class="col-lg-8">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="my-0"><i class="bi bi-card-checklist me-2"></i>Доступные тесты</h4>
+                    <h4 class="my-0"><i class="bi bi-card-checklist me-2"></i>Mavjud testlar</h4>
                 </div>
                 <div class="card-body">
                     {% if available_tests %}
-                        <div class="list-group list-group-flush"> {# flush убирает границы внутри карточки #}
+                        <div class="list-group list-group-flush"> {# flush kartochka ichidagi chegaralarni olib tashlaydi #}
                         {% for test in available_tests %}
                              <a href="{{ url_for('student.take_test', test_id=test.id) }}"
                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
@@ -23,50 +23,50 @@
                                     <i class="bi bi-pencil-square me-2"></i> {{ test.title }}
                                     {% if test.lesson %}<small class="text-muted ms-2">({{ test.lesson.title }})</small>{% endif %}
                                 </span>
-                                <span class="badge bg-primary rounded-pill">Пройти <i class="bi bi-arrow-right-short"></i></span>
+                                <span class="badge bg-primary rounded-pill">Topshirish <i class="bi bi-arrow-right-short"></i></span>
                             </a>
                         {% endfor %}
                         </div>
                     {% else %}
-                         <div class="alert alert-success mb-0"> {# mb-0 убирает нижний отступ #}
-                            <i class="bi bi-check-circle-fill me-2"></i>Поздравляем! У вас нет новых тестов для прохождения.
+                         <div class="alert alert-success mb-0"> {# mb-0 pastki bo'shliqni olib tashlaydi #}
+                            <i class="bi bi-check-circle-fill me-2"></i>Tabriklaymiz! Sizda topshirish uchun yangi testlar yo'q.
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        {# Блок с быстрыми ссылками и недавними оценками #}
+        {# Tezkor havolalar va so'nggi baholar bloki #}
         <div class="col-lg-4">
-             {# Быстрый доступ #}
+             {# Tezkor kirish #}
              <div class="card shadow-sm mb-4">
                  <div class="card-header">
-                      <h5 class="my-0"><i class="bi bi-collection-play-fill me-2"></i>Быстрый доступ</h5>
+                       <h5 class="my-0"><i class="bi bi-collection-play-fill me-2"></i>Tezkor kirish</h5>
                  </div>
                  <div class="card-body text-center">
-                     <a href="{{ url_for('main.list_lessons') }}" class="btn btn-outline-primary mb-2 w-100"><i class="bi bi-book me-1"></i> Перейти к урокам</a>
-                     <a href="{{ url_for('student.my_results') }}" class="btn btn-outline-secondary w-100"><i class="bi bi-award me-1"></i> Мои результаты</a>
+                      <a href="{{ url_for('main.list_lessons') }}" class="btn btn-outline-primary mb-2 w-100"><i class="bi bi-book me-1"></i> Darslarga o'tish</a>
+                      <a href="{{ url_for('student.my_results') }}" class="btn btn-outline-secondary w-100"><i class="bi bi-award me-1"></i> Mening natijalarim</a>
                  </div>
             </div>
 
-            {# Недавние оценки компетенций #}
+            {# So'nggi kompetentsiya baholari #}
              <div class="card shadow-sm">
                  <div class="card-header">
-                      <h5 class="my-0"><i class="bi bi-person-check-fill me-2"></i>Оценки компетенций</h5>
+                       <h5 class="my-0"><i class="bi bi-person-check-fill me-2"></i>Kompetentsiya baholari</h5>
                  </div>
-                 <div class="card-body p-0"> {# p-0 убирает padding у card-body #}
+                  <div class="card-body p-0"> {# p-0 card-body padding ni olib tashlaydi #}
                      {% if recent_assessments %}
                         <ul class="list-group list-group-flush">
                              {% for assessment in recent_assessments %}
-                                <li class="list-group-item small"> {# small делает текст мельче #}
+                                <li class="list-group-item small"> {# small matnni kichikroq qiladi #}
                                     <div class="d-flex w-100 justify-content-between">
                                       <strong class="mb-1">{{ assessment.competency_name }}</strong>
                                       <small class="text-muted">{{ assessment.assessment_date.strftime('%d.%m.%y') }}</small>
                                     </div>
                                     {% set level_lower = assessment.level|lower if assessment.level else '' %}
-                                    {% if 'превосходный' in level_lower or 'высокий' in level_lower %} {% set level_color = 'success' %}
-                                    {% elif 'средний' in level_lower %} {% set level_color = 'primary' %}
-                                    {% elif 'базовый' in level_lower %} {% set level_color = 'info' %}
+                                    {% if 'a\'lo' in level_lower or 'yuqori' in level_lower %} {% set level_color = 'success' %}
+                                    {% elif 'o\'rta' in level_lower %} {% set level_color = 'primary' %}
+                                    {% elif 'asosiy' in level_lower %} {% set level_color = 'info' %}
                                     {% else %} {% set level_color = 'secondary' %}
                                     {% endif %}
                                     <span class="badge bg-{{ level_color }}">{{ assessment.level if assessment.level else '-' }}</span>
@@ -74,14 +74,74 @@
                              {% endfor %}
                         </ul>
                      {% else %}
-                        <p class="text-muted p-3 mb-0"><small>У вас пока нет оценок компетенций.</small></p>
+                        <p class="text-muted p-3 mb-0"><small>Sizda hali kompetentsiya baholari yo'q.</small></p>
                      {% endif %}
                  </div>
                  {% if recent_assessments %}
                  <div class="card-footer text-center">
-                     <a href="{{ url_for('student.my_results') }}#competencies" class="btn btn-sm btn-outline-secondary">Все оценки <i class="bi bi-arrow-right"></i></a>
+                      <a href="{{ url_for('student.my_results') }}#competencies" class="btn btn-sm btn-outline-secondary">Barcha baholar <i class="bi bi-arrow-right"></i></a>
                  </div>
                  {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Загруженные работы студента -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="my-0"><i class="bi bi-cloud-upload me-2"></i>Mening yuklangan ishlarim</h4>
+                </div>
+                <div class="card-body">
+                    {% if recent_works %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Material</th>
+                                        <th>Fayl</th>
+                                        <th>Yuklangan sana</th>
+                                        <th>Holat</th>
+                                        <th>Harakatlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for work in recent_works %}
+                                        <tr>
+                                            <td>{{ work.material.title }}</td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ work.file_type }}</span>
+                                                {{ work.original_filename }}
+                                            </td>
+                                            <td>{{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                            <td>
+                                                {% if work.is_graded %}
+                                                    {% set score_color = 'success' if work.score >= 8.5 else ('primary' if work.score >= 6.5 else ('warning' if work.score >= 4.5 else 'danger')) %}
+                                                    <span class="badge bg-{{ score_color }}">{{ "%.1f"|format(work.score) }}/10</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Baholanmagan</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('student_work.view_work', work_id=work.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="bi bi-eye"></i> Ko'rish
+                                                </a>
+                                                <a href="{{ url_for('student_work.upload_work', material_id=work.material_id) }}" class="btn btn-sm btn-outline-success">
+                                                    <i class="bi bi-pencil"></i> Yangilash
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>Siz hali hech qanday ish yuklamagansiz.
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

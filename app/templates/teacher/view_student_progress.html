@@ -3,61 +3,61 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-    {# Хлебные крошки #}
+    {# Breadcrumbs #}
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_students') }}">Управление студентами</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_students') }}">Talabalarni boshqarish</a></li>
         <li class="breadcrumb-item active" aria-current="page">{{ student.full_name or student.username }}</li>
       </ol>
     </nav>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-person-lines-fill me-2"></i>Прогресс: {{ student.full_name or student.username }}</h1>
-         {# Кнопка оценки компетенций #}
+        <h1><i class="bi bi-person-lines-fill me-2"></i>Progress: {{ student.full_name or student.username }}</h1>
+         {# Kompetentsiyalarni baholash tugmasi #}
          <a href="{{ url_for('teacher.assess_transversal', student_id=student.id) }}" class="btn btn-outline-primary">
-            <i class="bi bi-check2-circle me-1"></i> Оценить компетенции
+            <i class="bi bi-check2-circle me-1"></i> Kompetentsiyalarni baholash
         </a>
     </div>
-    <p class="text-muted">Логин: {{ student.username }} | Зарегистрирован: {{ student.registration_date.strftime('%d.%m.%Y') if student.registration_date else '-' }}</p>
+    <p class="text-muted">Login: {{ student.username }} | Ro'yxatdan o'tgan: {{ student.registration_date.strftime('%d.%m.%Y') if student.registration_date else '-' }}</p>
     <hr>
 
-    {# ТАБЫ для разных разделов #}
+    {# Turli bo'limlar uchun tablar #}
     <ul class="nav nav-tabs mb-3" id="progressTab" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="submissions-tab" data-bs-toggle="tab" data-bs-target="#submissions-panel" type="button" role="tab" aria-controls="submissions-panel" aria-selected="true">Результаты тестов</button>
+        <button class="nav-link active" id="submissions-tab" data-bs-toggle="tab" data-bs-target="#submissions-panel" type="button" role="tab" aria-controls="submissions-panel" aria-selected="true">Test natijalari</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="assessments-tab" data-bs-toggle="tab" data-bs-target="#assessments-panel" type="button" role="tab" aria-controls="assessments-panel" aria-selected="false">Оценки компетенций</button>
+        <button class="nav-link" id="assessments-tab" data-bs-toggle="tab" data-bs-target="#assessments-panel" type="button" role="tab" aria-controls="assessments-panel" aria-selected="false">Kompetentsiya baholari</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity-panel" type="button" role="tab" aria-controls="activity-panel" aria-selected="false">Активность</button>
+        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity-panel" type="button" role="tab" aria-controls="activity-panel" aria-selected="false">Faollik</button>
       </li>
     </ul>
 
     <div class="tab-content" id="progressTabContent">
-      {# Панель с результатами тестов #}
+      {# Test natijalari paneli #}
       <div class="tab-pane fade show active" id="submissions-panel" role="tabpanel" aria-labelledby="submissions-tab" tabindex="0">
-        <h4>Результаты тестов</h4>
+        <h4>Test natijalari</h4>
         {% if submissions %}
-            {% include 'results_table_partial.html' with context %} {# Включаем частичный шаблон с таблицей #}
+            {% include 'results_table_partial.html' with context %} {# Jadval bilan qisman shablonni kiritamiz #}
         {% else %}
-            <div class="alert alert-light">Студент еще не сдавал тесты.</div>
+            <div class="alert alert-light">Talaba hali testlarni topshirmagan.</div>
         {% endif %}
       </div>
 
-      {# Панель с оценками компетенций #}
+      {# Kompetentsiya baholari paneli #}
       <div class="tab-pane fade" id="assessments-panel" role="tabpanel" aria-labelledby="assessments-tab" tabindex="0">
-        <h4>Оценки компетенций</h4>
+        <h4>Kompetentsiya baholari</h4>
          {% if assessments %}
-             {% include 'assessments_list_partial.html' with context %} {# Включаем частичный шаблон #}
+             {% include 'assessments_list_partial.html' with context %} {# Qisman shablonni kiritamiz #}
          {% else %}
-             <div class="alert alert-light">Оценок компетенций пока нет.</div>
+             <div class="alert alert-light">Kompetentsiya baholari hali yo'q.</div>
          {% endif %}
       </div>
 
-      {# Панель с активностью #}
+      {# Faollik paneli #}
       <div class="tab-pane fade" id="activity-panel" role="tabpanel" aria-labelledby="activity-tab" tabindex="0">
-        <h4>Последняя активность ({{ activity|length }} записей)</h4>
+        <h4>So'nggi faollik ({{ activity|length }} ta yozuv)</h4>
         {% if activity %}
             <ul class="list-group list-group-flush activity-log-list small">
                  {% for log in activity %}
@@ -68,7 +68,7 @@
                  {% endfor %}
             </ul>
         {% else %}
-            <div class="alert alert-light">Нет записей об активности.</div>
+            <div class="alert alert-light">Faollik haqida yozuvlar yo'q.</div>
         {% endif %}
       </div>
     </div>

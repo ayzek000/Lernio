@@ -65,6 +65,20 @@
                                             <button type="submit" class="btn btn-outline-danger" title="O'chirish"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
+                                {% else %}
+                                    <div>
+                                        {% set existing_work = material.student_works.filter_by(student_id=current_user.id).first() %}
+                                        <a href="{{ url_for('student_work.upload_work', material_id=material.id) }}" class="btn btn-sm {% if existing_work %}btn-outline-success{% else %}btn-outline-primary{% endif %}">
+                                            {% if existing_work %}
+                                                <i class="bi bi-cloud-arrow-up-fill"></i> Ishni yangilash
+                                                {% if existing_work.is_graded %}
+                                                    <span class="badge bg-success ms-1">{{ existing_work.score }}/10</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <i class="bi bi-cloud-arrow-up"></i> Ishni yuklash
+                                            {% endif %}
+                                        </a>
+                                    </div>
                                 {% endif %}
                              </div>
 
@@ -237,7 +251,7 @@
             {% if tests %}
                 <div class="list-group mb-4 shadow-sm">
                     {% for test in tests %}
-                        {% set submission = current_user.submissions.filter_by(test_id=test.id).first() if not current_user.is_teacher else None %}
+                        {% set submission = user_submissions.get(test.id) if not current_user.is_teacher else None %}
                         <a href="{{ url_for('student.take_test', test_id=test.id) if not current_user.is_teacher else url_for('teacher.manage_questions', test_id=test.id) }}"
                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-card-checklist me-1"></i> {{ test.title }}</span>

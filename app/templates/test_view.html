@@ -1,30 +1,30 @@
 {% extends "base.html" %}
-{% import "bootstrap_wtf.html" as wtf %} {# Для кнопки submit #}
+{% import "bootstrap_wtf.html" as wtf %} {# Submit tugmasi uchun #}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-    {# Хлебные крошки #}
+    {# Breadcrumbs #}
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         {% if test.lesson %}
-            <li class="breadcrumb-item"><a href="{{ url_for('main.list_lessons') }}">Уроки</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.list_lessons') }}">Darslar</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('main.lesson_detail', lesson_id=test.lesson_id) }}">{{ test.lesson.title }}</a></li>
         {% else %}
-             <li class="breadcrumb-item">Тесты</li>
+             <li class="breadcrumb-item">Testlar</li>
         {% endif %}
         <li class="breadcrumb-item active" aria-current="page">{{ test.title }}</li>
       </ol>
     </nav>
 
-    {# --- ЛОГИКА ОТОБРАЖЕНИЯ --- #}
-    {% if submission and submission.retake_status != 'rejected' %} {# Если тест УЖЕ СДАН и статус НЕ 'rejected' #}
+    {# --- KO'RSATISH LOGIKASI --- #}
+    {% if submission and submission.retake_status != 'rejected' %} {# Agar test ALLAQACHON TOPSHIRILGAN va holati 'rejected' EMAS #}
 
-        <h1><i class="bi bi-check-circle-fill text-success me-2"></i>Тест сдан: {{ test.title }}</h1>
-        <p class="lead">Вы уже проходили этот тест.</p>
+        <h1><i class="bi bi-check-circle-fill text-success me-2"></i>Test topshirilgan: {{ test.title }}</h1>
+        <p class="lead">Siz allaqachon bu testni topshirgansiz.</p>
         <hr>
         <div class="alert alert-info shadow-sm">
-            <h4>Ваш результат:</h4>
+            <h4>Sizning natijangiz:</h4>
             <p class="display-4">
                 {% if submission.is_graded %}
                     {% set score_val = submission.score|float %}
@@ -39,41 +39,41 @@
                     <span class="text-{{ score_color }} fw-bold">{{ points_display }}</span>
                     <small class="text-muted">({{ percent_display }}%)</small>
                 {% else %}
-                    <span class="text-secondary">Ожидает оценки</span>
+                    <span class="text-secondary">Baholash kutilmoqda</span>
                 {% endif %}
             </p>
-            <p class="mb-0">Дата сдачи: {{ submission.submitted_at.strftime('%d.%m.%Y %H:%M') if submission.submitted_at else '-' }}</p>
+            <p class="mb-0">Topshirish sanasi: {{ submission.submitted_at.strftime('%d.%m.%Y %H:%M') if submission.submitted_at else '-' }}</p>
         </div>
 
-        {# --- КНОПКА/СТАТУС ЗАПРОСА НА ПЕРЕСДАЧУ --- #}
+        {# --- QAYTA TOPSHIRISH SO'ROVI TUGMASI/HOLATI --- #}
         {% if submission.retake_status == 'requested' %}
              <div class="alert alert-warning mt-4">
-                <i class="bi bi-hourglass-split me-1"></i> Ваш запрос на пересдачу ожидает рассмотрения преподавателем.
+                <i class="bi bi-hourglass-split me-1"></i> Qayta topshirish so'rovingiz o'qituvchi tomonidan ko'rib chiqilishini kutmoqda.
             </div>
-             <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary mt-2">К моим результатам</a>
-        {% elif submission.retake_status != 'approved' %} {# Показываем кнопку, если статус None (т.е. просто сдан) #}
+             <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary mt-2">Mening natijalarimga</a>
+        {% elif submission.retake_status != 'approved' %} {# Agar holat None bo'lsa (ya'ni shunchaki topshirilgan) tugmani ko'rsatamiz #}
             <form action="{{ url_for('student.request_retake', test_id=test.id) }}" method="POST" class="mt-4"
-                  data-confirm="Отправить преподавателю запрос на пересдачу этого теста? Вам может потребоваться объяснить причину.">
+                  data-confirm="Ushbu testni qayta topshirish uchun o'qituvchiga so'rov yuborasizmi? Sababni tushuntirish talab qilinishi mumkin.">
                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                  <button type="submit" class="btn btn-warning">
-                     <i class="bi bi-arrow-clockwise me-1"></i> Запросить пересдачу
+                      <i class="bi bi-arrow-clockwise me-1"></i> Qayta topshirishni so'rash
                  </button>
-                 <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary ms-2">К моим результатам</a>
+                  <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary ms-2">Mening natijalarimga</a>
             </form>
-        {% else %} {# Статус approved - этого не должно быть здесь #}
-            <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary mt-4">К моим результатам</a>
+        {% else %} {# Holat approved - bu yerda bo'lmasligi kerak #}
+            <a href="{{ url_for('student.my_results') }}" class="btn btn-secondary mt-4">Mening natijalarimga</a>
         {% endif %}
-        {# --- КОНЕЦ БЛОКА КНОПКИ/СТАТУСА ЗАПРОСА --- #}
+        {# --- TUGMA/SO'ROV HOLATI BLOKI OXIRI --- #}
 
 
-    {% else %} {# Если тест ЕЩЕ НЕ СДАН ИЛИ ЗАПРОС ОТКЛОНЕН #}
+    {% else %} {# Agar test HALI TOPSHIRILMAGAN YOKI SO'ROV RAD ETILGAN bo'lsa #}
 
-        {# Показываем сообщение, если это повторная попытка после отклонения #}
+        {# Agar bu rad etilgandan keyin qayta urinish bo'lsa, xabarni ko'rsatamiz #}
         {% if submission and submission.retake_status == 'rejected' %}
-            <div class="alert alert-danger">Ваш предыдущий запрос на пересдачу был отклонен. Пожалуйста, пройдите тест внимательнее.</div>
+            <div class="alert alert-danger">Sizning oldingi qayta topshirish so'rovingiz rad etildi. Iltimos, testni diqqat bilan o'ting.</div>
         {% endif %}
 
-        <h1 class="mb-3"><i class="bi bi-clipboard-check me-2"></i>Тест: {{ test.title }}</h1>
+        <h1 class="mb-3"><i class="bi bi-clipboard-check me-2"></i>Test: {{ test.title }}</h1>
         {% if test.description %}
             <p class="lead">{{ test.description }}</p>
         {% endif %}
@@ -168,27 +168,27 @@
                         const submitBtn = document.getElementById('submitTestBtn');
                         if (submitBtn) { 
                             submitBtn.disabled = true; 
-                            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Отправка...'; 
+                            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Yuborilmoqda...'; 
                         }
                         submitIncompleteBtn.disabled = true;
-                        submitIncompleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Отправка...';
+                        submitIncompleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Yuborilmoqda...';
                         
-                        // Отправляем форму
+                        // Formani yuboramiz
                         testForm.submit();
                     }
                 });
             }
             
-            // Обработчик для стандартной отправки формы
+            // Formani standart yuborish uchun ishlov beruvchi
             testForm.addEventListener('submit', function(event) {
-                // Если установлен флаг force_submit, пропускаем проверку
+                // Agar force_submit bayrog'i o'rnatilgan bo'lsa, tekshirishni o'tkazib yuboramiz
                 if (forceSubmitInput && forceSubmitInput.value === '1') {
-                    return true; // Разрешаем отправку формы
+                    return true; // Formani yuborishga ruxsat beramiz
                 }
                 
                 let allRequiredAnswered = true;
                 const questionIds = {{ questions|map(attribute='id')|list|tojson|safe }};
-                questionIds.forEach((qId) => {
+                questionIds.forEach(function(qId) {
                     const group = document.getElementById(`q_group_${qId}`);
                     const errorDiv = document.getElementById(`q_error_${qId}`);
                     let answered = false;
@@ -239,14 +239,14 @@
                      const submitBtn = document.getElementById('submitTestBtn');
                      if (submitBtn) { 
                          submitBtn.disabled = true; 
-                         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Отправка...'; 
+                         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Yuborilmoqda...'; 
                      }
                 }
-            }); // end submit listener
-        }); // end DOMContentLoaded
+            }); // submit tinglovchisi oxiri
+        }); // DOMContentLoaded oxiri
         </script>
-    {% endif %} {# end if questions #}
-{% endif %} {# end if not submission #}
-{# Основной скрипт для data-confirm и др. #}
+    {% endif %} {# savollar uchun if oxiri #}
+{% endif %} {# submission yo'qligi uchun if oxiri #}
+{# data-confirm va boshqalar uchun asosiy skript #}
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-{% endblock %} {# Конец block scripts #}
+{% endblock %} {# block scripts oxiri #}

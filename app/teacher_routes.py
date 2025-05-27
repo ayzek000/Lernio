@@ -11,7 +11,7 @@ from functools import wraps
 from wtforms.validators import Optional, Length, EqualTo, DataRequired # Импортируем нужные валидаторы
 from app import db
 from app.models import (User, Lesson, Material, Test, Question, Submission,
-                      TransversalAssessment, ActivityLog, GlossaryItem)
+                       TransversalAssessment, ActivityLog, GlossaryItem, MaterialLink)
 from app.forms import (UserForm, LessonForm, MaterialForm, TestForm, QuestionForm,
                      TransversalAssessmentForm, GlossaryItemForm, GlossaryUploadForm)
 from app.utils import log_activity # Импортируем из utils
@@ -35,7 +35,7 @@ def teacher_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != 'teacher':
-            flash(translate('У вас нет доступа к этой странице. Требуются права преподавателя.'), 'danger')
+            flash('У вас нет доступа к этой странице. Требуются права преподавателя.', 'danger')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function

@@ -4,8 +4,9 @@ from flask_login import login_required, current_user
 from functools import wraps
 from sqlalchemy import not_
 from app import db
-from app.models import User, Lesson, Test, Question, Submission, TransversalAssessment
+from app.models import User, Lesson, Test, Question, Submission, TransversalAssessment, StudentWork
 from app.forms import TestSubmissionForm
+# Импортируем функции из app.utils.py
 from app.utils import log_activity, get_current_tashkent_time
 from datetime import datetime
 
@@ -39,11 +40,16 @@ def dashboard():
                          ).order_by(Test.created_at.desc()).all()
 
     # Последние результаты тестов
-    recent_submissions = current_user.submissions.order_by(
+    recent_submissions = Submission.query.filter_by(student_id=current_user.id).order_by(
         Submission.submitted_at.desc()
     ).limit(5).all()
+    
+    # Последние загруженные работы
+    recent_works = StudentWork.query.filter_by(student_id=current_user.id).order_by(
+        StudentWork.submitted_at.desc()
+    ).limit(5).all()
     # Последние оценки компетенций
-    recent_assessments = current_user.assessments_received.order_by(
+    recent_assessments = TransversalAssessment.query.filter_by(student_id=current_user.id).order_by(
         TransversalAssessment.assessment_date.desc()
     ).limit(5).all()
 
@@ -52,18 +58,23 @@ def dashboard():
                            user=current_user,
                            available_tests=available_tests,
                            recent_submissions=recent_submissions,
-                           recent_assessments=recent_assessments)
+                           recent_assessments=recent_assessments,
+                           recent_works=recent_works)
 
 # --- Просмотр Результатов ---
 @bp.route('/my_results')
 @login_required
 @student_required
 def my_results():
-    submissions = current_user.submissions.order_by(Submission.submitted_at.desc()).all()
-    assessments = current_user.assessments_received.order_by(TransversalAssessment.assessment_date.desc()).all()
+    submissions = Submission.query.filter_by(student_id=current_user.id).order_by(Submission.submitted_at.desc()).all()
+    assessments = TransversalAssessment.query.filter_by(student_id=current_user.id).order_by(TransversalAssessment.assessment_date.desc()).all()
+    
+    # Также получаем загруженные работы студента
+    works = StudentWork.query.filter_by(student_id=current_user.id).order_by(StudentWork.submitted_at.desc()).all()
+    
     log_activity(current_user.id, 'view_my_results')
     return render_template('results.html', title='Мои результаты',
-                           submissions=submissions, assessments=assessments)
+                           submissions=submissions, assessments=assessments, works=works)
 
 # --- Прохождение Теста ---
 @bp.route('/test/<int:test_id>', methods=['GET', 'POST'])

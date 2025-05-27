@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from app import db, login_manager
 import json
+import os
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -174,6 +175,40 @@ class Submission(db.Model):
         # Используем .student и .test, созданные через backref
         return f'<Submission {self.id} by U:{self.student_id} for T:{self.test_id} Status:{self.retake_status}>'
 
+
+class StudentWork(db.Model):
+    __tablename__ = 'student_works'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), nullable=False, index=True)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    file_type = db.Column(db.String(50), nullable=False)  # 'pdf', 'image', etc.
+    file_size = db.Column(db.Integer, nullable=False)  # размер в байтах
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    score = db.Column(db.Float, nullable=True)  # оценка от 0 до 10
+    is_graded = db.Column(db.Boolean, default=False)
+    feedback = db.Column(db.Text, nullable=True)  # комментарий учителя
+    graded_at = db.Column(db.DateTime, nullable=True)
+    graded_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    
+    # Связи
+    student = db.relationship('User', foreign_keys=[student_id], backref=db.backref('works', lazy='dynamic'))
+    material = db.relationship('Material', backref=db.backref('student_works', lazy='dynamic'))
+    graded_by = db.relationship('User', foreign_keys=[graded_by_id], backref=db.backref('graded_works', lazy='dynamic'))
+    
+    def get_file_path(self):
+        """Возвращает путь к файлу работы студента"""
+        from flask import current_app
+        return os.path.join(current_app.config['UPLOAD_FOLDER'], 'student_works', self.filename)
+    
+    def get_file_url(self):
+        """Возвращает URL для доступа к файлу"""
+        from flask import url_for
+        return url_for('main.view_student_work', work_id=self.id)
+    
+    def __repr__(self):
+        return f'<StudentWork {self.id} by U:{self.student_id} for M:{self.material_id}'
 
 class ActivityLog(db.Model):
     __tablename__ = 'activity_logs'
@@ -366,13 +401,13 @@ class MessageReadStatus(db.Model):
 class LoginHistory(db.Model):
     __tablename__ = 'login_history'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     ip_address = db.Column(db.String(45), nullable=True)  # IPv6 может быть до 45 символов
     user_agent = db.Column(db.String(255), nullable=True)
     
     # Связь с пользователем
-    user = db.relationship('User', backref=db.backref('login_history', lazy='dynamic'))
+    user = db.relationship('User', backref=db.backref('login_history', lazy='dynamic', cascade='all, delete-orphan'))
     
     def __repr__(self):
         return f'<LoginHistory User {self.user_id} at {self.timestamp}>'

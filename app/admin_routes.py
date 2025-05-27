@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, flash, redirect, url_for, request, jsonify, abort, Response, send_file, current_app as app
 from flask_login import current_user, login_required
 from app import db
-from app.models import User, Lesson, Material, Test, Submission, ActivityLog, MaterialQuestion, GlossaryItem, ChatConversation
+from app.models import User, Lesson, Material, Test, Submission, ActivityLog, MaterialQuestion, GlossaryItem, ChatConversation, LoginHistory
 from app.utils import log_activity
 from app.translations import translate
 from functools import wraps
@@ -26,7 +26,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
-            flash(translate('У вас нет доступа к этой странице. Требуются права администратора.'), 'danger')
+            flash('У вас нет доступа к этой странице. Требуются права администратора.', 'danger')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function

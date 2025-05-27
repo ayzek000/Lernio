@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 mb-0"><i class="bi bi-people-fill me-2"></i>Управление пользователями</h1>
+                    <p class="text-muted">Просмотр и управление всеми пользователями системы</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Добавить пользователя
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card admin-card">
+                <div class="card-body">
+                    <form class="row g-3">
+                        <div class="col-md-4">
+                            <label for="roleFilter" class="form-label">Роль</label>
+                            <select id="roleFilter" class="form-select">
+                                <option value="">Все роли</option>
+                                <option value="admin">Администраторы</option>
+                                <option value="teacher">Преподаватели</option>
+                                <option value="student">Студенты</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchFilter" class="form-label">Поиск</label>
+                            <input type="text" class="form-control" id="searchFilter" placeholder="Имя пользователя или полное имя">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary me-2" id="applyFilters">Применить</button>
+                            <button type="button" class="btn btn-outline-secondary" id="resetFilters">Сбросить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица пользователей -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card admin-card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Имя пользователя</th>
+                                    <th>Полное имя</th>
+                                    <th>Роль</th>
+                                    <th>Дата регистрации</th>
+                                    <th>Последний вход</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.full_name or '-' }}</td>
+                                    <td>
+                                        {% if user.role == 'admin' %}
+                                            <span class="badge bg-danger">Администратор</span>
+                                        {% elif user.role == 'teacher' %}
+                                            <span class="badge bg-primary">Преподаватель</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Студент</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.registration_date.strftime('%d.%m.%Y') }}</td>
+                                    <td>{{ user.last_login.strftime('%d.%m.%Y %H:%M') if user.last_login else 'Никогда' }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('admin.user_details', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal" 
+                                                    data-user-id="{{ user.id }}" data-username="{{ user.username }}" 
+                                                    data-fullname="{{ user.full_name or '' }}" data-role="{{ user.role }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            {% if user.id != current_user.id %}
+                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal" 
+                                                    data-user-id="{{ user.id }}" data-username="{{ user.username }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Пользователи отсутствуют</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления пользователя -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">Добавление пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Полное имя</label>
+                        <input type="text" class="form-control" id="fullName" name="fullName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Подтверждение пароля</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Роль</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="student">Студент</option>
+                            <option value="teacher">Преподаватель</option>
+                            <option value="admin">Администратор</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveNewUser">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования пользователя -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Редактирование пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId" name="userId">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="editUsername" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editFullName" class="form-label">Полное имя</label>
+                        <input type="text" class="form-control" id="editFullName" name="fullName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword" class="form-label">Новый пароль (оставьте пустым, если не хотите менять)</label>
+                        <input type="password" class="form-control" id="editPassword" name="password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label">Роль</label>
+                        <select class="form-select" id="editRole" name="role" required>
+                            <option value="student">Студент</option>
+                            <option value="teacher">Преподаватель</option>
+                            <option value="admin">Администратор</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="updateUser">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно удаления пользователя -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Удаление пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить пользователя <strong id="deleteUserName"></strong>?</p>
+                <p class="text-danger">Это действие нельзя отменить.</p>
+                <form id="deleteUserForm" method="post">
+                    <input type="hidden" id="deleteUserId" name="user_id">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUser">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Добавляем обработчик для кнопки добавления нового пользователя
+        const saveNewUserButton = document.getElementById('saveNewUser');
+        if (saveNewUserButton) {
+            saveNewUserButton.addEventListener('click', function() {
+                // Получаем данные из формы
+                const username = document.getElementById('username').value;
+                const fullName = document.getElementById('fullName').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const role = document.getElementById('role').value;
+                
+                // Проверяем, что пароли совпадают
+                if (password !== confirmPassword) {
+                    alert('Пароли не совпадают!');
+                    return;
+                }
+                
+                // Создаем объект с данными пользователя
+                const userData = {
+                    username: username,
+                    full_name: fullName,
+                    password: password,
+                    role: role
+                };
+                
+                // Получаем CSRF-токен
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                // Отправляем запрос на сервер
+                fetch('/admin/add_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Ошибка при добавлении пользователя');
+                })
+                .then(data => {
+                    // Закрываем модальное окно
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                    modal.hide();
+                    
+                    // Перезагружаем страницу
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+            });
+        }
+        
+        // Добавляем обработчик для кнопки редактирования пользователя
+        const updateUserButton = document.getElementById('updateUser');
+        if (updateUserButton) {
+            updateUserButton.addEventListener('click', function() {
+                // Получаем данные из формы
+                const userId = document.getElementById('editUserId').value;
+                const username = document.getElementById('editUsername').value;
+                const fullName = document.getElementById('editFullName').value;
+                const password = document.getElementById('editPassword').value;
+                const role = document.getElementById('editRole').value;
+                
+                // Создаем объект с данными пользователя
+                const userData = {
+                    user_id: userId,
+                    username: username,
+                    full_name: fullName,
+                    role: role
+                };
+                
+                // Добавляем пароль, если он был введен
+                if (password) {
+                    userData.password = password;
+                }
+                
+                // Получаем CSRF-токен
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                // Отправляем запрос на сервер
+                fetch('/admin/update_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Ошибка при редактировании пользователя');
+                })
+                .then(data => {
+                    // Закрываем модальное окно
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    modal.hide();
+                    
+                    // Перезагружаем страницу
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+            });
+        }
+        
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            deleteUserModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const username = button.getAttribute('data-username');
+                
+                document.getElementById('deleteUserId').value = userId;
+                document.getElementById('deleteUserName').textContent = username;
+            });
+            
+            const confirmDeleteButton = document.getElementById('confirmDeleteUser');
+            if (confirmDeleteButton) {
+                confirmDeleteButton.addEventListener('click', function() {
+                    document.getElementById('deleteUserForm').submit();
+                });
+            }
+        }
+        
+        const editUserModal = document.getElementById('editUserModal');
+        if (editUserModal) {
+            editUserModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const username = button.getAttribute('data-username');
+                const fullName = button.getAttribute('data-fullname');
+                const role = button.getAttribute('data-role');
+                
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUsername').value = username;
+                document.getElementById('editFullName').value = fullName;
+                document.getElementById('editPassword').value = '';
+                document.getElementById('editRole').value = role;
+            });
+        }
+        
+        // Фильтрация пользователей
+        const applyFiltersButton = document.getElementById('applyFilters');
+        if (applyFiltersButton) {
+            applyFiltersButton.addEventListener('click', function() {
+                filterUsers();
+            });
+        }
+        
+        const resetFiltersButton = document.getElementById('resetFilters');
+        if (resetFiltersButton) {
+            resetFiltersButton.addEventListener('click', function() {
+                document.getElementById('roleFilter').value = '';
+                document.getElementById('searchFilter').value = '';
+                filterUsers();
+            });
+        }
+        
+        function filterUsers() {
+            const roleFilter = document.getElementById('roleFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('#usersTable tbody tr');
+            
+            rows.forEach(row => {
+                let roleMatch = true;
+                let searchMatch = true;
+                
+                if (roleFilter) {
+                    const roleCell = row.querySelector('td:nth-child(4)');
+                    if (roleCell) {
+                        const roleBadge = roleCell.querySelector('.badge');
+                        if (roleBadge) {
+                            const roleText = roleBadge.textContent.toLowerCase();
+                            roleMatch = (
+                                (roleFilter === 'admin' && roleText === 'администратор') ||
+                                (roleFilter === 'teacher' && roleText === 'преподаватель') ||
+                                (roleFilter === 'student' && roleText === 'студент')
+                            );
+                        }
+                    }
+                }
+                
+                if (searchFilter) {
+                    const usernameCell = row.querySelector('td:nth-child(2)');
+                    const fullNameCell = row.querySelector('td:nth-child(3)');
+                    
+                    searchMatch = (
+                        (usernameCell && usernameCell.textContent.toLowerCase().includes(searchFilter)) ||
+                        (fullNameCell && fullNameCell.textContent.toLowerCase().includes(searchFilter))
+                    );
+                }
+                
+                if (roleMatch && searchMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Боковое меню настроек -->
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-header bg-primary text-white p-3">
+                    <h5 class="mb-0"><i class="bi bi-gear-fill me-2"></i>{{ title }}</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#profile" class="list-group-item list-group-item-action active p-3 d-flex align-items-center" data-bs-toggle="pill">
+                        <i class="bi bi-person-fill me-3 fs-5"></i>
+                        <div>
+                            <span class="d-block">Profil sozlamalari</span>
+                            <small class="text-muted">Shaxsiy ma'lumotlar</small>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.error_coming_soon') }}" class="list-group-item list-group-item-action p-3 d-flex align-items-center">
+                        <i class="bi bi-shield-lock-fill me-3 fs-5"></i>
+                        <div>
+                            <span class="d-block">Xavfsizlik</span>
+                            <small class="text-muted">Parol va xavfsizlik</small>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.error_coming_soon') }}" class="list-group-item list-group-item-action p-3 d-flex align-items-center">
+                        <i class="bi bi-bell-fill me-3 fs-5"></i>
+                        <div>
+                            <span class="d-block">Bildirishnomalar</span>
+                            <small class="text-muted">Xabarlar sozlamalari</small>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.error_coming_soon') }}" class="list-group-item list-group-item-action p-3 d-flex align-items-center">
+                        <i class="bi bi-translate me-3 fs-5"></i>
+                        <div>
+                            <span class="d-block">Til va mintaqa</span>
+                            <small class="text-muted">Dastur tili va mintaqa</small>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.error_coming_soon') }}" class="list-group-item list-group-item-action p-3 d-flex align-items-center">
+                        <i class="bi bi-palette-fill me-3 fs-5"></i>
+                        <div>
+                            <span class="d-block">Ko'rinish</span>
+                            <small class="text-muted">Mavzu va rang sxemasi</small>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.error_coming_soon') }}" class="list-group-item list-group-item-action p-3 d-flex align-items-center">
+                        <i class="bi bi-database-fill me-3 fs-5"></i>
+                        <div>
+                            <span class="d-block">Ma'lumotlar</span>
+                            <small class="text-muted">Ma'lumotlar eksporti</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Основное содержимое -->
+        <div class="col-md-8 col-lg-9">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="tab-content">
+                        <!-- Профиль -->
+                        <div class="tab-pane fade show active" id="profile">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="position-relative me-3">
+                                    <img src="{{ url_for('static', filename='img/avatar-placeholder.jpg') }}" alt="{{ current_user.full_name }}" 
+                                         class="rounded-circle" width="80" height="80">
+                                    <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-1" 
+                                         style="cursor: pointer;" title="Rasmni o'zgartirish">
+                                        <i class="bi bi-camera-fill text-white small"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ current_user.full_name }}</h5>
+                                    <p class="text-muted mb-0">{{ current_user.email if current_user.email else 'Email ko\'rsatilmagan' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info d-flex" role="alert">
+                                <i class="bi bi-info-circle-fill me-2 fs-5 align-self-center"></i>
+                                <div>Profil ma'lumotlarini o'zgartirish uchun ushbu formani to'ldiring.</div>
+                            </div>
+                            
+                            {{ wtf.quick_form(form, button_map={'submit': 'primary'}) }}
+                        </div>
+                        
+                        <!-- Безопасность -->
+                        <div class="tab-pane fade" id="security">
+                            <h4 class="border-bottom pb-3 mb-4">Xavfsizlik sozlamalari</h4>
+                            <div class="alert alert-secondary bg-light d-flex align-items-center mb-4" role="alert">
+                                <i class="bi bi-shield-check fs-3 me-3 text-success"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Parol yangilash</h5>
+                                    <p class="mb-0">Bu funksiya hozirda ishlab chiqilmoqda va tez orada mavjud bo'ladi.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3 border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title d-flex align-items-center">
+                                        <i class="bi bi-shield-lock me-2 text-primary"></i> Ikki bosqichli autentifikatsiya
+                                    </h5>
+                                    <p class="card-text text-muted">Qo'shimcha xavfsizlik qatlami uchun mobil telefonda tasdiqlang.</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" disabled>
+                                        <i class="bi bi-lock me-1"></i> Tez orada mavjud bo'ladi
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3 border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title d-flex align-items-center">
+                                        <i class="bi bi-fingerprint me-2 text-primary"></i> Kirish tarixi
+                                    </h5>
+                                    <p class="card-text text-muted">Hisobingizga kirish tarixi va shubhali faoliyatni kuzating.</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" disabled>
+                                        <i class="bi bi-lock me-1"></i> Tez orada mavjud bo'ladi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Остальные вкладки с плейсхолдерами -->
+                        <div class="tab-pane fade" id="notifications">
+                            <h4 class="border-bottom pb-3 mb-4">Bildirishnomalar sozlamalari</h4>
+                            <div class="alert alert-info d-flex" role="alert">
+                                <i class="bi bi-info-circle-fill me-2 fs-5 align-self-center"></i>
+                                <div>Bildirishnomalar sozlamalari hozirda ishlab chiqilmoqda va tez orada mavjud bo'ladi.</div>
+                            </div>
+                            
+                            <div class="placeholder-glow">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="notify1" disabled>
+                                    <label class="form-check-label placeholder col-7" for="notify1"></label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="notify2" disabled>
+                                    <label class="form-check-label placeholder col-5" for="notify2"></label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="notify3" disabled>
+                                    <label class="form-check-label placeholder col-6" for="notify3"></label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="language">
+                            <h4 class="border-bottom pb-3 mb-4">Til va mintaqa sozlamalari</h4>
+                            <div class="alert alert-info d-flex" role="alert">
+                                <i class="bi bi-info-circle-fill me-2 fs-5 align-self-center"></i>
+                                <div>Til sozlamalari hozirda ishlab chiqilmoqda va tez orada mavjud bo'ladi.</div>
+                            </div>
+                            
+                            <div class="placeholder-glow">
+                                <div class="mb-3">
+                                    <label class="form-label placeholder col-4"></label>
+                                    <select class="form-select" aria-label="Til tanlash" disabled>
+                                        <option>O'zbek</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label placeholder col-5"></label>
+                                    <select class="form-select" aria-label="Mintaqa tanlash" disabled>
+                                        <option>Toshkent (UTC+5)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="appearance">
+                            <h4 class="border-bottom pb-3 mb-4">Ko'rinish sozlamalari</h4>
+                            <div class="alert alert-info d-flex" role="alert">
+                                <i class="bi bi-info-circle-fill me-2 fs-5 align-self-center"></i>
+                                <div>Ko'rinish sozlamalari hozirda ishlab chiqilmoqda va tez orada mavjud bo'ladi.</div>
+                            </div>
+                            
+                            <div class="row placeholder-glow">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light border-0 h-100 placeholder"></div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light border-0 h-100 placeholder"></div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-light border-0 h-100 placeholder"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="data">
+                            <h4 class="border-bottom pb-3 mb-4">Ma'lumotlar boshqaruvi</h4>
+                            <div class="alert alert-info d-flex" role="alert">
+                                <i class="bi bi-info-circle-fill me-2 fs-5 align-self-center"></i>
+                                <div>Ma'lumotlar eksporti funksiyasi hozirda ishlab chiqilmoqda va tez orada mavjud bo'ladi.</div>
+                            </div>
+                            
+                            <div class="card mb-3 border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title d-flex align-items-center">
+                                        <i class="bi bi-download me-2 text-primary"></i> Ma'lumotlar eksporti
+                                    </h5>
+                                    <p class="card-text text-muted">Barcha shaxsiy ma'lumotlaringizni yuklab oling.</p>
+                                    <button type="button" class="btn btn-outline-primary" disabled>
+                                        <i class="bi bi-lock me-1"></i> Tez orada mavjud bo'ladi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .placeholder {
+        min-height: 120px;
+    }
+</style>
+{% endblock %}

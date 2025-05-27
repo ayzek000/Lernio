@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Загрузка материала{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Загрузка учебного материала</h2>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control") }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.title.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.type.label(class="form-label") }}
+                            {{ form.type(class="form-select") }}
+                            {% if form.type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.type.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows=3) }}
+                            {% if form.content.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.content.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.file.label(class="form-label") }}
+                            {{ form.file(class="form-control") }}
+                            {% if form.file.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.file.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Допустимые форматы: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, JPEG, PNG, GIF, MP4, ZIP
+                            </div>
+                        </div>
+                        
+                        <div id="video-url-field" class="mb-3" style="display: none;">
+                            {{ form.video_url.label(class="form-label") }}
+                            {{ form.video_url(class="form-control") }}
+                            {% if form.video_url.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.video_url.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div id="glossary-field" class="mb-3" style="display: none;">
+                            {{ form.glossary_definition.label(class="form-label") }}
+                            {{ form.glossary_definition(class="form-control", rows=3) }}
+                            {% if form.glossary_definition.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.glossary_definition.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('materials.list_materials') }}" class="btn btn-secondary me-md-2">Отмена</a>
+                            <button type="submit" class="btn btn-primary">Загрузить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.getElementById('type');
+        const fileField = document.querySelector('#file').closest('.mb-3');
+        const videoUrlField = document.getElementById('video-url-field');
+        const glossaryField = document.getElementById('glossary-field');
+        const contentField = document.querySelector('#content').closest('.mb-3');
+        
+        // Функция для обновления видимости полей в зависимости от типа материала
+        function updateFieldsVisibility() {
+            const selectedType = typeSelect.value;
+            
+            // Скрываем все специфические поля
+            fileField.style.display = 'none';
+            videoUrlField.style.display = 'none';
+            glossaryField.style.display = 'none';
+            
+            // Показываем нужные поля в зависимости от типа
+            switch (selectedType) {
+                case 'lecture':
+                    contentField.querySelector('label').textContent = 'Текст лекции';
+                    break;
+                    
+                case 'presentation':
+                case 'file':
+                    fileField.style.display = 'block';
+                    break;
+                    
+                case 'video_url':
+                    videoUrlField.style.display = 'block';
+                    break;
+                    
+                case 'glossary_term':
+                    glossaryField.style.display = 'block';
+                    contentField.querySelector('label').textContent = 'Термин';
+                    break;
+                    
+                case 'consolidation_question':
+                    contentField.querySelector('label').textContent = 'Вопрос';
+                    break;
+                    
+                case 'links':
+                    contentField.querySelector('label').textContent = 'Ссылки (каждая с новой строки)';
+                    break;
+            }
+        }
+        
+        // Обновляем поля при загрузке страницы
+        updateFieldsVisibility();
+        
+        // Обновляем поля при изменении типа материала
+        typeSelect.addEventListener('change', updateFieldsVisibility);
+    });
+</script>
+{% endblock %}

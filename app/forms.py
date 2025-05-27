@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed # , FileRequired (если файл обязателен)
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, TextAreaField, IntegerField, FloatField, SelectMultipleField, HiddenField
+from flask_wtf.file import FileField, FileAllowed, FileRequired
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, TextAreaField, IntegerField, FloatField, SelectMultipleField, HiddenField, EmailField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, Optional, URL, NumberRange
-from app.models import User, Lesson # Импортируем для валидации и списков
+from app.models import User, Lesson, Material # Импортируем для валидации и списков
 
 # --- Формы Аутентификации ---
 
@@ -14,6 +14,50 @@ class LoginForm(FlaskForm):
                              validators=[DataRequired(message="Это поле обязательно.")])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
+
+# --- Формы для работ учеников ---
+
+class UploadWorkForm(FlaskForm):
+    """Форма для загрузки работы ученика"""
+    file = FileField('Fayl', validators=[
+        FileRequired(message="Iltimos, faylni tanlang"),
+        FileAllowed(['pdf', 'png', 'jpg', 'jpeg', 'gif'], message="Faqat PDF yoki rasmlar (PNG, JPG, JPEG, GIF)")
+    ])
+    comment = TextAreaField('Izoh', validators=[Optional(), Length(max=500)])
+    material_id = HiddenField('Material ID', validators=[DataRequired()])
+    submit = SubmitField('Yuborish')
+
+class GradeWorkForm(FlaskForm):
+    """Форма для оценки работы ученика"""
+    score = FloatField('Baho (0-10)', validators=[
+        DataRequired(message="Iltimos, bahoni kiriting"),
+        NumberRange(min=0, max=10, message="Baho 0 dan 10 gacha bo'lishi kerak")
+    ])
+    feedback = TextAreaField('Fikr-mulohaza', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Baholash')
+    delete = SubmitField('O\'chirish')
+
+# --- Формы Профиля и Настроек ---
+
+class UserProfileForm(FlaskForm):
+    """Форма для редактирования профиля пользователя."""
+    full_name = StringField('To\'liq ism', validators=[DataRequired(), Length(max=120)])
+    email = EmailField('Email', validators=[Optional(), Email()])
+    bio = TextAreaField('O\'zim haqimda', validators=[Optional(), Length(max=500)])
+    submit = SubmitField('Saqlash')
+    
+    def __init__(self, original_username=None, *args, **kwargs):
+        super(UserProfileForm, self).__init__(*args, **kwargs)
+        self.original_username = original_username
+
+class UserSettingsForm(FlaskForm):
+    """Форма для настроек пользователя."""
+    password = PasswordField('Yangi parol', validators=[Optional(), Length(min=6)])
+    password2 = PasswordField('Parolni tasdiqlang', 
+                             validators=[Optional(), EqualTo('password', message='Parollar mos kelishi kerak.')])
+    language = SelectField('Interfeys tili', choices=[('uz', 'O\'zbek'), ('ru', 'Русский')])
+    notifications = BooleanField('Bildirishnomalarni olish')
+    submit = SubmitField('Saqlash')
 
 # --- Формы Учителя ---
 

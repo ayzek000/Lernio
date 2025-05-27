@@ -23,20 +23,27 @@ class Config:
     # Максимальный размер загружаемого файла (16 MB)
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
-    # Определяем среду выполнения: локальная разработка или production (Render)
-    IS_PRODUCTION = os.environ.get('RENDER') == 'true'
+    # Определяем среду выполнения: локальная разработка или production (Vercel/Render)
+    IS_PRODUCTION = os.environ.get('VERCEL') == 'true' or os.environ.get('RENDER') == 'true'
     
-    # Всегда используем SQLite из-за ограничений сети Render
+    # Используем SQLite для всех сред
     print(f"Используем SQLite в качестве базы данных")
     
+    # Проверяем наличие переменной окружения DATABASE_URL
+    database_url = os.environ.get('DATABASE_URL')
+    
     # Определяем путь к базе данных
-    if IS_PRODUCTION:
-        # В продакшене используем папку data в корне проекта
-        data_dir = os.path.join(basedir, 'data')
+    if database_url:
+        # Используем переменную окружения, если она есть
+        SQLALCHEMY_DATABASE_URI = database_url
+        print(f"Используем базу данных из переменной окружения")
+    elif IS_PRODUCTION:
+        # В продакшене используем папку instance
+        instance_dir = os.path.join(basedir, 'instance')
         # Создаем папку, если она не существует
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(data_dir, 'site.db')
+        if not os.path.exists(instance_dir):
+            os.makedirs(instance_dir)
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(instance_dir, 'site.db')
         print(f"Путь к базе данных (продакшен): {SQLALCHEMY_DATABASE_URI}")
     else:
         # При локальной разработке используем instance папку

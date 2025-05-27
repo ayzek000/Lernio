@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, render_template, flash, redirect, url_for, request, current_app
 from flask_login import login_user, logout_user, current_user, login_required
 from urllib.parse import urlparse, urljoin
@@ -7,7 +8,11 @@ from app.forms import LoginForm
 from app.models import User, LoginHistory # Добавляем импорт LoginHistory
 from datetime import datetime
 # V--- ДОБАВЛЕН ИМПОРТ ИЗ UTILS ---V
+# Импортируем функцию логирования из app.utils.py
 from app.utils import log_activity
+
+# Проверяем, включен ли режим разработки
+DEV_MODE = os.environ.get('FLASK_ENV') == 'development'
 
 bp = Blueprint('auth', __name__)
 
@@ -25,13 +30,24 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
+        
+        # Используем локальную аутентификацию
+        from app.local_auth import login_local_user
+        
+        print(f"\n[DEBUG] Попытка входа: {form.username.data}")
+        
+        # Пытаемся войти с помощью локальной аутентификации
+        user = login_local_user(form.username.data, form.password.data, form.remember_me.data)
+        
+        if user is None:
+            print(f"[DEBUG] Неудачная попытка входа: {form.username.data}")
             flash('Неверное имя пользователя или пароль.', 'danger')
-            log_activity(None, 'login_failed', f"Username: {form.username.data}") # Вызываем импортированную функцию
+            log_activity(None, 'login_failed', f"Username: {form.username.data}")
             return redirect(url_for('auth.login'))
+        
+        print(f"[DEBUG] Успешный вход пользователя: {user.username}, роль: {user.role}")
 
-        login_user(user, remember=form.remember_me.data)
+        # Обновляем время последнего входа
         user.last_login = datetime.utcnow()
         
         # Записываем информацию о входе в систему
@@ -42,8 +58,8 @@ def login():
         )
         db.session.add(login_record)
         
-        # Также записываем в общий журнал активности
-        log_activity(user.id, 'login_success') # Вызываем импортированную функцию
+        # Записываем в общий журнал активности
+        log_activity(user.id, 'login_success')
         
         db.session.commit()
 
@@ -67,6 +83,24 @@ def login():
                     next_page = url_for('student.dashboard')
 
         flash(f'Добро пожаловать, {user.full_name or user.username}!', 'success')
+        
+        # Добавляем отладочную информацию
+        print(f"\n[DEBUG] Перенаправление на: {next_page}")
+        print(f"[DEBUG] Тип пользователя: {user.role}, Имя: {user.username}")
+        print(f"[DEBUG] is_teacher: {user.is_teacher}, is_admin: {user.is_admin}")
+        print(f"[DEBUG] Фиктивный пользователь: {getattr(user, 'is_mock', False)}\n")
+        
+        # Проверяем, существует ли маршрут для перенаправления
+        try:
+            # Проверяем, что URL для перенаправления существует
+            url_for(next_page.split('/')[-2] + '.' + next_page.split('/')[-1])
+            print(f"[DEBUG] URL существует: {next_page}")
+        except Exception as e:
+            print(f"[DEBUG] Ошибка при проверке URL: {e}")
+            # В случае ошибки перенаправляем на главную страницу
+            next_page = url_for('main.index')
+            print(f"[DEBUG] Используем запасной URL: {next_page}")
+        
         return redirect(next_page)
 
     return render_template('login.html', title='Вход', form=form)

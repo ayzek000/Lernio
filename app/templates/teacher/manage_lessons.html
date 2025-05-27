@@ -6,14 +6,14 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-list-task me-2"></i>{{ title }}</h1>
         <a href="{{ url_for('teacher.add_lesson') }}" class="btn btn-success">
-            <i class="bi bi-plus-lg me-1"></i>Добавить урок
+            <i class="bi bi-plus-lg me-1"></i>Dars qo'shish
         </a>
     </div>
 
     {% if lessons %}
         <div class="list-group shadow-sm">
             {% for lesson in lessons %}
-                {# Используем div вместо ссылки, чтобы кнопки внутри работали #}
+                {# Tugmalar ishlashi uchun havola o'rniga div dan foydalanamiz #}
                 <div class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
                          <div>
@@ -24,19 +24,19 @@
                                 <p class="mb-1 text-muted">{{ lesson.description|truncate(150, True) }}</p>
                             {% endif %}
                             <small class="text-muted">
-                                 <i class="bi bi-collection-fill"></i> {{ lesson.materials.count() }} материалов
-                                 | <i class="bi bi-clipboard-check-fill"></i> {{ lesson.tests.count() }} тестов
+                                 <i class="bi bi-collection-fill"></i> {{ lesson.materials.count() }} materiallar
+                                 | <i class="bi bi-clipboard-check-fill"></i> {{ lesson.tests.count() }} testlar
                             </small>
                          </div>
-                         <small class="text-nowrap text-muted">Порядок: {{ lesson.order }}</small>
+                         <small class="text-nowrap text-muted">Tartib: {{ lesson.order }}</small>
                     </div>
-                    {# Кнопки управления #}
+                    {# Boshqaruv tugmalari #}
                      <div class="mt-2 text-end">
-                        <a href="{{ url_for('teacher.manage_materials', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-primary" title="Материалы"><i class="bi bi-collection-fill"></i> Материалы</a>
-                        <a href="{{ url_for('teacher.edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-secondary" title="Редактировать"><i class="bi bi-pencil-fill"></i> Редактировать</a>
-                         <form action="{{ url_for('teacher.delete_lesson', lesson_id=lesson.id) }}" method="POST" class="d-inline" data-confirm="Удалить урок '{{ lesson.title }}' и все его материалы/тесты?">
+                        <a href="{{ url_for('teacher.manage_materials', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-primary" title="Materiallar"><i class="bi bi-collection-fill"></i> Materiallar</a>
+                        <a href="{{ url_for('teacher.edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-secondary" title="Tahrirlash"><i class="bi bi-pencil-fill"></i> Tahrirlash</a>
+                         <form action="{{ url_for('teacher.delete_lesson', lesson_id=lesson.id) }}" method="POST" class="d-inline" data-confirm="'{{ lesson.title }}' darsini va uning barcha materiallari/testlarini o'chirishni xohlaysizmi?">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить"><i class="bi bi-trash-fill"></i> Удалить</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="O'chirish"><i class="bi bi-trash-fill"></i> O'chirish</button>
                        </form>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
         </div>
     {% else %}
         <div class="alert alert-info">
-            Уроки еще не добавлены. <a href="{{ url_for('teacher.add_lesson') }}" class="alert-link">Добавить первый урок?</a>
+            Darslar hali qo'shilmagan. <a href="{{ url_for('teacher.add_lesson') }}" class="alert-link">Birinchi darsni qo'shasizmi?</a>
         </div>
     {% endif %}
 

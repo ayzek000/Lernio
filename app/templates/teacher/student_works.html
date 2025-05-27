@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('teacher.dashboard') }}">Boshqaruv paneli</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-file-earmark-text me-2"></i>{{ title }}</h1>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Barcha talabalar ishlari</h5>
+        </div>
+        <div class="card-body">
+            {% if works %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Talaba</th>
+                                <th>Material</th>
+                                <th>Fayl</th>
+                                <th>Yuklangan sana</th>
+                                <th>Holat</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for work in works %}
+                                <tr>
+                                    <td>{{ work.student.full_name or work.student.username }}</td>
+                                    <td>{{ work.material.title }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ work.file_type }}</span>
+                                        {{ work.original_filename }}
+                                    </td>
+                                    <td>{{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                    <td>
+                                        {% if work.is_graded %}
+                                            {% set score_color = 'success' if work.score >= 8.5 else ('primary' if work.score >= 6.5 else ('warning' if work.score >= 4.5 else 'danger')) %}
+                                            <span class="badge bg-{{ score_color }}">{{ "%.1f"|format(work.score) }}/10</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Baholanmagan</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('student_work.view_work', work_id=work.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                <i class="bi bi-eye"></i> Ko'rish
+                                            </a>
+                                            <a href="{{ url_for('student_work.grade_work', work_id=work.id) }}" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-check-circle"></i> Baholash
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-light text-center">
+                    <i class="bi bi-info-circle fs-4 mb-3 d-block"></i>
+                    <p>Hozircha talabalar tomonidan yuklangan ishlar yo'q.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

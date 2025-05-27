@@ -1,22 +1,4 @@
-2025-05-19 20:51:32,709 ERROR: Exception on /favicon.ico [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
-Traceback (most recent call last):
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 891, in dispatch_request
-    self.raise_routing_exception(req)
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 500, in raise_routing_exception
-    raise request.routing_exception  # type: ignore[misc]
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\ctx.py", line 362, in match_request
-    result = self.url_adapter.match(return_rule=True)  # type: ignore
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 629, in match
-    raise NotFound() from None
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-During handling of the above exception, another exception occurred:
-
+2025-05-26 22:47:48,136 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:188]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -24,53 +6,28 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
     rv = self.handle_user_exception(e)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 802, in handle_user_exception
-    return self.handle_http_exception(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 777, in handle_http_exception
-    return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py", line 96, in page_not_found
-    return render_template('errors/404.html'), 404
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
-    return _render(app, template, context)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 131, in _render
-    rv = template.render(context)
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 1295, in render
-    self.environment.handle_exception()
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
-    raise rewrite_traceback_stack(source=source)
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\errors\404.html", line 1, in top-level template code
-    {% extends "base.html" %}
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 35, in top-level template code
-    <a class="nav-link {% if request.endpoint.startswith('main.list_lessons') or request.endpoint.startswith('main.lesson_detail') %}active{% endif %}" href="{{ url_for('main.list_lessons') }}">
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\utils.py", line 92, in from_obj
-    if hasattr(obj, "jinja_pass_arg"):
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-jinja2.exceptions.UndefinedError: 'None' has no attribute 'startswith'
-2025-05-19 20:51:32,737 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:102]
-Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
     rv = self.dispatch_request()
          ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 891, in dispatch_request
-    self.raise_routing_exception(req)
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 500, in raise_routing_exception
-    raise request.routing_exception  # type: ignore[misc]
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\ctx.py", line 362, in match_request
-    result = self.url_adapter.match(return_rule=True)  # type: ignore
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 629, in match
-    raise NotFound() from None
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-During handling of the above exception, another exception occurred:
-
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 21, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 43, in dashboard
+    recent_submissions = current_user.submissions.order_by(
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'submissions'
+2025-05-26 22:49:36,296 INFO: Lernio startup [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:169]
+2025-05-26 22:49:40,967 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:49:41,110 INFO: Пользователь загружен из базы данных: 123 (роль: student) [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:97]
+2025-05-26 22:49:41,187 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:49:41,188 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
+2025-05-26 22:49:41,196 ERROR: Exception on /student/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -78,31 +35,53 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
     rv = self.handle_user_exception(e)
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 802, in handle_user_exception
-    return self.handle_http_exception(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 777, in handle_http_exception
-    return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py", line 96, in page_not_found
-    return render_template('errors/404.html'), 404
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
-    return _render(app, template, context)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 131, in _render
-    rv = template.render(context)
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 1295, in render
-    self.environment.handle_exception()
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
-    raise rewrite_traceback_stack(source=source)
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\errors\404.html", line 1, in top-level template code
-    {% extends "base.html" %}
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 35, in top-level template code
-    <a class="nav-link {% if request.endpoint.startswith('main.list_lessons') or request.endpoint.startswith('main.lesson_detail') %}active{% endif %}" href="{{ url_for('main.list_lessons') }}">
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\utils.py", line 92, in from_obj
-    if hasattr(obj, "jinja_pass_arg"):
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-jinja2.exceptions.UndefinedError: 'None' has no attribute 'startswith'
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 21, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 43, in dashboard
+    recent_submissions = current_user.submissions.order_by(
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'submissions'
+2025-05-26 22:49:41,202 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:188]
+Traceback (most recent call last):
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 21, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 43, in dashboard
+    recent_submissions = current_user.submissions.order_by(
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'submissions'
+2025-05-26 22:54:22,323 INFO: Lernio startup [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:169]
+2025-05-26 22:54:29,716 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:54:29,827 INFO: Пользователь загружен из базы данных: 123 (роль: student) [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:97]
+2025-05-26 22:54:29,908 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:54:29,909 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
+2025-05-26 22:54:30,019 INFO: [2025-05-26 22:54:30] User 5: view_student_dashboard [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
+2025-05-26 22:54:37,261 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:54:37,262 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
+2025-05-26 22:54:38,016 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
+2025-05-26 22:54:38,018 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]

@@ -1,33 +1,23 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, session
 from flask_sqlalchemy import SQLAlchemy
-import psycopg2
-import sqlalchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 from config import Config
 from dotenv import load_dotenv
 
+# Проверяем, включен ли режим разработки
+DEV_MODE = os.environ.get('FLASK_ENV') == 'development'
+print(f"\nРежим разработки: {'ВКЛЮЧЕН' if DEV_MODE else 'ВЫКЛЮЧЕН'}\n")
+
 # Загружаем переменные окружения
 load_dotenv()
 
 # Глобальные экземпляры расширений (без привязки к app)
 db = SQLAlchemy()
-
-# Для прямого доступа к базе данных PostgreSQL
-def get_db_connection():
-    conn = psycopg2.connect(
-        host="db.hgyboeyjlkvjtavlqavv.supabase.co",
-        port=5432,
-        dbname="postgres",
-        user="postgres",
-        password="Aziz7340015"
-    )
-    conn.autocommit = True
-    return conn
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
@@ -57,27 +47,60 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     csrf.init_app(app)
     
-    # Инициализация хранилища Supabase
-    if os.environ.get('SUPABASE_URL') and os.environ.get('SUPABASE_ANON_KEY'):
-        try:
-            from app.supabase_storage import initialize_storage
-            with app.app_context():
-                if initialize_storage():
-                    app.logger.info("Supabase Storage успешно инициализирован")
-                else:
-                    app.logger.warning("Supabase Storage не был инициализирован")
-        except Exception as e:
-            app.logger.error(f"Supabase Storage error: {e}")
-    else:
-        app.logger.warning("Supabase Storage не настроен (нет переменных окружения)")
-        app.logger.info("Файлы будут сохраняться локально")
+    # Сообщаем о локальном хранилище файлов
+    app.logger.info("Файлы будут сохраняться локально")
 
     # Регистрируем функцию загрузки пользователя для Flask-Login
-    from app.supabase_auth import User
+    from app.local_auth import User
+    
+    # Сохраняем пользователей в сессии
+    session_users = {}
     
     @login_manager.user_loader
     def load_user(user_id):
-        return User.get_by_id(user_id)
+        app.logger.info(f"Загрузка пользователя с ID: {user_id}")
+        
+        # Если пользователь уже в сессии, возвращаем его
+        if user_id in session_users:
+            app.logger.info(f"Пользователь найден в сессии: {user_id}")
+            return session_users[user_id]
+        
+        # Сначала ищем пользователя в локальных мок-данных
+        user = User.get_by_id(user_id)
+        if user:
+            session_users[user_id] = user
+            app.logger.info(f"Пользователь загружен из локальных данных: {user.username} (роль: {user.role})")
+            return user
+        
+        # Если не нашли в локальных данных, ищем в базе данных
+        try:
+            # Импортируем модель User из app.models
+            from app.models import User as DBUser
+            
+            # Проверяем, является ли user_id числом (для базы данных)
+            if user_id.isdigit():
+                db_user = DBUser.query.get(int(user_id))
+                if db_user:
+                    # Создаем объект локального пользователя из пользователя базы данных
+                    user_data = {
+                        'id': str(db_user.id),
+                        'username': db_user.username,
+                        'role': db_user.role,
+                        'full_name': db_user.full_name,
+                        'password': 'db_password',  # Пароль не важен, т.к. пользователь уже аутентифицирован
+                        'email': '',
+                        'last_login': db_user.last_login,
+                        'is_active': True
+                    }
+                    user = User(user_data)
+                    session_users[user_id] = user
+                    app.logger.info(f"Пользователь загружен из базы данных: {user.username} (роль: {user.role})")
+                    return user
+        except Exception as e:
+            app.logger.error(f"Ошибка при загрузке пользователя из базы данных: {str(e)}")
+        
+        app.logger.warning(f"Пользователь с ID {user_id} не найден")
+        return None
     
     # --- РЕГИСТРАЦИЯ БЛЮПРИНТОВ (ВНУТРИ ФАБРИКИ) ---
     # Переносим импорты сюда, чтобы избежать циклических зависимостей при старте
@@ -97,9 +120,24 @@ def create_app(config_class=Config):
         from app.admin_routes import bp as admin_bp
         app.register_blueprint(admin_bp, url_prefix='/admin')
         
+        from app.student_work_routes import bp as student_work_bp
+        app.register_blueprint(student_work_bp)
+        
         # Регистрируем маршрут для учебных материалов с гибридным хранилищем
         from app.materials_routes import materials as materials_bp
         app.register_blueprint(materials_bp, url_prefix='/materials')
+        
+        # Регистрируем маршрут для удаления пользователей
+        from app.admin_delete_user import delete_user_bp
+        app.register_blueprint(delete_user_bp)
+        
+        # Регистрируем маршрут для добавления пользователей
+        from app.admin_add_user import add_user_bp
+        app.register_blueprint(add_user_bp)
+        
+        # Регистрируем маршрут для обновления данных пользователя
+        from app.admin_update_user import update_user_bp
+        app.register_blueprint(update_user_bp)
 
         # Регистрация обработчиков ошибок
         register_error_handlers(app)
