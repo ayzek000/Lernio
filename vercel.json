@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.py",
+      "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
         "pip": {
@@ -22,8 +22,15 @@
       "dest": "/app/static/$1"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.py"
+      "dest": "/api/index.py"
     }
-  ]
+  ],
+  "env": {
+    "FLASK_ENV": "production",
+    "VERCEL": "true"
+  }
 }
