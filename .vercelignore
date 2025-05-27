@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*build*/
+*dist*/
+*pip-wheel-metadata*/
+*share/python-wheels*/
+*.egg-info/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.venv/
+mongo_env/
+new_env/
+
+# Logs
+logs/
+
+# Git
+.git/
+
+# Не исключаем базу данных и загруженные файлы
+# instance/
+# uploads/
+
+# Исключаем тяжелые библиотеки, которые не нужны в продакшене
+pandas/
+numpy/
+scipy/
+matplotlib/
+openpyxl/
+PyPDF2/
+python-docx/
