@@ -7,9 +7,15 @@ services:
     envVars:
       - key: FLASK_APP
         value: run.py
+      - key: FLASK_ENV
+        value: production
       - key: FLASK_DEBUG
         value: 0
       - key: SECRET_KEY
         generateValue: true
       - key: RENDER
         value: true
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1

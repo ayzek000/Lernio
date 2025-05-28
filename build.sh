@@ -2,12 +2,12 @@
 # Exit on error
 set -o errexit
 
-# Устанавливаем переменную окружения VERCEL=true
-export VERCEL=true
+# Устанавливаем переменную окружения RENDER=true
+export RENDER=true
 
 # Выводим диагностическую информацию
 echo "Environment variables:" 
-echo "VERCEL=$VERCEL"
+echo "RENDER=$RENDER"
 echo "Running on: $(uname -a)"
 
 # Устанавливаем зависимости
