@@ -1,6 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Exit on error
 set -o errexit
+
+# Делаем скрипт исполняемым
+chmod +x "$0"
 
 # Устанавливаем переменную окружения RENDER=true
 export RENDER=true
