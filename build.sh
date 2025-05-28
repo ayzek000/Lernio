@@ -15,6 +15,12 @@ echo "Running on: $(uname -a)"
 
 # Устанавливаем зависимости
 echo "Installing dependencies..."
+
+# Сначала устанавливаем ключевые библиотеки с фиксированными версиями
+pip install numpy==1.24.3
+pip install pandas==2.0.3
+
+# Затем устанавливаем остальные зависимости
 pip install -r requirements.txt
 
 # Создаем необходимые каталоги
