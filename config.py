@@ -20,8 +20,8 @@ class Config:
 
     # Путь к папке загрузок
     if os.environ.get('RENDER') == 'true':
-        # На Render используем постоянное хранилище
-        UPLOAD_FOLDER = '/opt/render/project/src/uploads'
+        # На Render используем ту же папку что и локально
+        UPLOAD_FOLDER = os.path.join(basedir, 'app/static/uploads')
     else:
         # Локально используем папку внутри проекта
         UPLOAD_FOLDER = os.path.join(basedir, 'app/static/uploads')
