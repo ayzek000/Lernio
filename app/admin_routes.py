@@ -26,7 +26,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
-            flash('У вас нет доступа к этой странице. Требуются права администратора.', 'danger')
+            flash("Sizda ushbu sahifaga kirish huquqi yo'q. Administrator huquqlari talab qilinadi.", 'danger')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -77,7 +77,19 @@ def dashboard():
 def users():
     """Управление пользователями системы"""
     users = User.query.all()
-    return render_template('admin/users.html', title='Управление пользователями', users=users)
+    
+    # Получаем список групп для выбора при создании/редактировании пользователя
+    try:
+        from app.models_group import StudentGroup
+        student_groups = StudentGroup.query.all()
+    except Exception as e:
+        app.logger.error(f"Ошибка при получении списка групп: {str(e)}")
+        student_groups = []
+    
+    return render_template('admin/users.html', 
+                          title='Управление пользователями', 
+                          users=users,
+                          student_groups=student_groups)
 
 @bp.route('/user/<int:user_id>')
 @login_required
@@ -169,7 +181,7 @@ def new_course():
         description = request.form.get('description')
         
         if not title:
-            flash('Название курса обязательно', 'danger')
+            flash('Kurs nomi majburiy', 'danger')
             return redirect(url_for('admin.new_course'))
         
         course = Lesson(title=title, description=description, parent_id=None)
@@ -177,7 +189,7 @@ def new_course():
         db.session.commit()
         
         log_activity(f'Создан новый курс: {title}', 'admin')
-        flash(f'Курс "{title}" успешно создан', 'success')
+        flash(f'Kurs "{title}" muvaffaqiyatli yaratildi', 'success')
         return redirect(url_for('admin.courses'))
     
     return render_template('admin/course_form.html', title='Новый курс')
@@ -209,7 +221,7 @@ def edit_course(course_id):
         description = request.form.get('description')
         
         if not title:
-            flash('Название курса обязательно', 'danger')
+            flash('Kurs nomi majburiy', 'danger')
             return redirect(url_for('admin.edit_course', course_id=course_id))
         
         course.title = title
@@ -217,7 +229,7 @@ def edit_course(course_id):
         db.session.commit()
         
         log_activity(f'Отредактирован курс: {title}', 'admin')
-        flash(f'Курс "{title}" успешно обновлен', 'success')
+        flash(f'Kurs "{title}" muvaffaqiyatli yangilandi', 'success')
         return redirect(url_for('admin.course_details', course_id=course_id))
     
     return render_template('admin/course_form.html', 
@@ -235,14 +247,14 @@ def delete_course(course_id):
     
     # Проверка на наличие дочерних уроков
     if Lesson.query.filter_by(parent_id=course_id).count() > 0:
-        flash('Невозможно удалить курс, содержащий уроки', 'danger')
+        flash("Darslar mavjud bo'lgan kursni o'chirib bo'lmaydi", 'danger')
         return redirect(url_for('admin.course_details', course_id=course_id))
     
     db.session.delete(course)
     db.session.commit()
     
     log_activity(f'Удален курс: {title}', 'admin')
-    flash(f'Курс "{title}" успешно удален', 'success')
+    flash(f'Kurs "{title}" muvaffaqiyatli o\'chirildi', 'success')
     return redirect(url_for('admin.courses'))
 
 
@@ -258,7 +270,7 @@ def new_lesson(course_id):
         description = request.form.get('description')
         
         if not title:
-            flash('Название урока обязательно', 'danger')
+            flash('Dars nomi majburiy', 'danger')
             return redirect(url_for('admin.new_lesson', course_id=course_id))
         
         lesson = Lesson(title=title, description=description, parent_id=course_id)
@@ -266,7 +278,7 @@ def new_lesson(course_id):
         db.session.commit()
         
         log_activity(f'Создан новый урок: {title} в курсе {course.title}', 'admin')
-        flash(f'Урок "{title}" успешно создан', 'success')
+        flash(f'Dars "{title}" muvaffaqiyatli yaratildi', 'success')
         return redirect(url_for('admin.course_details', course_id=course_id))
     
     return render_template('admin/lesson_form.html', 
@@ -300,7 +312,7 @@ def edit_lesson(lesson_id):
         description = request.form.get('description')
         
         if not title:
-            flash('Название урока обязательно', 'danger')
+            flash('Dars nomi majburiy', 'danger')
             return redirect(url_for('admin.edit_lesson', lesson_id=lesson_id))
         
         lesson.title = title
@@ -308,7 +320,7 @@ def edit_lesson(lesson_id):
         db.session.commit()
         
         log_activity(f'Отредактирован урок: {title}', 'admin')
-        flash(f'Урок "{title}" успешно обновлен', 'success')
+        flash(f'Dars "{title}" muvaffaqiyatli yangilandi', 'success')
         return redirect(url_for('admin.lesson_details', lesson_id=lesson_id))
     
     return render_template('admin/lesson_form.html', 
@@ -334,7 +346,7 @@ def delete_lesson(lesson_id):
     db.session.commit()
     
     log_activity(f'Удален урок: {title}', 'admin')
-    flash(f'Урок "{title}" успешно удален', 'success')
+    flash(f'Dars "{title}" muvaffaqiyatli o\'chirildi', 'success')
     return redirect(url_for('admin.course_details', course_id=course_id))
 
 
@@ -356,7 +368,7 @@ def new_material(lesson_id):
         evaluation_criteria = request.form.get('evaluation_criteria')
         
         if not title or not material_type:
-            flash('Название и тип материала обязательны', 'danger')
+            flash('Material nomi va turi majburiy', 'danger')
             return redirect(url_for('admin.new_material', lesson_id=lesson_id))
         
         material = Material(
@@ -388,7 +400,7 @@ def new_material(lesson_id):
         db.session.commit()
         
         log_activity(f'Создан новый материал: {title} для урока {lesson.title}', 'admin')
-        flash(f'Материал "{title}" успешно создан', 'success')
+        flash(f'Material "{title}" muvaffaqiyatli yaratildi', 'success')
         
         # Если были добавлены вопросы
         questions = request.form.getlist('questions[]')
@@ -478,7 +490,7 @@ def edit_material(material_id):
         db.session.commit()
         
         log_activity(f'Отредактирован материал: {material.title}', 'admin')
-        flash(f'Материал "{material.title}" успешно обновлен', 'success')
+        flash(f'Material "{material.title}" muvaffaqiyatli yangilandi', 'success')
         return redirect(url_for('admin.material_details', material_id=material_id))
     
     return render_template('admin/material_form.html', 
@@ -503,7 +515,7 @@ def delete_material(material_id):
     db.session.commit()
     
     log_activity(f'Удален материал: {title}', 'admin')
-    flash(f'Материал "{title}" успешно удален', 'success')
+    flash(f'Material "{title}" muvaffaqiyatli o\'chirildi', 'success')
     return redirect(url_for('admin.lesson_details', lesson_id=lesson_id))
 
 
@@ -525,9 +537,9 @@ def add_question(material_id):
         db.session.commit()
         
         log_activity(f'Добавлен вопрос к материалу: {material.title}', 'admin')
-        flash('Вопрос успешно добавлен', 'success')
+        flash('Savol muvaffaqiyatli qo\'shildi', 'success')
     else:
-        flash('Текст вопроса не может быть пустым', 'danger')
+        flash("Savol matni bo'sh bo'lishi mumkin emas", 'danger')
     
     return redirect(url_for('admin.material_details', material_id=material_id))
 
@@ -544,7 +556,7 @@ def delete_question(question_id):
     db.session.commit()
     
     log_activity('Удален вопрос материала', 'admin')
-    flash('Вопрос успешно удален', 'success')
+    flash("Savol muvaffaqiyatli o'chirildi", 'success')
     return redirect(url_for('admin.material_details', material_id=material_id))
 
 
@@ -570,9 +582,9 @@ def add_glossary_item(material_id):
         db.session.commit()
         
         log_activity(f'Добавлено слово "{word}" в словарь материала: {material.title}', 'admin')
-        flash(f'Слово "{word}" успешно добавлено в словарь', 'success')
+        flash(f'So\'z "{word}" lug\'atga muvaffaqiyatli qo\'shildi', 'success')
     else:
-        flash('Все поля словаря должны быть заполнены', 'danger')
+        flash("Lug'atning barcha maydonlari to'ldirilishi kerak", 'danger')
     
     return redirect(url_for('admin.material_details', material_id=material_id))
 
@@ -590,7 +602,7 @@ def delete_glossary_item(glossary_id):
     db.session.commit()
     
     log_activity(f'Удалено слово "{word}" из словаря', 'admin')
-    flash(f'Слово "{word}" успешно удалено из словаря', 'success')
+    flash(f'So\'z "{word}" lug\'atdan muvaffaqiyatli o\'chirildi', 'success')
     return redirect(url_for('admin.material_details', material_id=material_id))
 
 
@@ -704,7 +716,7 @@ def reorder_materials(lesson_id):
         
         material = Material.query.get(material_id)
         if material and material.lesson_id == lesson_id:
-            material.position = position
+            material.order = position
     
     db.session.commit()
     log_activity(f'Изменен порядок материалов в уроке: {lesson.title}', 'admin')

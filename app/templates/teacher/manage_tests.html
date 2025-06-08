@@ -10,39 +10,111 @@
         </a>
     </div>
 
-    {% if tests %}
-        <div class="list-group shadow-sm">
-            {% for test in tests %}
-                 <div class="list-group-item list-group-item-action">
-                     <div class="d-flex w-100 justify-content-between">
-                         <div>
-                            <h5 class="mb-1">
-                                <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="text-decoration-none">{{ test.title }}</a>
-                                {% if test.lesson %}<span class="badge bg-light text-dark ms-2">Урок: {{ test.lesson.title }}</span>{% endif %}
-                            </h5>
-                             {% if test.description %}
-                                <p class="mb-1 text-muted">{{ test.description|truncate(150, True) }}</p>
-                            {% endif %}
-                             <small class="text-muted">
-                                 <i class="bi bi-patch-question-fill"></i> {{ test.questions.count() }} вопросов
-                                 | <i class="bi bi-file-earmark-check-fill"></i> {{ test.submissions.count() }} сдач
-                                 | <i class="bi bi-calendar-plus"></i> Создан: {{ test.created_at.strftime('%d.%m.%Y') if test.created_at else '-'}}
-                            </small>
-                         </div>
-                     </div>
-                     {# Кнопки управления тестом #}
-                     <div class="mt-2 text-end">
-                        <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="btn btn-sm btn-outline-primary" title="Вопросы"><i class="bi bi-list-ol"></i> Вопросы</a>
-                        <a href="{{ url_for('teacher.edit_test', test_id=test.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Редактировать"><i class="bi bi-pencil-fill"></i> Редактировать</a>
-                         <form action="{{ url_for('teacher.delete_test', test_id=test.id) }}" method="POST" class="d-inline" data-confirm="Удалить тест '{{ test.title }}' и все его вопросы и результаты?">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Удалить"><i class="bi bi-trash-fill"></i> Удалить</button>
-                       </form>
+    {% if tests_by_lesson %}
+        <div class="accordion" id="testsAccordion">
+            {% set has_tests = false %}
+            
+            {# Сначала показываем тесты, связанные с уроками #}
+            {% for lesson_id, lesson_data in tests_by_lesson.items() if lesson_id is not none and lesson_data.tests %}
+                {% set has_tests = true %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ lesson_id }}">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ lesson_id }}" aria-expanded="true" aria-controls="collapse{{ lesson_id }}">
+                            <span class="fw-bold">{{ lesson_data.lesson.title }}</span>
+                            <span class="badge bg-primary ms-2">{{ lesson_data.tests|length }}</span>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ lesson_id }}" class="accordion-collapse collapse show" aria-labelledby="heading{{ lesson_id }}" data-bs-parent="#testsAccordion">
+                        <div class="accordion-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for test in lesson_data.tests %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <div>
+                                                <h5 class="mb-1">
+                                                    <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="text-decoration-none">{{ test.title }}</a>
+                                                </h5>
+                                                {% if test.description %}
+                                                    <p class="mb-1 text-muted">{{ test.description|truncate(150, True) }}</p>
+                                                {% endif %}
+                                                <small class="text-muted">
+                                                    <i class="bi bi-patch-question-fill"></i> {{ test.questions.count() }} вопросов
+                                                    | <i class="bi bi-file-earmark-check-fill"></i> {{ test.submissions.count() }} сдач
+                                                    | <i class="bi bi-calendar-plus"></i> Создан: {{ test.created_at.strftime('%d.%m.%Y') if test.created_at else '-'}}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        {# Кнопки управления тестом #}
+                                        <div class="mt-2 text-end">
+                                            <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="btn btn-sm btn-outline-primary" title="Вопросы"><i class="bi bi-list-ol"></i> Вопросы</a>
+                                            <a href="{{ url_for('teacher.edit_test', test_id=test.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Редактировать"><i class="bi bi-pencil-fill"></i> Редактировать</a>
+                                            <form action="{{ url_for('teacher.delete_test', test_id=test.id) }}" method="POST" class="d-inline" data-confirm="Удалить тест '{{ test.title }}' и все его вопросы и результаты?">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Удалить"><i class="bi bi-trash-fill"></i> Удалить</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
+            
+            {# Затем показываем тесты без урока #}
+            {% if tests_by_lesson[none].tests %}
+                {% set has_tests = true %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingNoLesson">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoLesson" aria-expanded="true" aria-controls="collapseNoLesson">
+                            <span class="fw-bold">Тесты без урока</span>
+                            <span class="badge bg-secondary ms-2">{{ tests_by_lesson[none].tests|length }}</span>
+                        </button>
+                    </h2>
+                    <div id="collapseNoLesson" class="accordion-collapse collapse show" aria-labelledby="headingNoLesson" data-bs-parent="#testsAccordion">
+                        <div class="accordion-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for test in tests_by_lesson[none].tests %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <div>
+                                                <h5 class="mb-1">
+                                                    <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="text-decoration-none">{{ test.title }}</a>
+                                                </h5>
+                                                {% if test.description %}
+                                                    <p class="mb-1 text-muted">{{ test.description|truncate(150, True) }}</p>
+                                                {% endif %}
+                                                <small class="text-muted">
+                                                    <i class="bi bi-patch-question-fill"></i> {{ test.questions.count() }} вопросов
+                                                    | <i class="bi bi-file-earmark-check-fill"></i> {{ test.submissions.count() }} сдач
+                                                    | <i class="bi bi-calendar-plus"></i> Создан: {{ test.created_at.strftime('%d.%m.%Y') if test.created_at else '-'}}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        {# Кнопки управления тестом #}
+                                        <div class="mt-2 text-end">
+                                            <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="btn btn-sm btn-outline-primary" title="Вопросы"><i class="bi bi-list-ol"></i> Вопросы</a>
+                                            <a href="{{ url_for('teacher.edit_test', test_id=test.id) }}" class="btn btn-sm btn-outline-secondary ms-1" title="Редактировать"><i class="bi bi-pencil-fill"></i> Редактировать</a>
+                                            <form action="{{ url_for('teacher.delete_test', test_id=test.id) }}" method="POST" class="d-inline" data-confirm="Удалить тест '{{ test.title }}' и все его вопросы и результаты?">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Удалить"><i class="bi bi-trash-fill"></i> Удалить</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if not has_tests %}
+                <div class="alert alert-info">
+                    Тесты еще не созданы. <a href="{{ url_for('teacher.add_test') }}" class="alert-link">Создать первый тест?</a>
+                </div>
+            {% endif %}
         </div>
-     {% else %}
+    {% else %}
         <div class="alert alert-info">
             Тесты еще не созданы. <a href="{{ url_for('teacher.add_test') }}" class="alert-link">Создать первый тест?</a>
         </div>

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>{{ material.title }}</h4>
+                    <a href="{{ url_for('main.lesson_detail', lesson_id=material.lesson_id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Darsga qaytish
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>Ish haqida ma'lumot</h5>
+                        <p><strong>Talaba:</strong> {{ work.student.full_name }}</p>
+                        <p><strong>Yuborilgan sana:</strong> {{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                        {% if work.is_graded %}
+                        <p><strong>Baho:</strong> {{ work.score }}</p>
+                        <p><strong>Fikr-mulohaza:</strong> {{ work.feedback }}</p>
+                        {% endif %}
+                        {% if work.comment %}
+                        <p><strong>Izoh:</strong> {{ work.comment }}</p>
+                        {% endif %}
+                    </div>
+
+                    <h5>Fayllar</h5>
+                    <div class="row">
+                        {% for file in files %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ file.original_filename }}</h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            {% if file.file_type == 'pdf' %}
+                                                <i class="far fa-file-pdf text-danger"></i> PDF
+                                            {% elif file.file_type == 'image' %}
+                                                <i class="far fa-file-image text-primary"></i> Rasm
+                                            {% elif file.file_type == 'document' %}
+                                                <i class="far fa-file-word text-primary"></i> Word
+                                            {% elif file.file_type == 'spreadsheet' %}
+                                                <i class="far fa-file-excel text-success"></i> Excel
+                                            {% elif file.file_type == 'presentation' %}
+                                                <i class="far fa-file-powerpoint text-warning"></i> PowerPoint
+                                            {% elif file.file_type == 'text' %}
+                                                <i class="far fa-file-alt"></i> Matn
+                                            {% else %}
+                                                <i class="far fa-file"></i> Fayl
+                                            {% endif %}
+                                            {% if file.file_size %}
+                                                {{ (file.file_size / 1024)|round|int }} KB
+                                            {% endif %}
+                                        </small>
+                                    </p>
+                                    <div class="d-flex justify-content-between">
+                                        {% if file.file_type == 'image' %}
+                                        <a href="{{ file.get_file_url() }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="fas fa-eye"></i> Ko'rish
+                                        </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('student_work.download_file', file_id=file.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-download"></i> Yuklab olish
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            {% if current_user.role == 'teacher' or current_user.role == 'admin' %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Baholash</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('student_work.grade_work', work_id=work.id) }}" class="btn btn-primary">
+                        <i class="fas fa-star"></i> Ishni baholash
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

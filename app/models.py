@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(10), index=True, nullable=False, default='student')
     full_name = db.Column(db.String(120), nullable=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('student_groups.id'), nullable=True, index=True)
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
 
@@ -79,11 +80,37 @@ class Material(db.Model):
     type = db.Column(db.String(50), nullable=False, index=True)
     content = db.Column(db.Text, nullable=True)
     file_path = db.Column(db.String(255), nullable=True)
+    storage_type = db.Column(db.String(20), nullable=True, default='local')  # 'local' или 'firebase'
+    storage_path = db.Column(db.String(512), nullable=True)  # Путь в облачном хранилище
     video_url = db.Column(db.String(255), nullable=True)  # Сохраняем для обратной совместимости
     glossary_definition = db.Column(db.Text, nullable=True)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # Поле для сортировки материалов
-    position = db.Column(db.Integer, default=0, index=True)
+    order = db.Column(db.Integer, default=0, index=True)
+    
+    # Связи
+    links = db.relationship('MaterialLink', backref='material', lazy='dynamic', cascade="all, delete-orphan")
+    
+    def get_file_url(self):
+        """Возвращает URL для доступа к файлу материала"""
+        from flask import url_for, current_app
+        
+        # Если файл хранится в Firebase Storage, возвращаем прямую ссылку
+        if self.storage_type == 'firebase' and self.storage_path:
+            try:
+                from app.utils.firebase_storage import generate_download_url
+                # Генерируем временную ссылку для скачивания
+                return generate_download_url(self.storage_path)
+            except Exception as e:
+                current_app.logger.error(f"Ошибка при получении URL файла из Firebase: {str(e)}")
+                # Если произошла ошибка, возвращаем обычный URL
+                return url_for('main.download_file', filename=self.file_path.split('/')[-1])
+        
+        # Для локальных файлов используем обычный URL
+        if self.file_path:
+            return url_for('main.download_file', filename=self.file_path.split('/')[-1])
+        
+        return None
+    
     # Новые поля для расширенных функций
     is_video_lesson = db.Column(db.Boolean, default=False)
     video_source = db.Column(db.String(20), nullable=True)  # 'upload', 'youtube', 'vimeo', и т.д.
@@ -134,7 +161,9 @@ class Question(db.Model):
     def get_options_dict(self):
         # ... (без изменений) ...
         if not self.options: return {}
-        try: return json.loads(self.options)
+        try: 
+            data = json.loads(self.options)
+            return data if isinstance(data, dict) else {}
         except json.JSONDecodeError: return {}
 
     def get_correct_answer_list(self):
@@ -175,40 +204,147 @@ class Submission(db.Model):
         # Используем .student и .test, созданные через backref
         return f'<Submission {self.id} by U:{self.student_id} for T:{self.test_id} Status:{self.retake_status}>'
 
+class StudentWorkFile(db.Model):
+    __tablename__ = 'student_work_files'
+    id = db.Column(db.Integer, primary_key=True)
+    work_id = db.Column(db.Integer, db.ForeignKey('student_works.id', ondelete='CASCADE'), nullable=False, index=True)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    file_type = db.Column(db.String(20), nullable=False)  # 'pdf', 'image', etc.
+    file_size = db.Column(db.Integer, nullable=True)
+    storage_type = db.Column(db.String(20), nullable=True, default='local')  # 'local' или 'firebase'
+    storage_path = db.Column(db.String(512), nullable=True)  # Путь в облачном хранилище
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Связь с работой
+    work = db.relationship('StudentWork', backref=db.backref('files', lazy='dynamic', cascade='all, delete-orphan'))
+    
+    def get_file_path(self):
+        """Возвращает путь к файлу"""
+        from flask import current_app
+        
+        # Проверяем, хранится ли файл в Firebase Storage
+        if self.storage_type == 'firebase' and self.storage_path:
+            return self.storage_path
+        
+        # Возвращаем локальный путь для новой структуры
+        if self.work_id:
+            return os.path.join(current_app.config['UPLOAD_FOLDER'], 'student_works', str(self.work_id), self.filename)
+        
+        # Для обратной совместимости
+        return os.path.join(current_app.config['UPLOAD_FOLDER'], 'student_works', self.filename)
+    
+    def get_file_url(self):
+        """Возвращает URL для доступа к файлу"""
+        from flask import url_for, current_app
+        
+        # Если файл хранится в Firebase Storage, возвращаем прямую ссылку
+        if self.storage_type == 'firebase' and self.storage_path:
+            try:
+                from app.utils.firebase_storage import generate_download_url
+                # Генерируем временную ссылку для скачивания
+                return generate_download_url(self.storage_path)
+            except Exception as e:
+                current_app.logger.error(f"Ошибка при получении URL файла из Firebase: {str(e)}")
+                # Если произошла ошибка, возвращаем обычный URL
+                return url_for('student_work.download_file', file_id=self.id)
+        
+        # Для локальных файлов используем обычный URL
+        return url_for('student_work.download_file', file_id=self.id)
+    
+    def __repr__(self):
+        return f'<StudentWorkFile {self.id}: {self.original_filename}>'
 
 class StudentWork(db.Model):
     __tablename__ = 'student_works'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), nullable=False, index=True)
-    filename = db.Column(db.String(255), nullable=False)
-    original_filename = db.Column(db.String(255), nullable=False)
-    file_type = db.Column(db.String(50), nullable=False)  # 'pdf', 'image', etc.
-    file_size = db.Column(db.Integer, nullable=False)  # размер в байтах
+    title = db.Column(db.String(140), nullable=True)
+    # Старые поля для обратной совместимости
+    filename = db.Column(db.String(255), nullable=True)
+    original_filename = db.Column(db.String(255), nullable=True)
+    file_type = db.Column(db.String(20), nullable=True)  # 'pdf', 'image', etc.
+    file_path = db.Column(db.String(255), nullable=True)
+    storage_type = db.Column(db.String(20), nullable=True, default='local')  # 'local' или 'firebase'
+    storage_path = db.Column(db.String(512), nullable=True)  # Путь в облачном хранилище
+    file_size = db.Column(db.Integer, nullable=True)
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    score = db.Column(db.Float, nullable=True)  # оценка от 0 до 10
-    is_graded = db.Column(db.Boolean, default=False)
-    feedback = db.Column(db.Text, nullable=True)  # комментарий учителя
+    is_graded = db.Column(db.Boolean, default=False, index=True)
+    score = db.Column(db.Integer, nullable=True)
+    feedback = db.Column(db.Text, nullable=True)
     graded_at = db.Column(db.DateTime, nullable=True)
     graded_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
     # Связи
-    student = db.relationship('User', foreign_keys=[student_id], backref=db.backref('works', lazy='dynamic'))
-    material = db.relationship('Material', backref=db.backref('student_works', lazy='dynamic'))
-    graded_by = db.relationship('User', foreign_keys=[graded_by_id], backref=db.backref('graded_works', lazy='dynamic'))
+    student = db.relationship('User', foreign_keys=[student_id], backref='submitted_works')
+    material = db.relationship('Material', backref='student_works')
+    graded_by = db.relationship('User', foreign_keys=[graded_by_id], backref='graded_works')
     
     def get_file_path(self):
-        """Возвращает путь к файлу работы студента"""
+        """Возвращает путь к основному файлу работы студента (для обратной совместимости)"""
         from flask import current_app
-        return os.path.join(current_app.config['UPLOAD_FOLDER'], 'student_works', self.filename)
-    
+        
+        # Проверяем, есть ли файлы в новой системе
+        if self.files.count() > 0:
+            # Возвращаем путь к первому файлу
+            return self.files.first().get_file_path()
+        
+        # Для обратной совместимости со старыми записями
+        if self.storage_type == 'firebase' and self.storage_path:
+            return self.storage_path
+        
+        # Возвращаем локальный путь для обратной совместимости
+        if self.filename:
+            return os.path.join(current_app.config['UPLOAD_FOLDER'], 'student_works', self.filename)
+        
+        return None
+
     def get_file_url(self):
-        """Возвращает URL для доступа к файлу"""
-        from flask import url_for
-        return url_for('main.view_student_work', work_id=self.id)
+        """Возвращает URL для доступа к основному файлу (для обратной совместимости)"""
+        from flask import url_for, current_app
+        
+        # Проверяем, есть ли файлы в новой системе
+        if self.files.count() > 0:
+            # Возвращаем URL первого файла
+            return self.files.first().get_file_url()
+        
+        # Для обратной совместимости со старыми записями
+        if self.storage_type == 'firebase' and self.storage_path:
+            try:
+                from app.utils.firebase_storage import generate_download_url
+                # Генерируем временную ссылку для скачивания
+                return generate_download_url(self.storage_path)
+            except Exception as e:
+                current_app.logger.error(f"Ошибка при получении URL файла из Firebase: {str(e)}")
+                # Если произошла ошибка, возвращаем обычный URL
+                return url_for('student_work.view_work', work_id=self.id)
+        
+        # Для локальных файлов используем обычный URL
+        return url_for('student_work.view_work', work_id=self.id)
+        
+    def get_files(self):
+        """Возвращает список всех файлов работы"""
+        # Проверяем, есть ли файлы в новой системе
+        if self.files.count() > 0:
+            return self.files.all()
+        
+        # Для обратной совместимости со старыми записями
+        if self.filename:
+            # Создаем виртуальный объект файла для старой записи
+            from collections import namedtuple
+            VirtualFile = namedtuple('VirtualFile', ['id', 'original_filename', 'file_type', 'get_file_url'])
+            return [VirtualFile(
+                id=0,
+                original_filename=self.original_filename,
+                file_type=self.file_type,
+                get_file_url=lambda: self.get_file_url()
+            )]
+        
+        return []
     
     def __repr__(self):
-        return f'<StudentWork {self.id} by U:{self.student_id} for M:{self.material_id}'
+        return f'<StudentWork {self.id} by U:{self.student_id} for M:{self.material_id}>'
 
 class ActivityLog(db.Model):
     __tablename__ = 'activity_logs'

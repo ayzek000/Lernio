@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% if group %}{{ url_for('groups.edit_group', group_id=group.id) }}{% else %}{{ url_for('groups.create_group') }}{% endif %}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">u041du0430u0437u0432u0430u043du0438u0435 u0433u0440u0443u043fu043fu044b *</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{% if group %}{{ group.name }}{% endif %}" required>
+                            <div class="form-text">u041du0430u043fu0440u0438u043cu0435u0440: "u0413u0440u0443u043fu043fu0430 1u0410", "u041du0430u0447u0438u043du0430u044eu0449u0438u0435", "u041fu0440u043eu0434u0432u0438u043du0443u0442u044bu0435" u0438 u0442.u0434.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">u041eu043fu0438u0441u0430u043du0438u0435</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{% if group %}{{ group.description }}{% endif %}</textarea>
+                            <div class="form-text">u041eu043fu0438u0441u0430u043du0438u0435 u0433u0440u0443u043fu043fu044b, u0435u0435 u043eu0441u043eu0431u0435u043du043du043eu0441u0442u0438 u0438u043bu0438 u0434u043eu043fu043eu043bu043du0438u0442u0435u043bu044cu043du0430u044f u0438u043du0444u043eu0440u043cu0430u0446u0438u044f.</div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('groups.manage_groups') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> u041du0430u0437u0430u0434
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {% if group %}u0421u043eu0445u0440u0430u043du0438u0442u044c{% else %}u0421u043eu0437u0434u0430u0442u044c{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

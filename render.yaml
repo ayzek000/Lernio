@@ -15,7 +15,10 @@ services:
         generateValue: true
       - key: RENDER
         value: true
-    disk:
-      name: data
-      mountPath: /opt/render/project/src/instance
-      sizeGB: 1
+    disks:
+      - name: data
+        mountPath: /opt/render/project/src/instance
+        sizeGB: 0.5
+      - name: uploads
+        mountPath: /opt/render/project/src/uploads
+        sizeGB: 0.5

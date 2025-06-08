@@ -25,13 +25,48 @@
                         <div class="col-md-6">
                             <p><strong>Talaba:</strong> {{ work.student.full_name or work.student.username }}</p>
                             <p><strong>Material:</strong> {{ work.material.title }}</p>
-                            <p><strong>Fayl:</strong> {{ work.original_filename }}</p>
+                            <p><strong>Yuklangan sana:</strong> {{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Yuklangan sana:</strong> {{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</p>
-                            <p><strong>Fayl turi:</strong> {{ work.file_type }}</p>
-                            <p><strong>Fayl hajmi:</strong> {{ (work.file_size / 1024)|round(1) }} KB</p>
+                            {% if work.comment %}
+                            <p><strong>Izoh:</strong> {{ work.comment }}</p>
+                            {% endif %}
+                            <p><strong>Fayllar soni:</strong> {{ work.files.count() }}</p>
                         </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h5>Yuklangan fayllar</h5>
+                    <div class="list-group">
+                        {% for file in work.get_files() %}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if file.file_type == 'pdf' %}
+                                    <i class="far fa-file-pdf text-danger"></i>
+                                {% elif file.file_type == 'image' %}
+                                    <i class="far fa-file-image text-primary"></i>
+                                {% elif file.file_type == 'document' %}
+                                    <i class="far fa-file-word text-primary"></i>
+                                {% elif file.file_type == 'spreadsheet' %}
+                                    <i class="far fa-file-excel text-success"></i>
+                                {% elif file.file_type == 'presentation' %}
+                                    <i class="far fa-file-powerpoint text-warning"></i>
+                                {% elif file.file_type == 'text' %}
+                                    <i class="far fa-file-alt"></i>
+                                {% else %}
+                                    <i class="far fa-file"></i>
+                                {% endif %}
+                                {{ file.original_filename }}
+                                <small class="text-muted">
+                                    ({{ (file.file_size / 1024)|round(1) }} KB)
+                                </small>
+                            </div>
+                            <a href="{{ url_for('student_work.download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
                 

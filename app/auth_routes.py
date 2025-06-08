@@ -41,7 +41,7 @@ def login():
         
         if user is None:
             print(f"[DEBUG] Неудачная попытка входа: {form.username.data}")
-            flash('Неверное имя пользователя или пароль.', 'danger')
+            flash("Noto'g'ri foydalanuvchi nomi yoki parol.", 'danger')
             log_activity(None, 'login_failed', f"Username: {form.username.data}")
             return redirect(url_for('auth.login'))
         
@@ -82,7 +82,7 @@ def login():
                 else:
                     next_page = url_for('student.dashboard')
 
-        flash(f'Добро пожаловать, {user.full_name or user.username}!', 'success')
+        flash(f'Xush kelibsiz, {user.full_name or user.username}!', 'success')
         
         # Добавляем отладочную информацию
         print(f"\n[DEBUG] Перенаправление на: {next_page}")
@@ -112,5 +112,5 @@ def logout():
     # Вызываем импортированную функцию ПЕРЕД logout_user
     log_activity(user_id, 'logout')
     logout_user()
-    flash('Вы вышли из системы.', 'info')
+    flash('Siz tizimdan chiqdingiz.', 'info')
     return redirect(url_for('auth.login'))

@@ -2,13 +2,13 @@ import json
 from flask import Blueprint, render_template, flash, redirect, url_for, request, abort, current_app
 from flask_login import login_required, current_user
 from functools import wraps
-from sqlalchemy import not_
+from sqlalchemy import not_, func, cast, Date
 from app import db
-from app.models import User, Lesson, Test, Question, Submission, TransversalAssessment, StudentWork
+from app.models import User, Lesson, Test, Question, Submission, TransversalAssessment, StudentWork, ActivityLog
 from app.forms import TestSubmissionForm
 # Импортируем функции из app.utils.py
 from app.utils import log_activity, get_current_tashkent_time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 bp = Blueprint('student', __name__)
 
@@ -48,18 +48,116 @@ def dashboard():
     recent_works = StudentWork.query.filter_by(student_id=current_user.id).order_by(
         StudentWork.submitted_at.desc()
     ).limit(5).all()
+    
     # Последние оценки компетенций
     recent_assessments = TransversalAssessment.query.filter_by(student_id=current_user.id).order_by(
         TransversalAssessment.assessment_date.desc()
     ).limit(5).all()
-
+    
+    # Получаем данные об активности студента за последние 7 дней для графика
+    from datetime import datetime, timedelta
+    from sqlalchemy import func, cast, Date
+    
+    # Получаем текущую дату в Ташкенте
+    current_date = get_current_tashkent_time().date()
+    
+    # Создаем список дат за последние 7 дней
+    days = []
+    for i in range(6, -1, -1):  # От 6 до 0 (последние 7 дней)
+        days.append(current_date - timedelta(days=i))
+    
+    # Получаем активность студента по дням, используя более надежный способ работы с датами
+    activity_data = db.session.query(
+        func.date(ActivityLog.timestamp).label('date'),
+        func.count(ActivityLog.id).label('count')
+    ).filter(
+        ActivityLog.user_id == current_user.id,
+        ActivityLog.timestamp >= days[0]  # Начиная с самого раннего дня
+    ).group_by(
+        func.date(ActivityLog.timestamp)
+    ).all()
+    
+    # Преобразуем результаты в словарь для удобства
+    activity_dict = {str(date): count for date, count in activity_data}
+    
+    # Формируем данные для графика
+    activity_counts = []
+    activity_dates = []
+    activity_labels = []
+    
+    # Названия дней недели на узбекском
+    day_names = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba']
+    
+    for day in days:
+        day_str = str(day)
+        activity_dates.append(day_str)
+        # Получаем количество активностей для этого дня (или 0, если нет данных)
+        count = activity_dict.get(day_str, 0)
+        activity_counts.append(count)
+        # Добавляем название дня недели
+        weekday = day.weekday()  # 0 - понедельник, 6 - воскресенье
+        activity_labels.append(day_names[weekday])
+    
+    # Получаем данные о предметах и оценках для круговой диаграммы
+    # Группируем тесты по связанным урокам и вычисляем средний балл
+    subject_data = db.session.query(
+        Lesson.title,
+        func.avg(Submission.score).label('avg_score')
+    ).join(
+        Test, Test.lesson_id == Lesson.id
+    ).join(
+        Submission, Submission.test_id == Test.id
+    ).filter(
+        Submission.student_id == current_user.id,
+        Submission.score.isnot(None)
+    ).group_by(
+        Lesson.title
+    ).all()
+    
+    # Формируем данные для круговой диаграммы предметов
+    subject_labels = []
+    subject_scores = []
+    
+    for title, avg_score in subject_data:
+        subject_labels.append(title)
+        subject_scores.append(round(avg_score, 1))
+    
+    # Calculate real metrics for the dashboard
+    
+    # 1. Active days - count unique days with activity
+    active_days = db.session.query(func.count(func.distinct(func.date(ActivityLog.timestamp))))\
+                  .filter(ActivityLog.user_id == current_user.id).scalar() or 0
+    
+    # 2. Submitted tests count
+    submitted_tests_count = Submission.query.filter_by(student_id=current_user.id).count()
+    
+    # 3. Average score across all submissions
+    avg_score_result = db.session.query(func.avg(Submission.score))\
+                      .filter(Submission.student_id == current_user.id,
+                              Submission.score.isnot(None)).scalar()
+    average_score = round(avg_score_result or 0, 1)
+    
+    # 4. Estimate study hours based on activity logs and test submissions
+    # We'll estimate 30 minutes per activity log and 1 hour per test submission as a simple heuristic
+    activity_count = ActivityLog.query.filter_by(user_id=current_user.id).count()
+    study_hours = round((activity_count * 0.5 + submitted_tests_count * 1) or 0)
+    
     log_activity(current_user.id, 'view_student_dashboard')
     return render_template('student/dashboard.html', title='Моя панель',
                            user=current_user,
                            available_tests=available_tests,
                            recent_submissions=recent_submissions,
                            recent_assessments=recent_assessments,
-                           recent_works=recent_works)
+                           recent_works=recent_works,
+                           activity_labels=activity_labels,
+                           activity_counts=activity_counts,
+                           activity_dates=activity_dates,
+                           subject_labels=subject_labels,
+                           subject_scores=subject_scores,
+                           active_days=active_days,
+                           submitted_tests_count=submitted_tests_count,
+                           average_score=average_score,
+                           study_hours=study_hours)
 
 # --- Просмотр Результатов ---
 @bp.route('/my_results')
@@ -96,13 +194,13 @@ def take_test(test_id):
             status_message = 'Результат сохранен.'
             if existing_submission.retake_status == 'requested':
                 status_message = 'Запрос на пересдачу отправлен.'
-            flash(f'Вы уже проходили этот тест. {status_message}', 'info')
+            flash(f"Siz allaqachon ushbu testni topshirgansiz. {status_message}", 'info')
             return render_template('test_view.html', title=f'Тест: {test.title} (Сдан)',
                                    test=test, questions=[], form=None,
                                    submission=existing_submission) # Передаем данные о сдаче
         elif request.method == 'POST':
              # Блокируем повторную отправку формы
-             flash('Вы уже отправили результаты или запросили пересдачу этого теста.', 'warning')
+             flash("Siz allaqachon natijalarni yuborganmisiz yoki qayta topshirish so'rovi yuborganmisiz.", 'warning')
              return redirect(url_for('student.my_results'))
 
     # Сюда попадаем, если:
@@ -129,7 +227,7 @@ def take_test(test_id):
                  log_activity(current_user.id, f'deleted_rejected_submission_{existing_submission.id}')
              except Exception as e:
                   db.session.rollback()
-                  flash(f'Ошибка при удалении отклоненной попытки: {e}', 'danger')
+                  flash(f"Rad etilgan urinishni o'chirishda xatolik: {e}", 'danger')
                   return redirect(url_for('student.take_test', test_id=test_id))
 
 
@@ -185,11 +283,11 @@ def take_test(test_id):
         try:
             db.session.commit()
             log_activity(current_user.id, f'submit_test_{test_id}{submission_note}', f'Score: {final_score:.1f}/10 ({final_score_percent:.0f}%)')
-            flash(f'Тест "{test.title}" завершен!{submission_note} Результат: {final_score:.1f}/10 ({final_score_percent:.0f}%)', 'success')
+            flash(f'Test "{test.title}" tugatildi!{submission_note} Natija: {final_score:.1f}/10 ({final_score_percent:.0f}%)', 'success')
             return redirect(url_for('student.my_results'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Ошибка при сохранении результатов теста: {e}', 'danger')
+            flash(f"Test natijalarini saqlashda xatolik: {e}", 'danger')
             current_app.logger.error(f"Error saving submission for test {test_id}, user {current_user.id}: {e}")
             return render_template('test_view.html', title=f'Тест: {test.title}', test=test, questions=questions, form=form, submission=None)
 
@@ -209,16 +307,16 @@ def request_retake(test_id):
                                  .order_by(Submission.submitted_at.desc()).first()
 
     if not submission:
-        flash('Вы еще не сдавали этот тест.', 'warning')
+        flash("Siz hali ushbu testni topshirmadingiz.", 'warning')
         return redirect(url_for('student.take_test', test_id=test_id))
 
     # Проверяем текущий статус пересдачи
     if submission.retake_status == 'requested':
-        flash('Запрос на пересдачу уже отправлен и ожидает рассмотрения.', 'info')
+        flash("Qayta topshirish so'rovi allaqachon yuborilgan va ko'rib chiqilishini kutmoqda.", 'info')
         return redirect(url_for('student.take_test', test_id=test_id))
     if submission.retake_status == 'approved':
         # Этого не должно быть, т.к. одобрение удаляет старую запись. Но на всякий случай.
-         flash('Пересдача уже одобрена. Вы можете пройти тест заново.', 'info')
+         flash("Qayta topshirish allaqachon tasdiqlangan. Siz testni qaytadan topshirishingiz mumkin.", 'info')
          return redirect(url_for('student.take_test', test_id=test_id))
     # Если статус None или 'rejected', разрешаем запрос
 
@@ -229,10 +327,10 @@ def request_retake(test_id):
     try:
         db.session.commit() # Сохраняем изменения в БД
         log_activity(current_user.id, f'request_retake_test_{test_id}')
-        flash(f'Ваш запрос на пересдачу теста "{test.title}" отправлен преподавателю.', 'success')
+        flash(f'"{test.title}" testini qayta topshirish so\'rovi o\'qituvchiga yuborildi.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Ошибка при отправке запроса: {e}', 'danger')
+        flash(f"So'rov yuborishda xatolik: {e}", 'danger')
         current_app.logger.error(f"Error requesting retake for sub {submission.id}: {e}")
 
     # Возвращаем на страницу теста, где теперь будет виден статус запроса

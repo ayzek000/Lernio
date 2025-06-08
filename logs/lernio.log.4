@@ -1,4 +1,4 @@
-2025-05-26 22:47:48,136 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:188]
+2025-05-31 20:06:37,051 ERROR: Exception on /student/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -15,19 +15,31 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 21, in decorated_function
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 21, in decorated_function
     return f(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 43, in dashboard
-    recent_submissions = current_user.submissions.order_by(
-                         ^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'User' object has no attribute 'submissions'
-2025-05-26 22:49:36,296 INFO: Lernio startup [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:169]
-2025-05-26 22:49:40,967 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:49:41,110 INFO: Пользователь загружен из базы данных: 123 (роль: student) [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:97]
-2025-05-26 22:49:41,187 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:49:41,188 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:49:41,196 ERROR: Exception on /student/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 126, in dashboard
+    return render_template('student/dashboard.html', title='Моя панель',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\ENVY\Desktop\Lernio\app\templates\student\dashboard.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\ENVY\Desktop\Lernio\app\templates\base.html", line 126, in top-level template code
+    {% block content %}
+  File "C:\Users\ENVY\Desktop\Lernio\app\templates\student\dashboard.html", line 154, in block 'content'
+    <span class="badge {% if submitted_tests_count > 0 %}bg-success{% else %}bg-secondary{% endif %} rounded-pill">{% if submitted_tests_count > 0 %}Qozonilgan{% else %}Jarayonda{% endif %}</span>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'submitted_tests_count' is undefined
+2025-05-31 20:06:37,162 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:211]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -44,44 +56,32 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 21, in decorated_function
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 21, in decorated_function
     return f(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 43, in dashboard
-    recent_submissions = current_user.submissions.order_by(
-                         ^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'User' object has no attribute 'submissions'
-2025-05-26 22:49:41,202 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:188]
-Traceback (most recent call last):
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
-    return current_app.ensure_sync(func)(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 21, in decorated_function
-    return f(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 43, in dashboard
-    recent_submissions = current_user.submissions.order_by(
-                         ^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'User' object has no attribute 'submissions'
-2025-05-26 22:54:22,323 INFO: Lernio startup [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:169]
-2025-05-26 22:54:29,716 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:54:29,827 INFO: Пользователь загружен из базы данных: 123 (роль: student) [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:97]
-2025-05-26 22:54:29,908 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:54:29,909 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:54:30,019 INFO: [2025-05-26 22:54:30] User 5: view_student_dashboard [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:54:37,261 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:54:37,262 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:54:38,016 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:54:38,018 INFO: Пользователь найден в сессии: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 126, in dashboard
+    return render_template('student/dashboard.html', title='Моя панель',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\ENVY\Desktop\Lernio\app\templates\student\dashboard.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\ENVY\Desktop\Lernio\app\templates\base.html", line 126, in top-level template code
+    {% block content %}
+  File "C:\Users\ENVY\Desktop\Lernio\app\templates\student\dashboard.html", line 154, in block 'content'
+    <span class="badge {% if submitted_tests_count > 0 %}bg-success{% else %}bg-secondary{% endif %} rounded-pill">{% if submitted_tests_count > 0 %}Qozonilgan{% else %}Jarayonda{% endif %}</span>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'submitted_tests_count' is undefined
+2025-05-31 20:06:39,474 INFO: Загрузка пользователя с ID: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:39,476 INFO: Пользователь найден в сессии: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:06:39,478 INFO: Загрузка пользователя с ID: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:39,478 INFO: Пользователь найден в сессии: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:06:39,497 INFO: [2025-05-31 20:06:39] User 8: view_student_dashboard [in C:\Users\ENVY\Desktop\Lernio\app\utils\__init__.py:35]

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <a href="{{ url_for('groups.manage_groups') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку групп
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Список студентов в группе -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Студенты в группе</h5>
+                </div>
+                <div class="card-body">
+                    {% if students %}
+                    <div class="list-group">
+                        {% for student in students %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ student.full_name or student.username }}</strong>
+                                <small class="d-block text-muted">{{ student.username }}</small>
+                            </div>
+                            <form action="{{ url_for('groups.remove_student_from_group', group_id=group.id, student_id=student.id) }}" method="post">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить из группы">
+                                    <i class="bi bi-person-dash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> В этой группе пока нет студентов.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Добавление студентов в группу -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Добавить студентов в группу</h5>
+                </div>
+                <div class="card-body">
+                    {% if available_students %}
+                    <form action="{{ url_for('groups.add_student_to_group', group_id=group.id) }}" method="post" class="mb-3">
+                        <div class="input-group">
+                            <select name="student_id" class="form-select" required>
+                                <option value="">Выберите студента...</option>
+                                {% for student in available_students %}
+                                <option value="{{ student.id }}">{{ student.full_name or student.username }} ({{ student.username }})</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-person-plus"></i> Добавить
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Нет доступных студентов для добавления в группу.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <h6>Информация о группе:</h6>
+                        <p><strong>Название:</strong> {{ group.name }}</p>
+                        {% if group.description %}
+                        <p><strong>Описание:</strong> {{ group.description }}</p>
+                        {% endif %}
+                        <p><strong>Создана:</strong> {{ group.created_at.strftime('%d.%m.%Y') }}</p>
+                        <p><strong>Количество студентов:</strong> {{ students|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

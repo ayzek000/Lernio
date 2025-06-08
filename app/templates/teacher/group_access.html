@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <a href="{{ url_for('groups.manage_groups') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> u041du0430u0437u0430u0434 u043a u0441u043fu0438u0441u043au0443 u0433u0440u0443u043fu043f
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> u0417u0434u0435u0441u044c u0432u044b u043cu043eu0436u0435u0442u0435 u043du0430u0441u0442u0440u043eu0438u0442u044c u0434u043eu0441u0442u0443u043f u0433u0440u0443u043fu043fu044b <strong>{{ group.name }}</strong> u043a u0443u0447u0435u0431u043du044bu043c u043cu0430u0442u0435u0440u0438u0430u043bu0430u043c u0438 u0442u0435u0441u0442u0430u043c. u041fu043e u0443u043cu043eu043bu0447u0430u043du0438u044e u0434u043eu0441u0442u0443u043f u043a u0432u0441u0435u043c u043cu0430u0442u0435u0440u0438u0430u043bu0430u043c u0440u0430u0437u0440u0435u0448u0435u043d.
+            </div>
+        </div>
+    </div>
+
+    <!-- u0412u043au043bu0430u0434u043au0438 u0434u043bu044f u0440u0430u0437u043du044bu0445 u0442u0438u043fu043eu0432 u043au043eu043du0442u0435u043du0442u0430 -->
+    <ul class="nav nav-tabs mb-4" id="accessTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="lessons-tab" data-bs-toggle="tab" data-bs-target="#lessons" type="button" role="tab" aria-controls="lessons" aria-selected="true">
+                <i class="bi bi-book"></i> u0423u0440u043eu043au0438
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials" type="button" role="tab" aria-controls="materials" aria-selected="false">
+                <i class="bi bi-file-text"></i> u041cu0430u0442u0435u0440u0438u0430u043bu044b
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button" role="tab" aria-controls="tests" aria-selected="false">
+                <i class="bi bi-check-square"></i> u0422u0435u0441u0442u044b
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="accessTabsContent">
+        <!-- u0423u0440u043eu043au0438 -->
+        <div class="tab-pane fade show active" id="lessons" role="tabpanel" aria-labelledby="lessons-tab">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">u0414u043eu0441u0442u0443u043f u043a u0443u0440u043eu043au0430u043c</h5>
+                </div>
+                <div class="card-body">
+                    {% if lessons %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>u041du0430u0437u0432u0430u043du0438u0435 u0443u0440u043eu043au0430</th>
+                                    <th>u0422u0435u043au0443u0449u0438u0439 u0434u043eu0441u0442u0443u043f</th>
+                                    <th>u0414u0435u0439u0441u0442u0432u0438u044f</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lesson in lessons %}
+                                <tr>
+                                    <td>{{ lesson.title }}</td>
+                                    <td>
+                                        {% if lesson.id in lesson_rules %}
+                                            {% if lesson_rules[lesson.id] == 'allow' %}
+                                                <span class="badge bg-success">u0420u0430u0437u0440u0435u0448u0435u043d</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">u0417u0430u043fu0440u0435u0449u0435u043d</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">u041fu043e u0443u043cu043eu043bu0447u0430u043du0438u044e (u0440u0430u0437u0440u0435u0448u0435u043d)</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('groups.update_group_access', group_id=group.id) }}" method="post" class="d-inline">
+                                            <input type="hidden" name="content_type" value="lesson">
+                                            <input type="hidden" name="content_id" value="{{ lesson.id }}">
+                                            <div class="btn-group">
+                                                <button type="submit" name="access_type" value="allow" class="btn btn-sm btn-outline-success" title="u0420u0430u0437u0440u0435u0448u0438u0442u044c u0434u043eu0441u0442u0443u043f">
+                                                    <i class="bi bi-check-circle"></i> u0420u0430u0437u0440u0435u0448u0438u0442u044c
+                                                </button>
+                                                <button type="submit" name="access_type" value="deny" class="btn btn-sm btn-outline-danger" title="u0417u0430u043fu0440u0435u0442u0438u0442u044c u0434u043eu0441u0442u0443u043f">
+                                                    <i class="bi bi-x-circle"></i> u0417u0430u043fu0440u0435u0442u0438u0442u044c
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> u0423u0440u043eu043au0438 u0435u0449u0435 u043du0435 u0441u043eu0437u0434u0430u043du044b.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- u041cu0430u0442u0435u0440u0438u0430u043bu044b -->
+        <div class="tab-pane fade" id="materials" role="tabpanel" aria-labelledby="materials-tab">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">u0414u043eu0441u0442u0443u043f u043a u043cu0430u0442u0435u0440u0438u0430u043bu0430u043c</h5>
+                </div>
+                <div class="card-body">
+                    {% if materials %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>u041du0430u0437u0432u0430u043du0438u0435 u043cu0430u0442u0435u0440u0438u0430u043bu0430</th>
+                                    <th>u0423u0440u043eu043a</th>
+                                    <th>u0422u0435u043au0443u0449u0438u0439 u0434u043eu0441u0442u0443u043f</th>
+                                    <th>u0414u0435u0439u0441u0442u0432u0438u044f</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for material in materials %}
+                                <tr>
+                                    <td>{{ material.title }}</td>
+                                    <td>{{ material.lesson.title if material.lesson else 'u0411u0435u0437 u0443u0440u043eu043au0430' }}</td>
+                                    <td>
+                                        {% if material.id in material_rules %}
+                                            {% if material_rules[material.id] == 'allow' %}
+                                                <span class="badge bg-success">u0420u0430u0437u0440u0435u0448u0435u043d</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">u0417u0430u043fu0440u0435u0449u0435u043d</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">u041fu043e u0443u043cu043eu043bu0447u0430u043du0438u044e (u0440u0430u0437u0440u0435u0448u0435u043d)</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('groups.update_group_access', group_id=group.id) }}" method="post" class="d-inline">
+                                            <input type="hidden" name="content_type" value="material">
+                                            <input type="hidden" name="content_id" value="{{ material.id }}">
+                                            <div class="btn-group">
+                                                <button type="submit" name="access_type" value="allow" class="btn btn-sm btn-outline-success" title="u0420u0430u0437u0440u0435u0448u0438u0442u044c u0434u043eu0441u0442u0443u043f">
+                                                    <i class="bi bi-check-circle"></i> u0420u0430u0437u0440u0435u0448u0438u0442u044c
+                                                </button>
+                                                <button type="submit" name="access_type" value="deny" class="btn btn-sm btn-outline-danger" title="u0417u0430u043fu0440u0435u0442u0438u0442u044c u0434u043eu0441u0442u0443u043f">
+                                                    <i class="bi bi-x-circle"></i> u0417u0430u043fu0440u0435u0442u0438u0442u044c
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> u041cu0430u0442u0435u0440u0438u0430u043bu044b u0435u0449u0435 u043du0435 u0441u043eu0437u0434u0430u043du044b.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- u0422u0435u0441u0442u044b -->
+        <div class="tab-pane fade" id="tests" role="tabpanel" aria-labelledby="tests-tab">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">u0414u043eu0441u0442u0443u043f u043a u0442u0435u0441u0442u0430u043c</h5>
+                </div>
+                <div class="card-body">
+                    {% if tests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>u041du0430u0437u0432u0430u043du0438u0435 u0442u0435u0441u0442u0430</th>
+                                    <th>u0423u0440u043eu043a</th>
+                                    <th>u0422u0435u043au0443u0449u0438u0439 u0434u043eu0441u0442u0443u043f</th>
+                                    <th>u0414u0435u0439u0441u0442u0432u0438u044f</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in tests %}
+                                <tr>
+                                    <td>{{ test.title }}</td>
+                                    <td>{{ test.lesson.title if test.lesson else 'u0411u0435u0437 u0443u0440u043eu043au0430' }}</td>
+                                    <td>
+                                        {% if test.id in test_rules %}
+                                            {% if test_rules[test.id] == 'allow' %}
+                                                <span class="badge bg-success">u0420u0430u0437u0440u0435u0448u0435u043d</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">u0417u0430u043fu0440u0435u0449u0435u043d</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">u041fu043e u0443u043cu043eu043bu0447u0430u043du0438u044e (u0440u0430u0437u0440u0435u0448u0435u043d)</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('groups.update_group_access', group_id=group.id) }}" method="post" class="d-inline">
+                                            <input type="hidden" name="content_type" value="test">
+                                            <input type="hidden" name="content_id" value="{{ test.id }}">
+                                            <div class="btn-group">
+                                                <button type="submit" name="access_type" value="allow" class="btn btn-sm btn-outline-success" title="u0420u0430u0437u0440u0435u0448u0438u0442u044c u0434u043eu0441u0442u0443u043f">
+                                                    <i class="bi bi-check-circle"></i> u0420u0430u0437u0440u0435u0448u0438u0442u044c
+                                                </button>
+                                                <button type="submit" name="access_type" value="deny" class="btn btn-sm btn-outline-danger" title="u0417u0430u043fu0440u0435u0442u0438u0442u044c u0434u043eu0441u0442u0443u043f">
+                                                    <i class="bi bi-x-circle"></i> u0417u0430u043fu0440u0435u0442u0438u0442u044c
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> u0422u0435u0441u0442u044b u0435u0449u0435 u043du0435 u0441u043eu0437u0434u0430u043du044b.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -27,14 +27,40 @@
                 {% if existing_work %}
                 <div class="alert alert-info">
                     <h5><i class="bi bi-info-circle me-2"></i>Mavjud ish</h5>
-                    <p>Siz allaqachon ushbu material uchun ish yuklagansiz. Yangi faylni yuklasangiz, oldingi ish o'chiriladi.</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>
-                            <strong>Fayl:</strong> {{ existing_work.original_filename }}<br>
-                            <strong>Yuklangan:</strong> {{ existing_work.submitted_at.strftime('%d.%m.%Y %H:%M') }}
-                        </span>
+                    <p>Siz allaqachon ushbu material uchun ish yuklagansiz. Yangi fayllarni yuklasangiz, oldingi ishlar o'chiriladi.</p>
+                    <div class="mb-2">
+                        <strong>Yuklangan:</strong> {{ existing_work.submitted_at.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                    
+                    <div class="mb-2">
+                        <strong>Fayllar:</strong>
+                        <ul class="list-group mt-2">
+                            {% for file in existing_work.get_files() %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if file.file_type == 'pdf' %}
+                                        <i class="far fa-file-pdf text-danger"></i>
+                                    {% elif file.file_type == 'image' %}
+                                        <i class="far fa-file-image text-primary"></i>
+                                    {% elif file.file_type == 'document' %}
+                                        <i class="far fa-file-word text-primary"></i>
+                                    {% elif file.file_type == 'spreadsheet' %}
+                                        <i class="far fa-file-excel text-success"></i>
+                                    {% elif file.file_type == 'presentation' %}
+                                        <i class="far fa-file-powerpoint text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-file"></i>
+                                    {% endif %}
+                                    {{ file.original_filename }}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div class="text-end">
                         <a href="{{ url_for('student_work.view_work', work_id=existing_work.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                            <i class="bi bi-eye me-1"></i> Ko'rish
+                            <i class="bi bi-eye me-1"></i> Ishni ko'rish
                         </a>
                     </div>
                     
@@ -63,16 +89,16 @@
                     {{ form.material_id }}
                     
                     <div class="mb-3">
-                        {{ form.file.label(class="form-label") }}
-                        {{ form.file(class="form-control") }}
-                        {% if form.file.errors %}
+                        {{ form.files.label(class="form-label") }}
+                        {{ form.files(class="form-control", multiple="multiple") }}
+                        {% if form.files.errors %}
                         <div class="invalid-feedback d-block">
-                            {% for error in form.file.errors %}
+                            {% for error in form.files.errors %}
                             <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                         {% endif %}
-                        <div class="form-text">Faqat PDF yoki rasmlar (PNG, JPG, JPEG, GIF) qabul qilinadi.</div>
+                        <div class="form-text">PDF, rasmlar, Office hujjatlari va matn fayllari qabul qilinadi.</div>
                     </div>
                     
                     <div class="mb-3">

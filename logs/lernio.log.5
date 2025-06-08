@@ -1,96 +1,72 @@
-2025-05-26 22:47:18,297 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:188]
-Traceback (most recent call last):
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
-    return current_app.ensure_sync(func)(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 40, in decorated_function
-    return f(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 101, in dashboard
-    return render_template('teacher/dashboard.html', title='Панель преподавателя',
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
-    return _render(app, template, context)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 131, in _render
-    rv = template.render(context)
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 1295, in render
-    self.environment.handle_exception()
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
-    raise rewrite_traceback_stack(source=source)
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\teacher\dashboard.html", line 1, in top-level template code
-    {% extends "base.html" %}
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 57, in top-level template code
-    <li><a class="dropdown-item {% if request.endpoint == 'student_work.list_works' %}active{% endif %}" href="{{ url_for('student_work.list_works') }}"><i class="bi bi-file-earmark-text me-2"></i>Talabalar ishlari</a></li>
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1121, in url_for
-    return self.handle_url_build_error(error, endpoint, values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1110, in url_for
-    rv = url_adapter.build(  # type: ignore[union-attr]
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
-    raise BuildError(endpoint, values, method, self)
-werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.list_student_works'. Did you mean 'admin.student_report' instead?
-2025-05-26 22:47:30,024 INFO: Lernio startup [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:169]
-2025-05-26 22:47:32,436 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:32,437 INFO: Пользователь загружен из локальных данных: teacher (роль: teacher) [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:72]
-2025-05-26 22:47:32,456 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:32,458 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:47:32,631 INFO: [2025-05-26 22:47:32] User 1: view_teacher_dashboard [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:47:37,004 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:37,006 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:47:37,018 INFO: [2025-05-26 22:47:37] User 1: view_manage_lessons [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:47:38,579 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:38,581 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:47:38,590 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:38,590 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:47:38,601 INFO: [2025-05-26 22:47:38] User 1: view_teacher_dashboard [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:47:39,931 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:39,931 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:47:39,946 INFO: [2025-05-26 22:47:39] User 1: view_manage_students [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:47:44,311 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:44,312 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:47:44,325 INFO: [2025-05-26 22:47:44] User 1: logout [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:47:47,797 INFO: Проверка пароля для пользователя 123 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\local_auth.py:90]
-2025-05-26 22:47:48,106 INFO: Пользователь 123 успешно вошел в систему [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\local_auth.py:147]
-2025-05-26 22:47:48,112 INFO: [2025-05-26 22:47:48] User 5: login_success [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:47:48,125 INFO: Загрузка пользователя с ID: 5 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:47:48,127 INFO: Пользователь загружен из базы данных: 123 (роль: student) [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:97]
-2025-05-26 22:47:48,132 ERROR: Exception on /student/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
-Traceback (most recent call last):
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
-    return current_app.ensure_sync(func)(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 21, in decorated_function
-    return f(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\student_routes.py", line 43, in dashboard
-    recent_submissions = current_user.submissions.order_by(
-                         ^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'User' object has no attribute 'submissions'
+2025-05-31 20:05:27,005 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:27,029 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:29,998 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:29,998 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:30,502 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:30,503 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:30,505 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:30,506 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:30,506 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:30,507 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:30,508 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:30,508 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:30,513 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:30,525 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:31,005 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:31,005 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:31,010 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:31,012 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:31,012 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:31,012 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:31,016 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:31,020 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:31,022 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:31,022 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:39,489 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:39,489 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:39,504 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:39,504 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:39,522 INFO: [2025-05-31 20:05:39] User 1: view_teacher_dashboard [in C:\Users\ENVY\Desktop\Lernio\app\utils\__init__.py:35]
+2025-05-31 20:05:47,437 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:47,437 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:48,648 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:48,648 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:48,690 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:48,690 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:48,698 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:48,700 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:48,702 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:48,704 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:48,706 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:48,711 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:48,725 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:48,727 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:49,041 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:49,042 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:49,047 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:49,047 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:49,050 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:49,056 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:49,058 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:49,060 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:49,063 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:49,065 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:56,950 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:05:56,950 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:05:56,963 INFO: [2025-05-31 20:05:56] User 1: view_manage_materials_for_lesson_1 [in C:\Users\ENVY\Desktop\Lernio\app\utils\__init__.py:35]
+2025-05-31 20:06:00,652 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:00,652 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:06:14,850 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:14,851 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:06:14,857 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:14,857 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:06:14,872 INFO: [2025-05-31 20:06:14] User 1: view_teacher_dashboard [in C:\Users\ENVY\Desktop\Lernio\app\utils\__init__.py:35]
+2025-05-31 20:06:36,843 INFO: Пользователь 12345 успешно вошел в систему [in C:\Users\ENVY\Desktop\Lernio\app\local_auth.py:147]
+2025-05-31 20:06:36,855 INFO: [2025-05-31 20:06:36] User 8: login_success [in C:\Users\ENVY\Desktop\Lernio\app\utils\__init__.py:35]
+2025-05-31 20:06:36,863 INFO: Загрузка пользователя с ID: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:36,873 INFO: Пользователь загружен из базы данных: 12345 (роль: student) [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:97]
+2025-05-31 20:06:36,880 INFO: Загрузка пользователя с ID: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:36,880 INFO: Пользователь найден в сессии: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:06:36,885 INFO: Загрузка пользователя с ID: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-31 20:06:36,885 INFO: Пользователь найден в сессии: 8 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-31 20:06:36,948 INFO: [2025-05-31 20:06:36] User 8: view_student_dashboard [in C:\Users\ENVY\Desktop\Lernio\app\utils\__init__.py:35]

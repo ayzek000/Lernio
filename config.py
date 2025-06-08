@@ -18,8 +18,13 @@ class Config:
     WTF_CSRF_CHECK_DEFAULT = True
     WTF_CSRF_HEADERS = ['X-CSRFToken', 'X-CSRF-Token']
 
-    # Путь к папке загрузок внутри папки 'app'
-    UPLOAD_FOLDER = os.path.join(basedir, 'app/static/uploads')
+    # Путь к папке загрузок
+    if os.environ.get('RENDER') == 'true':
+        # На Render используем постоянное хранилище
+        UPLOAD_FOLDER = '/opt/render/project/src/uploads'
+    else:
+        # Локально используем папку внутри проекта
+        UPLOAD_FOLDER = os.path.join(basedir, 'app/static/uploads')
     # Максимальный размер загружаемого файла (16 MB)
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
@@ -56,6 +61,16 @@ class Config:
     # Настройка часового пояса Ташкента (UTC+5)
     TIMEZONE = 'Asia/Tashkent'
     TIMEZONE_OFFSET = 5  # Часовой пояс Ташкента UTC+5
+    
+    # Настройки Firebase Storage
+    USE_FIREBASE_STORAGE = os.environ.get('USE_FIREBASE_STORAGE', 'false').lower() == 'true'
+    FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH')
+    FIREBASE_STORAGE_BUCKET = os.environ.get('FIREBASE_STORAGE_BUCKET')
+    
+    # Проверяем наличие настроек Firebase
+    if USE_FIREBASE_STORAGE and (not FIREBASE_CREDENTIALS_PATH or not FIREBASE_STORAGE_BUCKET):
+        print("WARNING: Firebase Storage включен, но не указаны необходимые настройки (FIREBASE_CREDENTIALS_PATH или FIREBASE_STORAGE_BUCKET)")
+        USE_FIREBASE_STORAGE = False
     
     # Здесь можно добавить другие настройки, например, для почты
     # MAIL_SERVER = os.environ.get('MAIL_SERVER')

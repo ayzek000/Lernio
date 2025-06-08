@@ -8,25 +8,25 @@
               <small class="text-muted" title="{{ assessment.assessment_date.strftime('%d.%m.%Y %H:%M:%S') }}">{{ assessment.assessment_date.strftime('%d.%m.%Y') }}</small>
             </div>
             <p class="mb-1">
-                <strong>Уровень:</strong>
+                <strong>Daraja:</strong>
                 {% set level_lower = assessment.level|lower if assessment.level else '' %}
-                {% if 'превосходный' in level_lower or 'высокий' in level_lower %} {% set level_color = 'success' %}
-                {% elif 'средний' in level_lower %} {% set level_color = 'primary' %}
-                {% elif 'базовый' in level_lower %} {% set level_color = 'info' %}
+                {% if 'a\'lo' in level_lower or 'yuqori' in level_lower %} {% set level_color = 'success' %}
+                {% elif 'o\'rta' in level_lower %} {% set level_color = 'primary' %}
+                {% elif 'asosiy' in level_lower %} {% set level_color = 'info' %}
                 {% else %} {% set level_color = 'secondary' %}
                 {% endif %}
                  <span class="badge bg-{{ level_color }} ms-1">{{ assessment.level if assessment.level else '-' }}</span>
             </p>
-            <p class="mb-1"><small><strong>Комментарий:</strong> {{ assessment.comments }}</small></p>
+            <p class="mb-1"><small><strong>Izoh:</strong> {{ assessment.comments }}</small></p>
             {# Показываем преподавателя только если смотрим не свои оценки #}
             {% if not current_user or current_user.id != assessment.student_id %}
-                <small class="text-muted">Оценил(а): {{ assessment.assessor.full_name if assessment.assessor else 'Неизвестно' }}</small>
+                <small class="text-muted">Baholovchi: {{ assessment.assessor.full_name if assessment.assessor else 'Noma\'lum' }}</small>
             {% endif %}
             {# Ссылка на урок/тест, если есть #}
              {% if assessment.related_lesson %}
-                <span class="badge bg-light text-dark ms-2">Урок: {{ assessment.related_lesson.title }}</span>
+                <span class="badge bg-light text-dark ms-2">Dars: {{ assessment.related_lesson.title }}</span>
              {% elif assessment.related_test %}
-                <span class="badge bg-light text-dark ms-2">Тест: {{ assessment.related_test.title }}</span>
+                <span class="badge bg-light text-dark ms-2">Test: {{ assessment.related_test.title }}</span>
              {% endif %}
               {# TODO: Кнопка удаления оценки для преподавателя #}
         </div>

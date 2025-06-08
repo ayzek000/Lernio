@@ -151,6 +151,16 @@
                             <option value="admin">Administrator</option>
                         </select>
                     </div>
+                    <div class="mb-3" id="groupSelectContainer">
+                        <label for="group_id" class="form-label">Guruh</label>
+                        <select class="form-select" id="group_id" name="group_id">
+                            <option value="">Guruhsiz</option>
+                            {% for group in student_groups %}
+                            <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Faqat talabalar uchun</div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -192,6 +202,16 @@
                             <option value="admin">Administrator</option>
                         </select>
                     </div>
+                    <div class="mb-3" id="editGroupSelectContainer">
+                        <label for="editGroup" class="form-label">Guruh</label>
+                        <select class="form-select" id="editGroup" name="group_id">
+                            <option value="">Guruhsiz</option>
+                            {% for group in student_groups %}
+                            <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Faqat talabalar uchun</div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -231,6 +251,40 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Функция для отображения/скрытия поля выбора группы в зависимости от роли
+        function toggleGroupSelect(roleSelect, groupContainer) {
+            if (roleSelect.value === 'student') {
+                groupContainer.style.display = 'block';
+            } else {
+                groupContainer.style.display = 'none';
+            }
+        }
+        
+        // Настройка для формы добавления пользователя
+        const roleSelect = document.getElementById('role');
+        const groupContainer = document.getElementById('groupSelectContainer');
+        if (roleSelect && groupContainer) {
+            // Инициализация при загрузке страницы
+            toggleGroupSelect(roleSelect, groupContainer);
+            
+            // Обработчик изменения роли
+            roleSelect.addEventListener('change', function() {
+                toggleGroupSelect(roleSelect, groupContainer);
+            });
+        }
+        
+        // Настройка для формы редактирования пользователя
+        const editRoleSelect = document.getElementById('editRole');
+        const editGroupContainer = document.getElementById('editGroupSelectContainer');
+        if (editRoleSelect && editGroupContainer) {
+            // Инициализация при загрузке страницы
+            toggleGroupSelect(editRoleSelect, editGroupContainer);
+            
+            // Обработчик изменения роли
+            editRoleSelect.addEventListener('change', function() {
+                toggleGroupSelect(editRoleSelect, editGroupContainer);
+            });
+        }
         // Modal oynalar uchun ishlov beruvchilar
         const editUserModal = document.getElementById('editUserModal');
         if (editUserModal) {
@@ -258,10 +312,11 @@
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
                 const role = document.getElementById('role').value;
+                const group_id = document.getElementById('group_id').value;
                 
-                // Parollar mos kelishini tekshiramiz
+                // Проверяем, что пароли совпадают
                 if (password !== confirmPassword) {
-                    alert('Parollar mos kelmaydi!');
+                    alert('Пароли не совпадают!');
                     return;
                 }
                 
@@ -270,32 +325,30 @@
                     username: username,
                     full_name: fullName,
                     password: password,
-                    role: role
+                    role: role,
+                    group_id: group_id
                 };
                 
-                // Получаем CSRF-токен
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
                 // Отправляем запрос на сервер
-                fetch('/admin/add_user', {
+                fetch('/api/admin/users/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
                     },
-                    body: JSON.stringify(userData)
+                    body: JSON.stringify(userData),
                 })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('Foydalanuvchini qo\'shishda xatolik yuz berdi');
-                })
+                .then(response => response.json())
                 .then(data => {
-                    // Закрываем модальное окно
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-                    modal.hide();
-                    
+                    if (data.success) {
+                        // Закрываем модальное окно
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                        modal.hide();
+                        
+                        // Перезагружаем страницу для отображения нового пользователя
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка: ' + data.message);
+                    }
                     // Перезагружаем страницу
                     location.reload();
                 })
@@ -316,13 +369,15 @@
                 const fullName = document.getElementById('editFullName').value;
                 const password = document.getElementById('editPassword').value;
                 const role = document.getElementById('editRole').value;
+                const group_id = document.getElementById('editGroup').value;
                 
                 // Создаем объект с данными пользователя
                 const userData = {
                     user_id: userId,
                     username: username,
                     full_name: fullName,
-                    role: role
+                    role: role,
+                    group_id: group_id
                 };
                 
                 // Agar parol kiritilgan bo'lsa, uni qo'shamiz

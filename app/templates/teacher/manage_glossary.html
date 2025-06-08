@@ -19,7 +19,15 @@
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-book me-2"></i>Термины в словаре</h5>
+                    <h5 class="mb-0"><i class="bi bi-book me-2"></i>Термины словаря</h5>
+                    <div>
+                        <button id="toggleEditMode" class="btn btn-sm btn-light me-2">
+                            <i class="bi bi-pencil-square"></i> Редактировать
+                        </button>
+                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#generateTestModal">
+                            <i class="bi bi-lightning-charge"></i> Создать тест
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if glossary_items %}
@@ -36,16 +44,51 @@
                                 </thead>
                                 <tbody>
                                     {% for item in glossary_items %}
-                                        <tr>
+                                        <tr class="glossary-item-row" data-item-id="{{ item.id }}">
                                             <td>{{ loop.index }}</td>
-                                            <td>{{ item.term }}</td>
-                                            <td>{{ item.russian_translation }}</td>
-                                            <td>{{ item.english_translation }}</td>
                                             <td>
-                                                <form action="{{ url_for('teacher.delete_glossary_item', item_id=item.id) }}" method="POST" class="d-inline" data-confirm="Вы уверены, что хотите удалить термин '{{ item.term }}'?">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                                </form>
+                                                <span class="term-view">{{ item.term }}</span>
+                                                <div class="term-edit" style="display: none;">
+                                                    <input type="text" class="form-control form-control-sm edit-term" value="{{ item.term }}" data-original="{{ item.term }}">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="ru-view">{{ item.russian_translation }}</span>
+                                                <div class="ru-edit" style="display: none;">
+                                                    <input type="text" class="form-control form-control-sm edit-ru" value="{{ item.russian_translation }}" data-original="{{ item.russian_translation }}">
+                                                </div>
+                                                <!-- Скрытое поле для английского перевода -->
+                                            </td>
+                                            <td>
+                                                <span class="en-view">{{ item.english_translation }}</span>
+                                                <div class="en-edit" style="display: none;">
+                                                    <input type="text" class="form-control form-control-sm edit-en" value="{{ item.english_translation }}" data-original="{{ item.english_translation }}">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <!-- Кнопки режима просмотра -->
+                                                <div class="view-mode d-flex">
+                                                    <form action="{{ url_for('teacher.delete_glossary_item', item_id=item.id) }}" method="POST" data-confirm="Вы уверены, что хотите удалить этот термин?" class="me-2">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <button type="submit" class="btn btn-sm btn-danger">
+                                                            <i class="bi bi-trash"></i> Удалить
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary btn-select-item">
+                                                        <input type="checkbox" class="item-checkbox term-checkbox" name="selected_terms[]" value="{{ item.id }}" style="display: none;">
+                                                        <i class="bi bi-check-circle"></i> Выбрать для теста
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- Кнопки режима редактирования -->
+                                                <div class="edit-mode" style="display: none;">
+                                                    <button type="button" class="btn btn-sm btn-success btn-save-item" data-item-id="{{ item.id }}">
+                                                        <i class="bi bi-check"></i> Сохранить
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-cancel-edit">
+                                                        <i class="bi bi-x"></i> Отмена
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -163,6 +206,77 @@
         </a>
     </div>
 </div>
+
+<!-- Модальное окно для генерации теста -->
+<div class="modal fade" id="generateTestModal" tabindex="-1" aria-labelledby="generateTestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateTestModalLabel">Создание теста на основе словаря</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="generateTestForm" action="{{ url_for('teacher.generate_glossary_test', lesson_id=lesson.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название теста</label>
+                        <input type="text" class="form-control" id="testTitle" name="test_title" value="Тест по словарю: {{ lesson.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Типы вопросов для генерации</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="uzToRu" name="question_types[]" value="uz_to_ru" checked>
+                            <label class="form-check-label" for="uzToRu">
+                                Перевод с узбекского на русский
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ruToUz" name="question_types[]" value="ru_to_uz" checked>
+                            <label class="form-check-label" for="ruToUz">
+                                Перевод с русского на узбекский
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enToUz" name="question_types[]" value="en_to_uz">
+                            <label class="form-check-label" for="enToUz">
+                                Перевод с английского на узбекский
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="uzToEn" name="question_types[]" value="uz_to_en">
+                            <label class="form-check-label" for="uzToEn">
+                                Перевод с узбекского на английский
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Выберите термины для теста</label>
+                        <div class="d-flex mb-2">
+                            <button type="button" id="selectAllTerms" class="btn btn-sm btn-outline-primary me-2">Выбрать все</button>
+                            <button type="button" id="deselectAllTerms" class="btn btn-sm btn-outline-secondary">Снять выбор</button>
+                        </div>
+                        <div class="terms-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; padding: 10px; border-radius: 4px;">
+                            {% for item in glossary_items %}
+                            <div class="form-check">
+                                <input class="form-check-input term-checkbox" type="checkbox" name="selected_terms[]" value="{{ item.id }}" id="term{{ item.id }}">
+                                <label class="form-check-label" for="term{{ item.id }}">
+                                    {{ item.term }} - {{ item.russian_translation }} - {{ item.english_translation }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать тест</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -172,23 +286,160 @@
         const createTestCheckbox = document.getElementById('create_test');
         const testTitleGroup = document.getElementById('testTitleGroup');
         
+        // Редактирование терминов
+        const toggleEditModeBtn = document.getElementById('toggleEditMode');
+        let isEditMode = false;
+        
+        if (toggleEditModeBtn) {
+            toggleEditModeBtn.addEventListener('click', function() {
+                isEditMode = !isEditMode;
+                
+                // Переключаем режим отображения/редактирования
+                const viewElements = document.querySelectorAll('.term-view, .ru-view, .en-view, .view-mode');
+                const editElements = document.querySelectorAll('.term-edit, .ru-edit, .en-edit, .edit-mode');
+                
+                viewElements.forEach(el => {
+                    el.style.display = isEditMode ? 'none' : '';
+                });
+                
+                editElements.forEach(el => {
+                    el.style.display = isEditMode ? '' : 'none';
+                });
+                
+                // Меняем текст кнопки
+                this.innerHTML = isEditMode ? 
+                    '<i class="bi bi-eye"></i> Просмотр терминов' : 
+                    '<i class="bi bi-pencil-square"></i> Редактировать термины';
+            });
+        }
+        
+        // Обработка сохранения изменений
+        document.querySelectorAll('.btn-save-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                
+                const termInput = row.querySelector('.edit-term');
+                const ruInput = row.querySelector('.edit-ru');
+                const enInput = row.querySelector('.edit-en');
+                
+                const termValue = termInput.value.trim();
+                const ruValue = ruInput.value.trim();
+                const enValue = enInput.value.trim();
+                
+                if (!termValue) {
+                    alert('Термин не может быть пустым');
+                    return;
+                }
+                
+                // Отправляем данные на сервер через AJAX
+                fetch(`/teacher/glossary-item/${itemId}/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    },
+                    body: JSON.stringify({
+                        term: termValue,
+                        russian_translation: ruValue,
+                        english_translation: enValue
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Обновляем отображаемые значения
+                        row.querySelector('.term-view').textContent = termValue;
+                        row.querySelector('.ru-view').textContent = ruValue;
+                        row.querySelector('.en-view').textContent = enValue;
+                        
+                        // Обновляем data-original
+                        termInput.setAttribute('data-original', termValue);
+                        ruInput.setAttribute('data-original', ruValue);
+                        enInput.setAttribute('data-original', enValue);
+                        
+                        // Показываем уведомление
+                        alert('Термин успешно обновлен');
+                    } else {
+                        alert('Ошибка при обновлении термина: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Произошла ошибка при обновлении термина');
+                });
+            });
+        });
+        
+        // Отмена редактирования
+        document.querySelectorAll('.btn-cancel-edit').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                
+                // Возвращаем исходные значения
+                const termInput = row.querySelector('.edit-term');
+                const ruInput = row.querySelector('.edit-ru');
+                const enInput = row.querySelector('.edit-en');
+                
+                termInput.value = termInput.getAttribute('data-original');
+                ruInput.value = ruInput.getAttribute('data-original');
+                enInput.value = enInput.getAttribute('data-original');
+            });
+        });
+        
+        // Выбор терминов для теста
+        document.querySelectorAll('.btn-select-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const checkbox = this.querySelector('.item-checkbox');
+                checkbox.checked = !checkbox.checked;
+                
+                // Изменяем внешний вид кнопки
+                if (checkbox.checked) {
+                    this.classList.add('btn-primary');
+                    this.classList.remove('btn-outline-primary');
+                } else {
+                    this.classList.add('btn-outline-primary');
+                    this.classList.remove('btn-primary');
+                }
+            });
+        });
+        
+        // Выбрать все термины для теста
+        document.getElementById('selectAllTerms').addEventListener('click', function() {
+            document.querySelectorAll('.term-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+        
+        // Снять выбор со всех терминов для теста
+        document.getElementById('deselectAllTerms').addEventListener('click', function() {
+            document.querySelectorAll('.term-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+        
+        // Проверка перед отправкой формы генерации теста
+        document.getElementById('generateTestForm').addEventListener('submit', function(e) {
+            const selectedTerms = document.querySelectorAll('.term-checkbox:checked');
+            if (selectedTerms.length === 0) {
+                e.preventDefault();
+                alert('Выберите хотя бы один термин для теста');
+            }
+            
+            const questionTypes = document.querySelectorAll('input[name="question_types[]"]:checked');
+            if (questionTypes.length === 0) {
+                e.preventDefault();
+                alert('Выберите хотя бы один тип вопросов');
+            }
+        });
+        
+        // Переключение поля для названия теста
         function toggleTestTitle() {
             testTitleGroup.style.display = createTestCheckbox.checked ? 'block' : 'none';
         }
         
         createTestCheckbox.addEventListener('change', toggleTestTitle);
         toggleTestTitle(); // Инициализация при загрузке страницы
-        
-        // Подтверждение удаления
-        const forms = document.querySelectorAll('form[data-confirm]');
-        forms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                const message = this.getAttribute('data-confirm');
-                if (!confirm(message)) {
-                    e.preventDefault();
-                }
-            });
-        });
     });
 </script>
 {% endblock %}

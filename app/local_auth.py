@@ -19,7 +19,7 @@ MOCK_USERS = {
         'id': '1',
         'username': 'teacher',
         'role': 'teacher',
-        'full_name': 'Преподаватель',
+        'full_name': 'Olima Mukhidova',
         'password': '1234567890',
         'email': 'teacher@example.com',
         'last_login': datetime.utcnow(),

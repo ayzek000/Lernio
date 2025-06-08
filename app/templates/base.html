@@ -47,7 +47,7 @@
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('teacher.') %}active{% endif %}" href="#" id="teacherMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-briefcase-fill nav-icon"></i>
-                                    <span>O'qituvchi</span>
+                                    <span>{{ current_user.full_name or current_user.username }}</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-animated" aria-labelledby="teacherMenuLink">
                                     <li><a class="dropdown-item {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}" href="{{ url_for('teacher.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Boshqaruv paneli</a></li>
@@ -129,12 +129,52 @@
 
     {# V--- Pastga bosish uchun klasslar bilan footer ---V #}
     {% if request.endpoint != 'auth.login' %}
-    <footer class="footer mt-auto">
-        <div class="container">
-            <div class="footer-bottom text-center py-3">
-                <div class="copyright">
-                    <span class="brand-name">Lernio</span> - ta'lim platformasi
+    <footer class="footer mt-4">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>Lernio</h5>
+                    <p class="text-muted small">Ta'lim jarayonini zamonaviy yondashuvlar bilan osonlashtiruvchi platforma</p>
+                    <p class="small">Versiya: <span class="badge bg-primary">1.5.2</span></p>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <h5>Foydali havolalar</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('main.list_lessons') }}" class="text-decoration-none">
+                            <i class="bi bi-book me-2 text-primary"></i>Darslar
+                        </a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.glossary') }}" class="text-decoration-none">
+                            <i class="bi bi-journal-text me-2 text-primary"></i>Lug'at
+                        </a></li>
+                        <li><a href="{{ url_for('main.error_coming_soon') }}" class="text-decoration-none">
+                            <i class="bi bi-stars me-2 text-primary"></i>Yangi imkoniyatlar
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-4">
+                    <h5>Xatolik sahifalari</h5>
+                    <div class="d-flex gap-2 mb-3">
+                        <a href="{{ url_for('main.test_403_error') }}" class="btn btn-sm btn-outline-secondary">403</a>
+                        <a href="{{ url_for('main.test_404_error') }}" class="btn btn-sm btn-outline-secondary">404</a>
+                        <a href="{{ url_for('main.test_405_error') }}" class="btn btn-sm btn-outline-secondary">405</a>
+                        <a href="{{ url_for('main.test_500_error') }}" class="btn btn-sm btn-outline-secondary">500</a>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-3">
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    <span class="fw-bold">Lernio</span> - ta'lim platformasi
                     <span class="ms-2">© 2025</span>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="#" class="text-muted" aria-label="Telegram"><i class="bi bi-telegram"></i></a>
+                    <a href="#" class="text-muted" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-muted" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
                 </div>
             </div>
         </div>

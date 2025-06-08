@@ -70,15 +70,15 @@ def upload_material():
                     db.session.add(material)
                     db.session.commit()
                     
-                    flash('Материал успешно загружен', 'success')
+                    flash('Material muvaffaqiyatli yuklandi', 'success')
                     return redirect(url_for('materials.list_materials'))
                 else:
-                    flash('Ошибка при загрузке файла в облачное хранилище', 'error')
+                    flash("Faylni bulutli xotiraga yuklashda xatolik", 'error')
             else:
-                flash('Недопустимый тип файла', 'error')
+                flash("Ruxsat etilmagan fayl turi", 'error')
         except Exception as e:
             current_app.logger.error(f"Ошибка при загрузке материала: {e}")
-            flash(f'Произошла ошибка при загрузке материала: {str(e)}', 'error')
+            flash(f'Material yuklashda xatolik yuz berdi: {str(e)}', 'error')
     
     return render_template('materials/upload.html', form=form)
 
@@ -90,7 +90,7 @@ def delete_material(material_id):
     
     # Проверяем права доступа
     if current_user.id != material.author_id and current_user.role != 'admin':
-        flash('У вас нет прав на удаление этого материала', 'error')
+        flash("Sizda ushbu materialni o'chirish huquqi yo'q", 'error')
         return redirect(url_for('materials.list_materials'))
     
     try:
@@ -114,9 +114,9 @@ def delete_material(material_id):
         db.session.delete(material)
         db.session.commit()
         
-        flash('Материал успешно удален', 'success')
+        flash("Material muvaffaqiyatli o'chirildi", 'success')
     except Exception as e:
         current_app.logger.error(f"Ошибка при удалении материала: {e}")
-        flash(f'Произошла ошибка при удалении материала: {str(e)}', 'error')
+        flash(f"Materialni o'chirishda xatolik yuz berdi: {str(e)}", 'error')
     
     return redirect(url_for('materials.list_materials'))

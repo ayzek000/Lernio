@@ -26,6 +26,8 @@ pip install -r requirements.txt
 # Создаем необходимые каталоги
 echo "Creating necessary directories..."
 mkdir -p instance
+mkdir -p uploads
+mkdir -p uploads/student_works
 mkdir -p app/static/uploads
 
 # Устанавливаем права на запись

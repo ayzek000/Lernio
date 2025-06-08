@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-journal-text me-2"></i>{{ title }}</h1>
+        <div>
+            <a href="{{ url_for('main.glossary') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-1"></i> Вернуться к глоссарию
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form id="glossaryForm" method="POST" action="{{ url_for('main.manage_glossary') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Таблица существующих элементов глоссария -->
+                {% if glossary_items %}
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Узбекский</th>
+                                <th>Русский</th>
+                                <th>Английский</th>
+                                <th style="width: 80px;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in glossary_items %}
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input item-checkbox" type="checkbox" name="selected_items[]" value="{{ item.id }}">
+                                        <input type="hidden" name="item_id[]" value="{{ item.id }}">
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="word[]" value="{{ item.word }}" placeholder="Термин на узбекском">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="definition_ru[]" value="{{ item.definition_ru }}" placeholder="Перевод на русский">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="definition_uz[]" value="{{ item.definition_uz }}" placeholder="Перевод на английский">
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-item" data-item-id="{{ item.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">Глоссарий пока пуст. Добавьте новые термины ниже.</div>
+                {% endif %}
+
+                <!-- Секция для добавления новых элементов -->
+                <h4 class="mb-3">Добавить новые термины</h4>
+                <div id="newItemsContainer">
+                    <div class="row mb-2 new-item-row">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="new_word[]" placeholder="Термин на узбекском">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="new_definition_ru[]" placeholder="Перевод на русский">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="new_definition_uz[]" placeholder="Перевод на английский">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-new-item">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <button type="button" id="addNewItem" class="btn btn-outline-success">
+                        <i class="bi bi-plus-lg me-1"></i> Добавить строку
+                    </button>
+                </div>
+
+                <!-- Кнопки сохранения и генерации тестов -->
+                <div class="d-flex justify-content-between">
+                    <button type="submit" name="save_glossary" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Сохранить изменения
+                    </button>
+                    
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#generateTestModal">
+                        <i class="bi bi-file-earmark-text me-1"></i> Сгенерировать тесты
+                    </button>
+                </div>
+
+                <!-- Скрытое поле для хранения ID удаляемых элементов -->
+                <div id="deleteItemsContainer"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для генерации тестов -->
+<div class="modal fade" id="generateTestModal" tabindex="-1" aria-labelledby="generateTestModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateTestModalLabel">Генерация теста</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="generateTestForm" method="POST" action="{{ url_for('main.manage_glossary') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="testTitle" class="form-label">Название теста</label>
+                        <input type="text" class="form-control" id="testTitle" name="test_title" value="Тест по глоссарию" required>
+                    </div>
+                    <div class="mb-3">
+                        <p>Выберите слова для включения в тест:</p>
+                        <div class="d-flex mb-2">
+                            <button type="button" id="selectAllForTest" class="btn btn-sm btn-outline-primary me-2">Выбрать все</button>
+                            <button type="button" id="deselectAllForTest" class="btn btn-sm btn-outline-secondary">Снять выбор</button>
+                        </div>
+                        <div class="glossary-items-list" style="max-height: 300px; overflow-y: auto;">
+                            {% for item in glossary_items %}
+                            <div class="form-check">
+                                <input class="form-check-input test-item-checkbox" type="checkbox" name="selected_items[]" value="{{ item.id }}" id="item{{ item.id }}">
+                                <label class="form-check-label" for="item{{ item.id }}">
+                                    {{ item.word }} - {{ item.definition_ru }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" name="generate_test" class="btn btn-primary">Создать тест</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Выбрать все элементы
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // Добавление новой строки
+        document.getElementById('addNewItem').addEventListener('click', function() {
+            const container = document.getElementById('newItemsContainer');
+            const newRow = document.querySelector('.new-item-row').cloneNode(true);
+            
+            // Очищаем значения в новой строке
+            newRow.querySelectorAll('input').forEach(input => {
+                input.value = '';
+            });
+            
+            // Добавляем обработчик для кнопки удаления
+            newRow.querySelector('.remove-new-item').addEventListener('click', function() {
+                this.closest('.new-item-row').remove();
+            });
+            
+            container.appendChild(newRow);
+        });
+
+        // Удаление существующей строки
+        document.querySelectorAll('.delete-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const container = document.getElementById('deleteItemsContainer');
+                
+                // Создаем скрытое поле для ID удаляемого элемента
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'delete_item[]';
+                hiddenInput.value = itemId;
+                container.appendChild(hiddenInput);
+                
+                // Удаляем строку из таблицы
+                this.closest('tr').remove();
+            });
+        });
+
+        // Удаление новой строки
+        document.querySelectorAll('.remove-new-item').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.new-item-row').remove();
+            });
+        });
+
+        // Выбрать все элементы для теста
+        document.getElementById('selectAllForTest').addEventListener('click', function() {
+            document.querySelectorAll('.test-item-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+
+        // Снять выбор со всех элементов для теста
+        document.getElementById('deselectAllForTest').addEventListener('click', function() {
+            document.querySelectorAll('.test-item-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+
+        // Перенос выбранных элементов из таблицы в модальное окно
+        document.querySelector('[data-bs-target="#generateTestModal"]').addEventListener('click', function() {
+            const selectedItems = document.querySelectorAll('.item-checkbox:checked');
+            selectedItems.forEach(item => {
+                const itemId = item.value;
+                const testCheckbox = document.getElementById('item' + itemId);
+                if (testCheckbox) {
+                    testCheckbox.checked = true;
+                }
+            });
+        });
+
+        // Проверка перед отправкой формы генерации теста
+        document.getElementById('generateTestForm').addEventListener('submit', function(e) {
+            const selectedItems = this.querySelectorAll('.test-item-checkbox:checked');
+            if (selectedItems.length === 0) {
+                e.preventDefault();
+                alert('Выберите хотя бы одно слово для генерации теста');
+            }
+        });
+    });
+</script>
+{% endblock %}

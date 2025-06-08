@@ -10,7 +10,7 @@ MOCK_USERS = {
         'id': 'teacher-mock-id',
         'username': 'teacher',
         'role': 'teacher',
-        'full_name': 'Преподаватель (Режим разработки)',
+        'full_name': 'Olima Mukhidova (Режим разработки)',
         'password': '1234567890',
         'is_mock': True
     },

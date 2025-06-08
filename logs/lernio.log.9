@@ -1,4 +1,4 @@
-2025-05-26 22:45:16,130 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:188]
+2025-05-30 22:57:43,932 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:211]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -15,40 +15,18 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 40, in decorated_function
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 21, in decorated_function
     return f(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 101, in dashboard
-    return render_template('teacher/dashboard.html', title='Панель преподавателя',
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
-    return _render(app, template, context)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 131, in _render
-    rv = template.render(context)
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 1295, in render
-    self.environment.handle_exception()
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
-    raise rewrite_traceback_stack(source=source)
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\teacher\dashboard.html", line 1, in top-level template code
-    {% extends "base.html" %}
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 57, in top-level template code
-    <li><a class="dropdown-item {% if request.endpoint == 'main.list_student_works' %}active{% endif %}" href="{{ url_for('main.list_student_works') }}"><i class="bi bi-file-earmark-text me-2"></i>Talabalar ishlari</a></li>
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1121, in url_for
-    return self.handle_url_build_error(error, endpoint, values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1110, in url_for
-    rv = url_adapter.build(  # type: ignore[union-attr]
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
-    raise BuildError(endpoint, values, method, self)
-werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.list_student_works'. Did you mean 'admin.student_report' instead?
-2025-05-26 22:45:17,108 INFO: Загрузка пользователя с ID: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:61]
-2025-05-26 22:45:17,108 INFO: Пользователь найден в сессии: 1 [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\__init__.py:65]
-2025-05-26 22:45:17,123 INFO: [2025-05-26 22:45:17] User 1: view_teacher_dashboard [in C:\Users\ENVY\Downloads\sewing_lms_ready\app\utils\__init__.py:35]
-2025-05-26 22:45:17,125 ERROR: Exception on /teacher/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 71, in dashboard
+    cast(ActivityLog.timestamp, Date).label('date'),
+         ^^^^^^^^^^^
+NameError: name 'ActivityLog' is not defined
+2025-05-30 22:57:44,013 INFO: Загрузка пользователя с ID: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-30 22:57:44,014 INFO: Пользователь найден в сессии: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-30 22:57:44,024 INFO: Загрузка пользователя с ID: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-30 22:57:44,024 INFO: Пользователь найден в сессии: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-30 22:57:44,044 ERROR: Exception on /student/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
 Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
     response = self.full_dispatch_request()
@@ -65,33 +43,88 @@ Traceback (most recent call last):
   File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
     return current_app.ensure_sync(func)(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 40, in decorated_function
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 21, in decorated_function
     return f(*args, **kwargs)
            ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\teacher_routes.py", line 101, in dashboard
-    return render_template('teacher/dashboard.html', title='Панель преподавателя',
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
-    return _render(app, template, context)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\templating.py", line 131, in _render
-    rv = template.render(context)
-         ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 1295, in render
-    self.environment.handle_exception()
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
-    raise rewrite_traceback_stack(source=source)
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\teacher\dashboard.html", line 1, in top-level template code
-    {% extends "base.html" %}
-  File "C:\Users\ENVY\Downloads\sewing_lms_ready\app\templates\base.html", line 57, in top-level template code
-    <li><a class="dropdown-item {% if request.endpoint == 'main.list_student_works' %}active{% endif %}" href="{{ url_for('main.list_student_works') }}"><i class="bi bi-file-earmark-text me-2"></i>Talabalar ishlari</a></li>
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1121, in url_for
-    return self.handle_url_build_error(error, endpoint, values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1110, in url_for
-    rv = url_adapter.build(  # type: ignore[union-attr]
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
-    raise BuildError(endpoint, values, method, self)
-werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.list_student_works'. Did you mean 'admin.student_report' instead?
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 71, in dashboard
+    cast(ActivityLog.timestamp, Date).label('date'),
+         ^^^^^^^^^^^
+NameError: name 'ActivityLog' is not defined
+2025-05-30 22:57:44,059 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:211]
+Traceback (most recent call last):
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 21, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 71, in dashboard
+    cast(ActivityLog.timestamp, Date).label('date'),
+         ^^^^^^^^^^^
+NameError: name 'ActivityLog' is not defined
+2025-05-30 22:57:44,377 INFO: Загрузка пользователя с ID: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-30 22:57:44,378 INFO: Пользователь найден в сессии: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-30 22:57:44,397 INFO: Загрузка пользователя с ID: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-30 22:57:44,399 INFO: Пользователь найден в сессии: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]
+2025-05-30 22:57:44,421 ERROR: Exception on /student/dashboard [GET] [in C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:875]
+Traceback (most recent call last):
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 21, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 71, in dashboard
+    cast(ActivityLog.timestamp, Date).label('date'),
+         ^^^^^^^^^^^
+NameError: name 'ActivityLog' is not defined
+2025-05-30 22:57:44,439 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:211]
+Traceback (most recent call last):
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 21, in decorated_function
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ENVY\Desktop\Lernio\app\student_routes.py", line 71, in dashboard
+    cast(ActivityLog.timestamp, Date).label('date'),
+         ^^^^^^^^^^^
+NameError: name 'ActivityLog' is not defined
+2025-05-30 22:57:44,716 INFO: Загрузка пользователя с ID: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:61]
+2025-05-30 22:57:44,716 INFO: Пользователь найден в сессии: 4 [in C:\Users\ENVY\Desktop\Lernio\app\__init__.py:65]

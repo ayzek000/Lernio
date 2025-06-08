@@ -138,6 +138,22 @@ def create_app(config_class=Config):
         # Регистрируем маршрут для обновления данных пользователя
         from app.admin_update_user import update_user_bp
         app.register_blueprint(update_user_bp)
+        
+        # Регистрируем маршрут для управления группами студентов
+        try:
+            from app.group_routes import bp as group_bp
+            app.register_blueprint(group_bp)
+            app.logger.info("Маршруты для групп студентов зарегистрированы")
+        except ImportError as e:
+            app.logger.warning(f"Не удалось зарегистрировать маршруты для групп студентов: {str(e)}")
+        
+        # Регистрируем API маршруты для администратора
+        try:
+            from app.admin_api_routes import bp as admin_api_bp
+            app.register_blueprint(admin_api_bp)
+            app.logger.info("API маршруты для администратора зарегистрированы")
+        except ImportError as e:
+            app.logger.warning(f"Не удалось зарегистрировать API маршруты для администратора: {str(e)}")
 
         # Регистрация обработчиков ошибок
         register_error_handlers(app)
@@ -168,6 +184,9 @@ def create_app(config_class=Config):
         app.logger.setLevel(logging.INFO)
         app.logger.info('Lernio startup')
 
+    # Регистрируем обработчики ошибок
+    register_error_handlers(app)
+
     return app
 
 # --- ОБРАБОТЧИКИ ОШИБОК (могут остаться снаружи) ---
@@ -180,6 +199,10 @@ def register_error_handlers(app):
     @app.errorhandler(404)
     def page_not_found(error):
         return render_template('errors/404.html'), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        return render_template('errors/405.html'), 405
 
     @app.errorhandler(500)
     def internal_server_error(error):

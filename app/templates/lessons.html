@@ -3,50 +3,99 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-book me-2"></i>{{ title }}</h1>
-        {% if current_user.is_teacher %}
-            <a href="{{ url_for('teacher.add_lesson') }}" class="btn btn-success">
+<div class="container py-4">
+    <!-- Header with gradient background -->
+    <div class="bg-gradient-primary text-white p-4 rounded-3 mb-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-5 fw-bold"><i class="bi bi-book me-2"></i>{{ title }}</h1>
+            {% if current_user.is_teacher %}
+            <a href="{{ url_for('teacher.add_lesson') }}" class="btn btn-light btn-lg">
                 <i class="bi bi-plus-lg me-1"></i>Dars qo'shish
             </a>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 
     {% if lessons %}
-        {# V--- Добавляем тень ---V #}
-        <div class="list-group shadow-sm">
-            {% for lesson in lessons %}
-                <a href="{{ url_for('main.lesson_detail', lesson_id=lesson.id) }}" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ lesson.title }}</h5>
-                        <small class="text-muted">Tartib: {{ lesson.order }}</small>
-                    </div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for lesson in lessons %}
+        <div class="col">
+            <div class="card h-100 shadow-sm hover-card">
+                <!-- Card header with lesson number badge -->
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{{ lesson.title }}</h5>
+                    <span class="badge bg-primary rounded-pill">{{ lesson.order }}</span>
+                </div>
+                
+                <div class="card-body">
                     {% if lesson.description %}
-                        <p class="mb-1 text-muted">{{ lesson.description|truncate(150, True) }}</p>
+                    <p class="card-text text-muted">{{ lesson.description|truncate(100, True) }}</p>
+                    {% else %}
+                    <p class="card-text text-muted fst-italic">Tavsif mavjud emas</p>
                     {% endif %}
-                     <small class="text-muted">
-                          <i class="bi bi-file-earmark-text"></i> {{ lesson.materials.count() }} materiallar
-                          | <i class="bi bi-clipboard-check"></i> {{ lesson.tests.count() }} testlar
-                    </small>
-                     {% if current_user.is_teacher %}
-                         <span class="float-end">
-                               <a href="{{ url_for('teacher.edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-secondary ms-2" title="Darsni tahrirlash"><i class="bi bi-pencil-fill"></i></a>
-                               <form action="{{ url_for('teacher.delete_lesson', lesson_id=lesson.id) }}" method="POST" class="d-inline" data-confirm="'{{ lesson.title }}' darsini va uning barcha materiallarini/testlarini o'chirishni istaysizmi?">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Darsni o'chirish"><i class="bi bi-trash-fill"></i></button>
-                               </form>
-                         </span>
+                    
+                    <!-- Stats with icons -->
+                    <div class="d-flex justify-content-around mt-3 mb-2">
+                        <div class="text-center">
+                            <div class="fs-4 text-primary"><i class="bi bi-file-earmark-text"></i></div>
+                            <div class="small text-muted">{{ lesson.materials.count() }} materiallar</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="fs-4 text-success"><i class="bi bi-clipboard-check"></i></div>
+                            <div class="small text-muted">{{ lesson.tests.count() }} testlar</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('main.lesson_detail', lesson_id=lesson.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Ko'rish
+                    </a>
+                    
+                    {% if current_user.is_teacher %}
+                    <div>
+                        <a href="{{ url_for('teacher.edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-secondary" title="Darsni tahrirlash">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <form action="{{ url_for('teacher.delete_lesson', lesson_id=lesson.id) }}" method="POST" class="d-inline" data-confirm="'{{ lesson.title }}' darsini va uning barcha materiallarini/testlarini o'chirishni istaysizmi?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1" title="Darsni o'chirish">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </form>
+                    </div>
                     {% endif %}
-                </a>
-            {% endfor %}
+                </div>
+            </div>
         </div>
+        {% endfor %}
+    </div>
     {% else %}
-        <div class="alert alert-info">
-            Darslar hali qo'shilmagan.
-            {% if current_user.is_teacher %}
-                 <a href="{{ url_for('teacher.add_lesson') }}" class="alert-link">Birinchi darsni qo'shasizmi?</a>
-            {% endif %}
-        </div>
+    <div class="text-center py-5">
+        <div class="display-1 text-muted mb-4"><i class="bi bi-journal-x"></i></div>
+        <h3 class="text-muted mb-4">Darslar hali qo'shilmagan</h3>
+        {% if current_user.is_teacher %}
+        <a href="{{ url_for('teacher.add_lesson') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle me-2"></i>Birinchi darsni qo'shasizmi?
+        </a>
+        {% endif %}
+    </div>
     {% endif %}
+</div>
 
+<!-- Custom CSS for hover effects -->
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #6f42c1 0%, #007bff 100%);
+    }
+    
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
 {% endblock %}

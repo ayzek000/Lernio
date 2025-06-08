@@ -2,86 +2,322 @@
 
 {% block title %}{{ title }}{% endblock %}
 
+{% block head %}
+{{ super() }}
+<script>
+    // Инициализация глобальных переменных JavaScript с данными из Flask
+    // Используем скрипт для инициализации переменных
+    var activity_labels = [];
+    var activity_counts = [];
+    var subject_labels = [];
+    var subject_scores = [];
+    
+    // Заполняем данными из Flask или значениями по умолчанию
+    (function() {
+        // Данные из Flask или значения по умолчанию
+        /* Jinja expressions are wrapped in comments for IDE compatibility */
+        /*{% if activity_labels %}*/
+        var tempActivityLabels = /*{{ activity_labels|default([])|tojson|safe }}*/ [];
+        /*{% else %}*/
+        // Default values if activity_labels is not defined
+        // tempActivityLabels = [];
+        /*{% endif %}*/
+
+        /*{% if activity_counts %}*/
+        var tempActivityCounts = /*{{ activity_counts|default([])|tojson|safe }}*/ [];
+        /*{% else %}*/
+        // Default values if activity_counts is not defined
+        // tempActivityCounts = [];
+        /*{% endif %}*/
+
+        /*{% if subject_labels %}*/
+        var tempSubjectLabels = /*{{ subject_labels|default([])|tojson|safe }}*/ [];
+        /*{% else %}*/
+        // Default values if subject_labels is not defined
+        // tempSubjectLabels = [];
+        /*{% endif %}*/
+
+        /*{% if subject_scores %}*/
+        var tempSubjectScores = /*{{ subject_scores|default([])|tojson|safe }}*/ [];
+        /*{% else %}*/
+        // Default values if subject_scores is not defined
+        // tempSubjectScores = [];
+        /*{% endif %}*/
+        
+        // Если данные есть, используем их
+        if (tempActivityLabels && tempActivityLabels.length > 0) {
+            activity_labels = tempActivityLabels;
+        } else {
+            // Иначе используем значения по умолчанию
+            activity_labels = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+        }
+        
+        if (tempActivityCounts && tempActivityCounts.length > 0) {
+            activity_counts = tempActivityCounts;
+        } else {
+            activity_counts = [5, 8, 3, 7, 6, 2, 4];
+        }
+        
+        if (tempSubjectLabels && tempSubjectLabels.length > 0) {
+            subject_labels = tempSubjectLabels;
+        } else {
+            subject_labels = ['Matematika', 'Fizika', 'Kimyo', 'Biologiya', 'Ingliz tili'];
+        }
+        
+        if (tempSubjectScores && tempSubjectScores.length > 0) {
+            subject_scores = tempSubjectScores;
+        } else {
+            subject_scores = [85, 72, 90, 65, 78];
+        }
+    })();
+</script>
+{% endblock %}
+
 {% block content %}
-    <h1 class="mb-4">Xush kelibsiz, {{ current_user.full_name or current_user.username }}!</h1>
-    <hr>
+<div class="container py-4">
+    <!-- Приветствие с градиентным фоном -->
+    <div class="bg-gradient-primary text-white p-4 rounded-3 mb-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1 class="display-5 fw-bold mb-0">Xush kelibsiz, {{ current_user.full_name or current_user.username }}!</h1>
+                <p class="lead mb-0">Bu sizning shaxsiy boshqaruv panelingiz</p>
+            </div>
+            <div class="d-none d-md-block">
+                <i class="bi bi-person-circle display-4"></i>
+            </div>
+        </div>
+    </div>
 
     <div class="row g-4 mb-4">
-        {# Mavjud testlar bloki #}
-        <div class="col-lg-8">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="my-0"><i class="bi bi-card-checklist me-2"></i>Mavjud testlar</h4>
+        {# O'quv faoliyati va progress bloki #}
+        <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="row g-4">
+                <!-- O'quv faoliyati grafigi -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-3 hover-card">
+                        <div class="card-header bg-gradient-primary text-white py-3">
+                            <h4 class="my-0 d-flex align-items-center"><i class="bi bi-lightning-charge me-2"></i>O'quv faoliyatingiz</h4>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="activity-stat-card bg-light p-3 rounded-3 text-center h-100">
+                                        <i class="bi bi-calendar-check fs-1 text-primary mb-2"></i>
+                                        <h3 class="mb-0">{{ active_days }}</h3>
+                                        <p class="text-muted mb-0">Faol kunlar</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="activity-stat-card bg-light p-3 rounded-3 text-center h-100">
+                                        <i class="bi bi-file-earmark-check fs-1 text-success mb-2"></i>
+                                        <h3 class="mb-0">{{ submitted_tests_count }}</h3>
+                                        <p class="text-muted mb-0">Topshirilgan testlar</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="activity-stat-card bg-light p-3 rounded-3 text-center h-100">
+                                        <i class="bi bi-award fs-1 text-warning mb-2"></i>
+                                        <h3 class="mb-0">{{ average_score|default('0')|float|round|int }}%</h3>
+                                        <p class="text-muted mb-0">O'rtacha ball</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="activity-stat-card bg-light p-3 rounded-3 text-center h-100">
+                                        <i class="bi bi-clock-history fs-1 text-info mb-2"></i>
+                                        <h3 class="mb-0">{{ study_hours }}</h3>
+                                        <p class="text-muted mb-0">Soat o'qishda</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    {% if available_tests %}
-                        <div class="list-group list-group-flush"> {# flush kartochka ichidagi chegaralarni olib tashlaydi #}
-                        {% for test in available_tests %}
-                             <a href="{{ url_for('student.take_test', test_id=test.id) }}"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>
-                                    <i class="bi bi-pencil-square me-2"></i> {{ test.title }}
-                                    {% if test.lesson %}<small class="text-muted ms-2">({{ test.lesson.title }})</small>{% endif %}
-                                </span>
-                                <span class="badge bg-primary rounded-pill">Topshirish <i class="bi bi-arrow-right-short"></i></span>
-                            </a>
-                        {% endfor %}
+                
+                <!-- O'quv yutuqlari -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm rounded-3 hover-card h-100">
+                        <div class="card-header bg-gradient-success text-white py-3">
+                            <h5 class="my-0 d-flex align-items-center"><i class="bi bi-trophy me-2"></i>Yutuqlaringiz</h5>
                         </div>
-                    {% else %}
-                         <div class="alert alert-success mb-0"> {# mb-0 pastki bo'shliqni olib tashlaydi #}
-                            <i class="bi bi-check-circle-fill me-2"></i>Tabriklaymiz! Sizda topshirish uchun yangi testlar yo'q.
+                        <div class="card-body p-3">
+                            <div class="achievement-list">
+                                <!-- Достижение 1: First Step - Awarded if student has at least one submission -->
+                                <div class="achievement-item d-flex align-items-center p-2 mb-3 border-bottom">
+                                    <div class="achievement-icon me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-star-fill fs-4"></i>
+                                    </div>
+                                    <div class="achievement-content">
+                                        <h6 class="mb-0 fw-bold">Birinchi qadam</h6>
+                                        <p class="text-muted small mb-0">Birinchi testni muvaffaqiyatli topshirganingiz uchun</p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="badge {% if submitted_tests_count > 0 %}bg-success{% else %}bg-secondary{% endif %} rounded-pill">{% if submitted_tests_count > 0 %}Qozonilgan{% else %}Jarayonda{% endif %}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Достижение 2: Active Learner - Awarded if student has activity on 5+ days -->
+                                <div class="achievement-item d-flex align-items-center p-2 mb-3 border-bottom">
+                                    <div class="achievement-icon me-3 bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-lightning-charge-fill fs-4"></i>
+                                    </div>
+                                    <div class="achievement-content">
+                                        <h6 class="mb-0 fw-bold">Faol o'quvchi</h6>
+                                        <p class="text-muted small mb-0">Bir hafta davomida har kuni kirganingiz uchun</p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="badge {% if active_days >= 5 %}bg-success{% else %}bg-secondary{% endif %} rounded-pill">{% if active_days >= 5 %}Qozonilgan{% else %}Jarayonda{% endif %}</span>
+                                    </div>
+                                </div>
+                            
+                                <!-- Достижение 3: Top Scorer - Awarded if average score is 80%+ -->
+                                <div class="achievement-item d-flex align-items-center p-2 mb-3 border-bottom">
+                                    <div class="achievement-icon me-3 bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-mortarboard-fill fs-4"></i>
+                                    </div>
+                                    <div class="achievement-content">
+                                        <h6 class="mb-0 fw-bold">A'lochi</h6>
+                                        <p class="text-muted small mb-0">Barcha testlardan yuqori ball olganingiz uchun</p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="badge {% if average_score|default(0)|float >= 80 %}bg-success{% else %}bg-secondary{% endif %} rounded-pill">{% if average_score|default(0)|float >= 80 %}Qozonilgan{% else %}Jarayonda{% endif %}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Достижение 4: Knowledgeable - Awarded if student has 10+ test submissions -->
+                                <div class="achievement-item d-flex align-items-center p-2">
+                                    <div class="achievement-icon me-3 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                        <i class="bi bi-award-fill fs-4"></i>
+                                    </div>
+                                    <div class="achievement-content">
+                                        <h6 class="mb-0 fw-bold">Bilimdon</h6>
+                                        <p class="text-muted small mb-0">10 ta testni ketma-ket to'g'ri yechganingiz uchun</p>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="badge {% if submitted_tests_count >= 10 %}bg-success{% else %}bg-secondary{% endif %} rounded-pill">{% if submitted_tests_count >= 10 %}Qozonilgan{% else %}Jarayonda{% endif %}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Добавляем круговую диаграмму для предметов -->
+                            <div class="subjects-chart-container mt-auto">
+                                <h6 class="mb-2 text-center">Fanlar bo'yicha natijalar</h6>
+                                <canvas id="subjectsChart" height="160"></canvas>
+                            </div>
+                            
+                            {% if available_tests|length > 0 %}
+                            <div class="mt-auto pt-3">
+                                <a href="{{ url_for('student.take_test', test_id=available_tests[0].id) }}" class="btn btn-primary w-100 d-flex align-items-center justify-content-between hover-button">
+                                    <span>Keyingi testni boshlash</span>
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
+                    </div>
+                </div>
+                
+                <!-- So'nggi natijalar -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm rounded-3 hover-card h-100">
+                        <div class="card-header bg-gradient-info text-white py-3">
+                            <h5 class="my-0 d-flex align-items-center"><i class="bi bi-trophy me-2"></i>So'nggi natijalar</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if recent_submissions %}
+                                <ul class="list-group list-group-flush">
+                                    {% for submission in recent_submissions[:5] %}
+                                        {% set score_color = 'success' if submission.score >= 8.5 else ('primary' if submission.score >= 6.5 else ('warning' if submission.score >= 4.5 else 'danger')) %}
+                                        <li class="list-group-item p-3 hover-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-0 text-truncate">{{ submission.test.title }}</h6>
+                                                    <small class="text-muted">{{ submission.submitted_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                                                </div>
+                                                <span class="badge bg-{{ score_color }} rounded-pill">{{ submission.score|round(1) }}%</span>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% if recent_submissions|length > 5 %}
+                                <div class="card-footer bg-light text-center p-2">
+                                    <a href="{{ url_for('student.my_results') }}" class="btn btn-sm btn-outline-primary">
+                                        Barcha natijalarni ko'rish <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="p-4 text-center">
+                                    <i class="bi bi-emoji-smile display-4 text-muted mb-3"></i>
+                                    <p class="text-muted mb-0">Siz hali birorta ham test topshirmagansiz.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         {# Tezkor havolalar va so'nggi baholar bloki #}
         <div class="col-lg-4">
-             {# Tezkor kirish #}
-             <div class="card shadow-sm mb-4">
-                 <div class="card-header">
-                       <h5 class="my-0"><i class="bi bi-collection-play-fill me-2"></i>Tezkor kirish</h5>
-                 </div>
-                 <div class="card-body text-center">
-                      <a href="{{ url_for('main.list_lessons') }}" class="btn btn-outline-primary mb-2 w-100"><i class="bi bi-book me-1"></i> Darslarga o'tish</a>
-                      <a href="{{ url_for('student.my_results') }}" class="btn btn-outline-secondary w-100"><i class="bi bi-award me-1"></i> Mening natijalarim</a>
-                 </div>
+            {# Tezkor kirish #}
+            <div class="card shadow-sm mb-4 border-0 rounded-3 hover-card">
+                <div class="card-header bg-gradient-secondary text-white py-3">
+                    <h5 class="my-0 d-flex align-items-center"><i class="bi bi-lightning-charge-fill me-2"></i>Tezkor kirish</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('main.list_lessons') }}" class="btn btn-primary btn-lg d-flex align-items-center justify-content-between hover-button">
+                            <span><i class="bi bi-book me-2"></i> Darslarga o'tish</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <a href="{{ url_for('student.my_results') }}" class="btn btn-outline-primary btn-lg d-flex align-items-center justify-content-between hover-button">
+                            <span><i class="bi bi-award me-2"></i> Mening natijalarim</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
 
             {# So'nggi kompetentsiya baholari #}
-             <div class="card shadow-sm">
-                 <div class="card-header">
-                       <h5 class="my-0"><i class="bi bi-person-check-fill me-2"></i>Kompetentsiya baholari</h5>
-                 </div>
-                  <div class="card-body p-0"> {# p-0 card-body padding ni olib tashlaydi #}
-                     {% if recent_assessments %}
-                        <ul class="list-group list-group-flush">
-                             {% for assessment in recent_assessments %}
-                                <li class="list-group-item small"> {# small matnni kichikroq qiladi #}
-                                    <div class="d-flex w-100 justify-content-between">
-                                      <strong class="mb-1">{{ assessment.competency_name }}</strong>
-                                      <small class="text-muted">{{ assessment.assessment_date.strftime('%d.%m.%y') }}</small>
-                                    </div>
+            <div class="card shadow-sm border-0 rounded-3 hover-card">
+                <div class="card-header bg-gradient-success text-white py-3">
+                    <h5 class="my-0 d-flex align-items-center"><i class="bi bi-person-check-fill me-2"></i>Kompetentsiya baholari</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_assessments %}
+                    <ul class="list-group list-group-flush">
+                        {% for assessment in recent_assessments %}
+                        <li class="list-group-item p-3 hover-item">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ assessment.competency_name }}</h6>
                                     {% set level_lower = assessment.level|lower if assessment.level else '' %}
                                     {% if 'a\'lo' in level_lower or 'yuqori' in level_lower %} {% set level_color = 'success' %}
                                     {% elif 'o\'rta' in level_lower %} {% set level_color = 'primary' %}
                                     {% elif 'asosiy' in level_lower %} {% set level_color = 'info' %}
                                     {% else %} {% set level_color = 'secondary' %}
                                     {% endif %}
-                                    <span class="badge bg-{{ level_color }}">{{ assessment.level if assessment.level else '-' }}</span>
-                                </li>
-                             {% endfor %}
-                        </ul>
-                     {% else %}
-                        <p class="text-muted p-3 mb-0"><small>Sizda hali kompetentsiya baholari yo'q.</small></p>
-                     {% endif %}
-                 </div>
-                 {% if recent_assessments %}
-                 <div class="card-footer text-center">
-                      <a href="{{ url_for('student.my_results') }}#competencies" class="btn btn-sm btn-outline-secondary">Barcha baholar <i class="bi bi-arrow-right"></i></a>
-                 </div>
-                 {% endif %}
+                                    <span class="badge bg-{{ level_color }} rounded-pill">{{ assessment.level if assessment.level else '-' }}</span>
+                                </div>
+                                <small class="text-muted">{{ assessment.assessment_date.strftime('%d.%m.%y') }}</small>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="p-4 text-center">
+                        <i class="bi bi-clipboard-data display-4 text-muted mb-3"></i>
+                        <p class="text-muted mb-0">Sizda hali kompetentsiya baholari yo'q.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if recent_assessments %}
+                <div class="card-footer bg-light text-center p-3">
+                    <a href="{{ url_for('student.my_results') }}#competencies" class="btn btn-sm btn-success">
+                        Barcha baholar <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -89,15 +325,47 @@
     <!-- Загруженные работы студента -->
     <div class="row g-4">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h4 class="my-0"><i class="bi bi-cloud-upload me-2"></i>Mening yuklangan ishlarim</h4>
+            <div class="card shadow-sm border-0 rounded-3 hover-card">
+                <div class="card-header bg-gradient-success text-white py-3">
+                    <h4 class="my-0 d-flex align-items-center"><i class="bi bi-cloud-upload me-2"></i>Mening yuklangan ishlarim</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     {% if recent_works %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                        <!-- Адаптивный вид для мобильных устройств -->
+                        <div class="d-md-none">
+                            <div class="list-group list-group-flush">
+                                {% for work in recent_works %}
+                                    <div class="list-group-item p-3 hover-item">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0 fw-bold">{{ work.material.title }}</h6>
+                                            {% if work.is_graded %}
+                                                {% set score_color = 'success' if work.score >= 8.5 else ('primary' if work.score >= 6.5 else ('warning' if work.score >= 4.5 else 'danger')) %}
+                                                <span class="badge bg-{{ score_color }} rounded-pill">{{ "%.1f"|format(work.score) }}/10</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary rounded-pill">Baholanmagan</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mb-2 small">
+                                            <div><i class="bi bi-file-earmark me-1 text-primary"></i> <span class="badge bg-light text-dark">{{ work.file_type }}</span> {{ work.original_filename }}</div>
+                                            <div class="text-muted mt-1"><i class="bi bi-calendar me-1"></i> {{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                                        </div>
+                                        <div class="d-flex gap-2 mt-2">
+                                            <a href="{{ url_for('student_work.view_work', work_id=work.id) }}" class="btn btn-sm btn-primary flex-grow-1" target="_blank">
+                                                <i class="bi bi-eye"></i> Ko'rish
+                                            </a>
+                                            <a href="{{ url_for('student_work.upload_work', material_id=work.material_id) }}" class="btn btn-sm btn-success flex-grow-1">
+                                                <i class="bi bi-pencil"></i> Yangilash
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Табличный вид для десктопов -->
+                        <div class="table-responsive d-none d-md-block">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Material</th>
                                         <th>Fayl</th>
@@ -108,28 +376,30 @@
                                 </thead>
                                 <tbody>
                                     {% for work in recent_works %}
-                                        <tr>
-                                            <td>{{ work.material.title }}</td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ work.file_type }}</span>
+                                        <tr class="hover-row">
+                                            <td class="align-middle">{{ work.material.title }}</td>
+                                            <td class="align-middle">
+                                                <span class="badge bg-light text-dark">{{ work.file_type }}</span>
                                                 {{ work.original_filename }}
                                             </td>
-                                            <td>{{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</td>
-                                            <td>
+                                            <td class="align-middle">{{ work.submitted_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                            <td class="align-middle">
                                                 {% if work.is_graded %}
                                                     {% set score_color = 'success' if work.score >= 8.5 else ('primary' if work.score >= 6.5 else ('warning' if work.score >= 4.5 else 'danger')) %}
-                                                    <span class="badge bg-{{ score_color }}">{{ "%.1f"|format(work.score) }}/10</span>
+                                                    <span class="badge bg-{{ score_color }} rounded-pill">{{ "%.1f"|format(work.score) }}/10</span>
                                                 {% else %}
-                                                    <span class="badge bg-secondary">Baholanmagan</span>
+                                                    <span class="badge bg-secondary rounded-pill">Baholanmagan</span>
                                                 {% endif %}
                                             </td>
-                                            <td>
-                                                <a href="{{ url_for('student_work.view_work', work_id=work.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                                    <i class="bi bi-eye"></i> Ko'rish
-                                                </a>
-                                                <a href="{{ url_for('student_work.upload_work', material_id=work.material_id) }}" class="btn btn-sm btn-outline-success">
-                                                    <i class="bi bi-pencil"></i> Yangilash
-                                                </a>
+                                            <td class="align-middle">
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('student_work.view_work', work_id=work.id) }}" class="btn btn-sm btn-primary" target="_blank">
+                                                        <i class="bi bi-eye"></i> Ko'rish
+                                                    </a>
+                                                    <a href="{{ url_for('student_work.upload_work', material_id=work.material_id) }}" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-pencil"></i> Yangilash
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -137,13 +407,518 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="alert alert-info mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Siz hali hech qanday ish yuklamagansiz.
+                        <div class="p-4 text-center">
+                            <i class="bi bi-cloud-upload display-4 text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Siz hali hech qanday ish yuklamagansiz.</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
 
+<!-- CSS стили для улучшения внешнего вида -->
+<style>
+    /* Современные градиенты для карточек */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #6f42c1 0%, #007bff 100%);
+    }
+    
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%);
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    }
+    
+    /* Анимации и эффекты для карточек */
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.5s ease;
+        opacity: 0.95;
+        transform: translateY(10px);
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        opacity: 1;
+    }
+    
+    /* Улучшенные эффекты наведения */
+    .hover-item {
+        transition: all 0.2s ease;
+    }
+    
+    .hover-item:hover {
+        background-color: rgba(0,0,0,0.03);
+        transform: scale(1.01);
+    }
+    
+    .hover-row:hover {
+        background-color: rgba(0,0,0,0.03);
+    }
+    
+    .hover-button {
+        transition: all 0.2s ease;
+    }
+    
+    .hover-button:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Улучшенные стили для карточек тестов */
+    .test-card {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .test-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    
+    .test-icon-container {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #007bff 0%, #6f42c1 100%);
+        flex-shrink: 0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .test-card .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    /* Улучшенные стили для графика активности */
+    .activity-chart-container {
+        width: 100%;
+        height: 300px;
+        padding: 15px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5), 0 5px 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    
+    .activity-chart-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #6f42c1, #007bff);
+        z-index: 1;
+    }
+    
+    /* Улучшенные стили для прогресс-баров */
+    .progress-item {
+        margin-bottom: 1.5rem;
+    }
+    
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .progress-lg {
+        height: 18px;
+        border-radius: 9px;
+    }
+    
+    .progress-value {
+        display: inline-block;
+        padding: 0 5px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+    }
+    
+    /* Стили для карточек прогресса */
+    .progress-card {
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    .progress-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .bg-light-success {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .bg-light-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    /* Стили для круговой диаграммы предметов */
+    .subjects-chart-container {
+        position: relative;
+        height: 180px;
+        margin-top: 15px;
+    }
+    
+    .progress-bar {
+        transition: width 1.5s ease;
+        background-size: 30px 30px;
+        background-image: linear-gradient(
+            45deg,
+            rgba(255, 255, 255, .15) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255, 255, 255, .15) 50%,
+            rgba(255, 255, 255, .15) 75%,
+            transparent 75%,
+            transparent
+        );
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+    
+    @keyframes progress-bar-stripes {
+        from { background-position: 30px 0; }
+        to { background-position: 0 0; }
+    }
+    
+    /* Улучшенные стили для значков и иконок */
+    .badge {
+        padding: 0.5em 0.8em;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .badge:hover {
+        transform: scale(1.05);
+    }
+    
+    /* Адаптивность для мобильных устройств */
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 1.8rem;
+        }
+        
+        .lead {
+            font-size: 1rem;
+        }
+        
+        .test-card .card-body {
+            padding: 0.75rem;
+        }
+        
+        .test-icon-container {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .activity-chart-container {
+            height: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- Подключаем Chart.js для графиков -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Подключаем библиотеку для анимаций -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<!-- Скрипт для графика активности и круговой диаграммы предметов -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация прогресс-баров с правильной шириной
+        console.log('Инициализация прогресс-баров...');
+        const progressBars = document.querySelectorAll('.progress-bar[data-progress]');
+        console.log('Найдено прогресс-баров:', progressBars.length);
+        
+        progressBars.forEach(function(progressBar) {
+            const progress = progressBar.getAttribute('data-progress');
+            console.log('Прогресс бар:', progress + '%');
+            progressBar.style.width = progress + '%';
+        });
+        
+        // Регистрируем плагин градиента
+        const gradientPlugin = {
+            id: 'customCanvasBackgroundColor',
+            beforeDraw: (chart) => {
+                const chartCtx = chart.canvas.getContext('2d');
+                chartCtx.save();
+                const gradient = chartCtx.createLinearGradient(0, 0, 0, chart.height);
+                gradient.addColorStop(0, 'rgba(111, 66, 193, 0.8)');
+                gradient.addColorStop(1, 'rgba(0, 123, 255, 0.2)');
+                chartCtx.fillStyle = gradient;
+                chartCtx.fillRect(0, 0, chart.width, chart.height);
+                chartCtx.restore();
+            }
+        };
+
+        // Получаем контекст для графика активности
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        
+        // Используем фиксированные демо-данные
+        const activityLabels = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+        const activityCounts = [5, 8, 12, 7, 10, 4, 6];
+        
+        const data = {
+            labels: activityLabels,
+            datasets: [{
+                label: 'O\'quv faoliyati',
+                data: activityCounts,
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return null;
+                    }
+                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, 'rgba(111, 66, 193, 0.1)');
+                    gradient.addColorStop(1, 'rgba(0, 123, 255, 0.6)');
+                    return gradient;
+                },
+                borderColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return null;
+                    }
+                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, 'rgba(111, 66, 193, 1)');
+                    gradient.addColorStop(1, 'rgba(0, 123, 255, 1)');
+                    return gradient;
+                },
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: 'rgba(255, 255, 255, 1)',
+                pointBorderColor: 'rgba(0, 123, 255, 1)',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 9,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(111, 66, 193, 1)',
+                pointHoverBorderWidth: 3,
+                pointStyle: 'circle',
+                pointShadowBlur: 10,
+                pointShadowColor: 'rgba(0, 0, 0, 0.5)'
+            }]
+        };
+
+        // Улучшенные настройки графика
+        const config = {
+            type: 'line',
+            data: data,
+            plugins: [gradientPlugin],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                devicePixelRatio: 2, // Увеличиваем четкость графика
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutCubic',
+                    delay: function(context) {
+                        return context.dataIndex * 100;
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 14
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return `Faollik: ${context.parsed.y} ball`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        grid: {
+                            display: true,
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            lineWidth: 1
+                        },
+                        border: {
+                            dash: [4, 4]
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            },
+                            padding: 10,
+                            callback: function(value) {
+                                return value + ' ball';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            },
+                            padding: 10
+                        }
+                    }
+                },
+                elements: {
+                    line: {
+                        borderJoinStyle: 'round'
+                    },
+                    point: {
+                        hitRadius: 10,
+                        hoverRadius: 12
+                    }
+                }
+            }
+        };
+
+        // Создаем график активности
+        const myChart = new Chart(ctx, config);
+        
+        // Получаем контекст для круговой диаграммы предметов
+        const subjectsCtx = document.getElementById('subjectsChart').getContext('2d');
+        
+        // Используем фиксированные демо-данные
+        const subjectLabels = ['Matematika', 'Fizika', 'Kimyo', 'Biologiya', 'Ingliz tili'];
+        const subjectScores = [85, 72, 90, 65, 78];
+        
+        // Цвета для круговой диаграммы
+        const subjectColors = [
+            'rgba(111, 66, 193, 0.8)',   // Фиолетовый
+            'rgba(0, 123, 255, 0.8)',    // Синий
+            'rgba(40, 167, 69, 0.8)',    // Зеленый
+            'rgba(255, 193, 7, 0.8)',    // Желтый
+            'rgba(220, 53, 69, 0.8)',    // Красный
+            'rgba(23, 162, 184, 0.8)',   // Голубой
+            'rgba(108, 117, 125, 0.8)',  // Серый
+            'rgba(253, 126, 20, 0.8)'    // Оранжевый
+        ];
+        
+        // Данные для круговой диаграммы
+        const subjectsData = {
+            labels: subjectLabels,
+            datasets: [{
+                data: subjectScores,
+                backgroundColor: subjectColors.slice(0, subjectLabels.length),
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 15
+            }]
+        };
+        
+        // Настройки для круговой диаграммы
+        const subjectsConfig = {
+            type: 'doughnut',
+            data: subjectsData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.raw} ball`;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 2000
+                }
+            }
+        };
+        
+        // Создаем круговую диаграмму
+        const subjectsChart = new Chart(subjectsCtx, subjectsConfig);
+        
+        // Добавляем анимацию при прокрутке
+        const animateOnScroll = () => {
+            const cards = document.querySelectorAll('.hover-card');
+            cards.forEach(card => {
+                const cardPosition = card.getBoundingClientRect();
+                if (cardPosition.top < window.innerHeight) {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }
+            });
+        };
+        
+        // Добавляем интерактивность при наведении на график
+        document.getElementById('activityChart').addEventListener('mousemove', (e) => {
+            const activePoints = myChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
+            if (activePoints.length > 0) {
+                document.getElementById('activityChart').style.cursor = 'pointer';
+            } else {
+                document.getElementById('activityChart').style.cursor = 'default';
+            }
+        });
+        
+        // Инициализируем анимацию
+        window.addEventListener('scroll', animateOnScroll);
+        animateOnScroll(); // Запускаем один раз при загрузке
+    });
+</script>
 {% endblock %}

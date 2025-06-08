@@ -3,8 +3,9 @@ import json
 import random
 import re
 from datetime import datetime
+from sqlalchemy import func
 from flask import (Blueprint, render_template, flash, redirect, url_for,
-                   request, abort, current_app)
+                   request, abort, current_app, jsonify)
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -16,6 +17,13 @@ from app.forms import (UserForm, LessonForm, MaterialForm, TestForm, QuestionFor
                      TransversalAssessmentForm, GlossaryItemForm, GlossaryUploadForm)
 from app.utils import log_activity # Импортируем из utils
 from app.document_processor import process_glossary_file, create_glossary_test_questions, PDF_DOCX_SUPPORT
+
+# Импортируем функции для работы с Firebase Storage
+try:
+    from app.utils.firebase_storage import upload_file, delete_file, generate_unique_filename
+    firebase_available = True
+except ImportError:
+    firebase_available = False
 
 # Дополнительные импорты для обработки PDF и Word
 try:
@@ -35,7 +43,7 @@ def teacher_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != 'teacher':
-            flash('У вас нет доступа к этой странице. Требуются права преподавателя.', 'danger')
+            flash("Sizda ushbu sahifaga kirish huquqi yo'q. O'qituvchi huquqlari talab qilinadi.", 'danger')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -50,7 +58,7 @@ def order_materials(lesson_id):
     if lesson_id != 0 and not lesson: abort(404)
     
     # Загружаем материалы для урока, сортируем по position (по убыванию), затем по названию
-    materials = Material.query.filter_by(lesson_id=lesson_id if lesson else None).order_by(Material.position.desc(), Material.title).all()
+    materials = Material.query.filter_by(lesson_id=lesson_id if lesson else None).order_by(Material.order.desc(), Material.title).all()
     
     if request.method == 'POST':
         # Получаем данные о новом порядке материалов
@@ -64,10 +72,10 @@ def order_materials(lesson_id):
             
             material = Material.query.get(material_id)
             if material and material.lesson_id == (lesson_id if lesson else None):
-                material.position = position
+                material.order = position
         
         db.session.commit()
-        flash('Порядок материалов успешно обновлен', 'success')
+        flash('Materiallar tartibi muvaffaqiyatli yangilandi', 'success')
         return redirect(url_for('teacher.manage_materials', lesson_id=lesson_id))
     
     return render_template('teacher/order_materials.html',
@@ -82,26 +90,63 @@ def order_materials(lesson_id):
 @login_required
 @teacher_required
 def dashboard():
-    # Статистика для дашборда
+    from datetime import datetime, timedelta
+    
+    # Расширенная статистика для дашборда
     stats = {
         'students': User.query.filter_by(role='student').count(),
         'lessons': Lesson.query.count(),
         'tests': Test.query.count(),
         'submissions': Submission.query.count(), # Всего сдач
-        'pending_retakes': Submission.query.filter_by(retake_status='requested').count() # Запросы на пересдачу
+        'pending_retakes': Submission.query.filter_by(retake_status='requested').count(), # Запросы на пересдачу
+        'approved_retakes': Submission.query.filter_by(retake_status='approved').count(), # Одобренные запросы
+        'materials': Material.query.count(), # Количество материалов
+        'graded_submissions': Submission.query.filter(Submission.is_graded == True).count(), # Оцененные сдачи
+        'ungraded_submissions': Submission.query.filter(Submission.is_graded == False).count(), # Неоцененные сдачи
     }
+    
+    # Активные студенты (были активны за последние 7 дней)
+    week_ago = datetime.now() - timedelta(days=7)
+    stats['active_students'] = db.session.query(func.count(func.distinct(ActivityLog.user_id)))\
+                              .join(User, User.id == ActivityLog.user_id)\
+                              .filter(User.role == 'student', ActivityLog.timestamp >= week_ago).scalar() or 0
+    
     # Последние действия всех пользователей (или только студентов)
     recent_activity = ActivityLog.query.order_by(ActivityLog.timestamp.desc()).limit(10).all()
 
     # Последние сдачи тестов студентами
     recent_submissions = Submission.query.join(User).filter(User.role == 'student')\
                                     .order_by(Submission.submitted_at.desc()).limit(5).all()
+    
+    # Данные для диаграммы предметов - средний балл по каждому предмету
+    subject_data = db.session.query(
+        Lesson.title,
+        func.avg(Submission.score).label('avg_score')
+    ).join(
+        Test, Test.lesson_id == Lesson.id
+    ).join(
+        Submission, Submission.test_id == Test.id
+    ).filter(
+        Submission.score.isnot(None)
+    ).group_by(
+        Lesson.title
+    ).all()
+    
+    # Формируем данные для диаграммы предметов
+    subject_labels = []
+    subject_averages = []
+    
+    for title, avg_score in subject_data:
+        subject_labels.append(title)
+        subject_averages.append(round(avg_score, 1))
 
     log_activity(current_user.id, 'view_teacher_dashboard')
-    return render_template('teacher/dashboard.html', title='Панель преподавателя',
+    return render_template('teacher/dashboard_new.html', title='O\'qituvchi paneli',
                            stats=stats,
                            recent_activity=recent_activity,
-                           recent_submissions=recent_submissions) # Передаем недавние сдачи
+                           recent_submissions=recent_submissions,
+                           subject_labels=subject_labels,
+                           subject_averages=subject_averages)
 
 # --- Управление Студентами ---
 @bp.route('/students')
@@ -120,25 +165,35 @@ def add_student():
     form.password.validators.insert(0, DataRequired("Пароль обязателен"))
     form.password2.validators.insert(0, DataRequired("Повторите пароль"))
     form.user_id.data = None
+    
+    # Заполняем список групп для выбора
+    from app.models_group import StudentGroup
+    groups = StudentGroup.query.all()
+    form.group_id.choices = [(0, 'Без группы')] + [(g.id, g.name) for g in groups]
 
     if form.validate_on_submit():
         student = User(username=form.username.data,
                        full_name=form.full_name.data,
                        role='student')
+        
+        # Устанавливаем группу, если она выбрана
+        if form.group_id.data and form.group_id.data > 0:
+            student.group_id = form.group_id.data
+            
         student.set_password(form.password.data)
         db.session.add(student)
         try:
             db.session.commit()
             log_activity(current_user.id, f'add_student_{student.id}', f'Username: {student.username}')
-            flash(f'Студент {student.full_name} добавлен.', 'success')
+            flash(f"Talaba {student.full_name} qo'shildi.", 'success')
             return redirect(url_for('teacher.manage_students'))
         except Exception as e:
             db.session.rollback()
             if 'UNIQUE constraint failed' in str(e):
-                 flash('Пользователь с таким именем уже существует.', 'danger')
-                 form.username.errors.append('Это имя пользователя уже используется.')
+                 flash('Bunday nomli foydalanuvchi allaqachon mavjud.', 'danger')
+                 form.username.errors.append("Bu foydalanuvchi nomi allaqachon ishlatilmoqda.")
             else:
-                flash(f'Ошибка при добавлении студента: {e}', 'danger')
+                flash(f"Talaba qo'shishda xatolik: {e}", 'danger')
             current_app.logger.error(f"Error adding student: {e}")
 
     form.user_id.data = None
@@ -155,26 +210,42 @@ def edit_student(student_id):
     form = UserForm(obj=student)
     form.user_id.data = student_id
 
+    # Заполняем список групп для выбора
+    from app.models_group import StudentGroup
+    groups = StudentGroup.query.all()
+    form.group_id.choices = [(0, 'Без группы')] + [(g.id, g.name) for g in groups]
+    
+    # Если у студента нет группы, устанавливаем значение 0
+    if not student.group_id:
+        form.group_id.data = 0
+
     form.password.validators = [Optional(), Length(min=6, message='Пароль должен быть не менее 6 символов.')]
     form.password2.validators = [Optional(), EqualTo('password', message='Пароли должны совпадать.')]
 
     if form.validate_on_submit():
         student.username = form.username.data
         student.full_name = form.full_name.data
+        
+        # Обновляем группу студента
+        if form.group_id.data and form.group_id.data > 0:
+            student.group_id = form.group_id.data
+        else:
+            student.group_id = None
+            
         if form.password.data:
             student.set_password(form.password.data)
         try:
             db.session.commit()
             log_activity(current_user.id, f'edit_student_{student.id}', f'Username: {student.username}')
-            flash(f'Данные студента {student.full_name} обновлены.', 'success')
+            flash(f"Talaba {student.full_name} ma'lumotlari yangilandi.", 'success')
             return redirect(url_for('teacher.manage_students'))
         except Exception as e:
             db.session.rollback()
             if 'UNIQUE constraint failed' in str(e):
-                 flash('Пользователь с таким именем уже существует.', 'danger')
-                 form.username.errors.append('Это имя пользователя уже используется.')
+                 flash('Bunday nomli foydalanuvchi allaqachon mavjud.', 'danger')
+                 form.username.errors.append("Bu foydalanuvchi nomi allaqachon ishlatilmoqda.")
             else:
-                flash(f'Ошибка при обновлении данных студента: {e}', 'danger')
+                flash(f"Talaba ma'lumotlarini yangilashda xatolik: {e}", 'danger')
             current_app.logger.error(f"Error editing student {student_id}: {e}")
             return render_template('teacher/edit_student.html', title='Редактировать студента',
                                    form=form, student=student, legend=f'Редактировать: {student.full_name}')
@@ -194,10 +265,10 @@ def delete_student(student_id):
         db.session.delete(student)
         db.session.commit()
         log_activity(current_user.id, f'delete_student_{student_id}', f'Username: {student.username}')
-        flash(f'Студент {student_name} и все связанные данные удалены.', 'info')
+        flash(f"Talaba {student_name} va barcha bog'liq ma'lumotlar o'chirildi.", 'info')
     except Exception as e:
         db.session.rollback()
-        flash(f'Ошибка при удалении студента: {e}', 'danger')
+        flash(f"Talabani o'chirishda xatolik: {e}", 'danger')
         current_app.logger.error(f"Error deleting student {student_id}: {e}")
     return redirect(url_for('teacher.manage_students'))
 
@@ -295,8 +366,8 @@ def manage_materials(lesson_id):
     if lesson_id != 0 and not lesson: abort(404)
     # Загружаем материалы для урока ИЛИ общие материалы (если lesson is None)
     materials_query = Material.query.filter_by(lesson_id=lesson_id if lesson else None)
-    # Сортируем по position (по убыванию), затем по типу и названию
-    materials = materials_query.order_by(Material.position.desc(), Material.type, Material.title).all()
+    # Сортируем по order (по убыванию), затем по типу и названию
+    materials = materials_query.order_by(Material.order.desc(), Material.type, Material.title).all()
     log_activity(current_user.id, f'view_manage_materials_for_lesson_{lesson_id}')
     return render_template('teacher/manage_materials.html',
                            title=f'Материалы: {lesson.title if lesson else "Общие"}',
@@ -317,19 +388,57 @@ def add_material(lesson_id):
         actual_lesson_id = lesson.id if lesson else None
         material = Material(lesson_id=actual_lesson_id, title=form.title.data, type=form.type.data, content=form.content.data,
                             video_url=form.video_url.data, glossary_definition=form.glossary_definition.data,
-                            evaluation_criteria=form.assessment_criteria.data, position=form.position.data)
+                            evaluation_criteria=form.assessment_criteria.data, order=form.order.data)
+        
+        # Проверяем, доступен ли Firebase
+        use_firebase = firebase_available and current_app.config.get('USE_FIREBASE_STORAGE', False)
+        
         file = form.file.data
         upload_path = None
+        
         if file:
-            filename = secure_filename(file.filename)
-            upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            try:
-                os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
-                file.save(upload_path)
-                material.file_path = filename
-            except Exception as e:
-                flash(f'Ошибка загрузки файла: {e}', 'danger')
-                current_app.logger.error(f"File upload failed: {e}")
+            original_filename = secure_filename(file.filename)
+            # Создаем уникальное имя файла
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_id = os.urandom(4).hex()
+            filename = f"{timestamp}_{unique_id}_{original_filename}"
+            
+            if use_firebase:
+                try:
+                    # Загружаем файл в Firebase Storage
+                    storage_path = f"materials/{filename}"
+                    firebase_url = upload_file(file, storage_path, content_type=file.content_type)
+                    
+                    # Сбрасываем указатель файла в начало для возможного локального сохранения
+                    file.seek(0)
+                    
+                    # Для отладки
+                    current_app.logger.info(f"Файл успешно загружен в Firebase: {firebase_url}")
+                    
+                    # Сохраняем информацию о файле в материале
+                    material.file_path = filename
+                    material.storage_type = 'firebase'
+                    material.storage_path = storage_path
+                    
+                    # Локальный путь не нужен
+                    upload_path = None
+                except Exception as e:
+                    current_app.logger.error(f"Ошибка при загрузке в Firebase: {str(e)}")
+                    use_firebase = False
+                    flash('Облачное хранилище временно недоступно, файл будет сохранен локально', 'warning')
+            
+            # Если Firebase недоступен или произошла ошибка, сохраняем локально
+            if not use_firebase:
+                upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                try:
+                    os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+                    file.save(upload_path)
+                    material.file_path = filename
+                    material.storage_type = 'local'
+                    material.storage_path = None
+                except Exception as e:
+                    flash(f'Ошибка загрузки файла: {e}', 'danger')
+                    current_app.logger.error(f"File upload failed: {e}")
         # Обработка нескольких ссылок
         if form.type.data == 'links' and form.links_json.data:
             try:
@@ -370,61 +479,136 @@ def add_material(lesson_id):
                            form=form, lesson=lesson, legend='Новый материал')
 
 
-@bp.route('/materials/edit/<int:material_id>', methods=['GET', 'POST'])
+@bp.route('/material/<int:material_id>/edit', methods=['GET', 'POST'])
 @login_required
 @teacher_required
 def edit_material(material_id):
     material = db.session.get(Material, material_id) or abort(404)
-    lesson = material.lesson
+    lesson = db.session.get(Lesson, material.lesson_id) if material.lesson_id else None
     form = MaterialForm(obj=material)
-    old_file_path = material.file_path
-
+    
     # При загрузке формы добавляем существующие ссылки в JSON
     if request.method == 'GET' and material.type == 'links':
         links_data = [{'id': link.id, 'url': link.url, 'title': link.title or ''} for link in material.links]
         form.links_json.data = json.dumps(links_data)
     
     if form.validate_on_submit():
+        # Обновляем поля материала
         material.title = form.title.data
         material.type = form.type.data
         material.content = form.content.data
         material.video_url = form.video_url.data
         material.glossary_definition = form.glossary_definition.data
         material.evaluation_criteria = form.assessment_criteria.data
-        material.position = form.position.data
+        material.order = form.order.data
+        
+        # Проверяем, доступен ли Firebase
+        use_firebase = firebase_available and current_app.config.get('USE_FIREBASE_STORAGE', False)
+        
+        # Обрабатываем загрузку файла, если он есть
         file = form.file.data
-        new_filename = None
         upload_path = None
+        new_filename = None
+        
         if file:
-            new_filename = secure_filename(file.filename)
-            upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)
-            try:
-                os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
-                file.save(upload_path)
-                material.file_path = new_filename
-            except Exception as e:
-                 flash(f'Ошибка загрузки нового файла: {e}', 'danger')
-                 current_app.logger.error(f"File upload failed: {e}")
-                 db.session.rollback()
-                 return render_template('teacher/edit_material.html', title='Редактировать материал', form=form, material=material, lesson=lesson, legend=f'Редактировать: {material.title}')
+            # Сохраняем старый путь к файлу и информацию о хранилище для возможного удаления
+            old_file_path = material.file_path
+            old_storage_type = material.storage_type
+            old_storage_path = material.storage_path
+            
+            # Создаем уникальное имя файла
+            original_filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_id = os.urandom(4).hex()
+            new_filename = f"{timestamp}_{unique_id}_{original_filename}"
+            
+            if use_firebase:
+                try:
+                    # Загружаем файл в Firebase Storage
+                    storage_path = f"materials/{new_filename}"
+                    firebase_url = upload_file(file, storage_path, content_type=file.content_type)
+                    
+                    # Сбрасываем указатель файла в начало для возможного локального сохранения
+                    file.seek(0)
+                    
+                    # Для отладки
+                    current_app.logger.info(f"Файл успешно загружен в Firebase: {firebase_url}")
+                    
+                    # Сохраняем информацию о файле в материале
+                    material.file_path = new_filename
+                    material.storage_type = 'firebase'
+                    material.storage_path = storage_path
+                    
+                    # Удаляем старый файл из Firebase, если он там был
+                    if old_storage_type == 'firebase' and old_storage_path:
+                        try:
+                            delete_file(old_storage_path)
+                        except Exception as e:
+                            current_app.logger.warning(f"Could not delete old file from Firebase: {str(e)}")
+                    # Если старый файл был локальным, удаляем его
+                    elif old_file_path:
+                        try:
+                            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], old_file_path))
+                        except OSError as e:
+                            current_app.logger.warning(f"Could not delete old local file: {str(e)}")
+                except Exception as e:
+                    current_app.logger.error(f"Ошибка при загрузке в Firebase: {str(e)}")
+                    use_firebase = False
+                    flash('Облачное хранилище временно недоступно, файл будет сохранен локально', 'warning')
+            
+            # Если Firebase недоступен или произошла ошибка, сохраняем локально
+            if not use_firebase:
+                upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)
+                try:
+                    os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+                    file.save(upload_path)
+                    material.file_path = new_filename
+                    material.storage_type = 'local'
+                    material.storage_path = None
+                    
+                    # Удаляем старый файл, если он существовал локально
+                    if old_storage_type != 'firebase' and old_file_path:
+                        try:
+                            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], old_file_path))
+                        except OSError as e:
+                            current_app.logger.warning(f"Could not delete old file: {str(e)}")
+                except Exception as e:
+                    flash(f'Ошибка загрузки файла: {e}', 'danger')
+                    current_app.logger.error(f"File upload failed: {e}")
+        
+        # Проверяем, нужно ли удалить файл без замены
         delete_file_checked = request.form.get('delete_file') == 'y'
-        if (new_filename or delete_file_checked) and old_file_path and old_file_path != new_filename:
-            try:
-                os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], old_file_path))
-                log_activity(current_user.id, f'delete_old_file_{old_file_path}_for_material_{material_id}')
-                if delete_file_checked and not new_filename:
-                     material.file_path = None
-            except OSError as e:
-                 current_app.logger.warning(f"Could not delete old file {old_file_path}: {e}")
+        if delete_file_checked and not file:
+            old_file_path = material.file_path
+            old_storage_type = material.storage_type
+            old_storage_path = material.storage_path
+            
+            # Удаляем файл в зависимости от типа хранилища
+            if old_storage_type == 'firebase' and old_storage_path:
+                try:
+                    delete_file(old_storage_path)
+                except Exception as e:
+                    current_app.logger.warning(f"Could not delete file from Firebase: {str(e)}")
+            elif old_file_path:
+                try:
+                    os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], old_file_path))
+                except OSError as e:
+                    current_app.logger.warning(f"Could not delete file: {str(e)}")
+            
+            # Очищаем информацию о файле
+            material.file_path = None
+            material.storage_type = None
+            material.storage_path = None
+        
         # Обработка нескольких ссылок
         if form.type.data == 'links' and form.links_json.data:
             try:
-                # Удаляем все существующие ссылки
+                links_data = json.loads(form.links_json.data)
+                # Удаляем существующие ссылки
                 for link in material.links.all():
                     db.session.delete(link)
                 
                 # Добавляем новые ссылки
-                links_data = json.loads(form.links_json.data)
                 for link_data in links_data:
                     if 'url' in link_data and link_data['url'].strip():
                         link = MaterialLink(
@@ -438,49 +622,81 @@ def edit_material(material_id):
         
         try:
             db.session.commit()
-            log_activity(current_user.id, f'edit_material_{material_id}', f'Title: {material.title}')
+            log_activity(current_user.id, f'edit_material_{material.id}')
             flash('Материал успешно обновлен.', 'success')
-            if lesson: return redirect(url_for('teacher.manage_materials', lesson_id=lesson.id))
-            elif material.type == 'glossary_term': return redirect(url_for('main.glossary'))
-            else: return redirect(url_for('teacher.dashboard'))
+            if material.lesson_id: 
+                return redirect(url_for('teacher.manage_materials', lesson_id=material.lesson_id))
+            elif material.type == 'glossary_term': 
+                return redirect(url_for('main.glossary'))
+            else: 
+                return redirect(url_for('teacher.dashboard'))
         except Exception as e:
             db.session.rollback()
+            if new_filename and upload_path:
+                try: 
+                    os.remove(upload_path)
+                except OSError: 
+                    pass
             flash(f'Ошибка при обновлении материала: {e}', 'danger')
-            current_app.logger.error(f"Error editing material {material_id}: {e}")
+            current_app.logger.error(f"Error updating material: {e}")
+    
     return render_template('teacher/edit_material.html', title='Редактировать материал',
                            form=form, material=material, lesson=lesson, legend=f'Редактировать: {material.title}')
 
 
-@bp.route('/materials/delete/<int:material_id>', methods=['POST'])
+@bp.route('/material/<int:material_id>/delete', methods=['POST'])
 @login_required
 @teacher_required
 def delete_material(material_id):
-    material = db.session.get(Material, material_id) or abort(404)
+    material = db.session.get(Material, material_id)
+    if not material: abort(404)
+    
+    # Сохраняем информацию о материале для логирования
+    material_info = f"Material ID: {material.id}, Title: {material.title}, Type: {material.type}"
     lesson_id = material.lesson_id
-    material_title = material.title
-    material_type = material.type
-    file_path_to_delete = material.file_path
-    redirect_url = request.form.get('redirect_to')
-    try:
-        db.session.delete(material)
-        db.session.commit()
-        log_activity(current_user.id, f'delete_material_{material_id}', f'Title: {material_title}')
-        if file_path_to_delete:
+    
+    # Удаляем файл, если он есть
+    if material.file_path:
+        # Проверяем, где хранится файл
+        if material.storage_type == 'firebase' and material.storage_path:
             try:
+                # Если Firebase доступен, удаляем файл из облачного хранилища
+                if firebase_available:
+                    delete_file(material.storage_path)
+                    log_activity(current_user.id, f'delete_firebase_file_{material.storage_path}')
+            except Exception as e:
+                # Просто логируем ошибку, но продолжаем удаление материала
+                current_app.logger.warning(f"Could not delete file from Firebase: {str(e)}")
+        else:
+            # Удаляем локальный файл
+            try:
+                file_path_to_delete = material.file_path
                 os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], file_path_to_delete))
                 log_activity(current_user.id, f'delete_file_{file_path_to_delete}')
             except OSError as e:
-                 flash(f'Материал удален, но не удалось удалить файл {file_path_to_delete}: {e}', 'warning')
-                 current_app.logger.warning(f"Could not delete file: {e}")
-        flash(f'Материал "{material_title}" удален.', 'info')
+                # Просто логируем ошибку, но продолжаем удаление материала
+                current_app.logger.warning(f"Could not delete file {file_path_to_delete}: {e}")
+    
+    try:
+        db.session.delete(material)
+        db.session.commit()
+        log_activity(current_user.id, f'delete_material_{material_id}', material_info)
+        flash(f'Материал "{material.title}" удален.', 'info')
     except Exception as e:
         db.session.rollback()
         flash(f'Ошибка при удалении материала: {e}', 'danger')
         current_app.logger.error(f"Error deleting material {material_id}: {e}")
-    if redirect_url: return redirect(redirect_url)
-    elif lesson_id: return redirect(url_for('teacher.manage_materials', lesson_id=lesson_id))
-    elif material_type == 'glossary_term': return redirect(url_for('main.glossary'))
-    else: return redirect(url_for('teacher.dashboard'))
+    # Проверяем аргументы запроса
+    redirect_url = request.args.get('redirect_url')
+    
+    if redirect_url: 
+        return redirect(redirect_url)
+    elif lesson_id: 
+        return redirect(url_for('teacher.manage_materials', lesson_id=lesson_id))
+    elif material.type == 'glossary_term': 
+        return redirect(url_for('main.glossary'))
+    else: 
+        return redirect(url_for('teacher.dashboard'))
 
 
 # --- Управление Тестами (CRUD) ---
@@ -488,9 +704,38 @@ def delete_material(material_id):
 @login_required
 @teacher_required
 def manage_tests():
+    # Получаем все уроки (темы)
+    lessons = Lesson.query.order_by(Lesson.order, Lesson.title).all()
+    
+    # Создаем словарь для группировки тестов по урокам
+    tests_by_lesson = {}
+    
+    # Добавляем все уроки в словарь
+    for lesson in lessons:
+        tests_by_lesson[lesson.id] = {
+            'lesson': lesson,
+            'tests': []
+        }
+    
+    # Добавляем категорию для тестов без урока
+    tests_by_lesson[None] = {
+        'lesson': None,
+        'tests': []
+    }
+    
+    # Получаем все тесты и распределяем их по урокам
     tests = Test.query.order_by(Test.created_at.desc()).all()
+    
+    for test in tests:
+        lesson_id = test.lesson_id
+        if lesson_id in tests_by_lesson:
+            tests_by_lesson[lesson_id]['tests'].append(test)
+        else:
+            # Если урок был удален, помещаем тест в категорию без урока
+            tests_by_lesson[None]['tests'].append(test)
+    
     log_activity(current_user.id, 'view_manage_tests')
-    return render_template('teacher/manage_tests.html', title='Управление тестами', tests=tests)
+    return render_template('teacher/manage_tests.html', title='Управление тестами', tests_by_lesson=tests_by_lesson)
 
 @bp.route('/tests/add', methods=['GET', 'POST'])
 @login_required
@@ -557,7 +802,7 @@ def delete_test(test_id):
 
 
 # --- Управление Вопросами Теста (CRUD) ---
-@bp.route('/test/<int:test_id>/questions')
+@bp.route('/test/<int:test_id>/questions', methods=['GET'])
 @login_required
 @teacher_required
 def manage_questions(test_id):
@@ -566,6 +811,182 @@ def manage_questions(test_id):
     log_activity(current_user.id, f'view_manage_questions_for_test_{test_id}')
     return render_template('teacher/manage_questions.html', title=f'Вопросы: {test.title}',
                            test=test, questions=questions)
+
+@bp.route('/test/<int:test_id>/shuffle_questions', methods=['POST'])
+@login_required
+@teacher_required
+def shuffle_questions(test_id):
+    """Перемешивание порядка вопросов в тесте."""
+    import random
+    from flask import request
+    
+    # Проверяем CSRF-токен
+    if not request.form.get('csrf_token'):
+        abort(400, description="CSRF token is missing")
+    
+    test = db.session.get(Test, test_id) or abort(404)
+    questions = test.questions.all()
+    
+    if len(questions) < 2:
+        flash('В тесте недостаточно вопросов для перемешивания.', 'warning')
+        return redirect(url_for('teacher.manage_questions', test_id=test_id))
+    
+    # Создаем список идентификаторов вопросов
+    question_ids = [q.id for q in questions]
+    
+    # Запоминаем текущий порядок
+    original_order = question_ids.copy()
+    
+    # Перемешиваем до тех пор, пока порядок не изменится
+    attempts = 0
+    while question_ids == original_order and attempts < 5:
+        random.shuffle(question_ids)
+        attempts += 1
+    
+    # Если после 5 попыток порядок не изменился, просто меняем местами первый и последний элементы
+    if question_ids == original_order:
+        question_ids[0], question_ids[-1] = question_ids[-1], question_ids[0]
+    
+    try:
+        # Создаем временную таблицу для хранения порядка
+        temp_order = {}
+        for i, q_id in enumerate(question_ids):
+            # Находим вопрос по ID
+            question = next((q for q in questions if q.id == q_id), None)
+            if question:
+                # Сохраняем порядок в временной таблице
+                temp_order[q_id] = i
+        
+        # Создаем таблицу для хранения порядка вопросов, если её ещё нет
+        if not hasattr(Question, 'order'):
+            # Добавляем поле order в таблицу questions
+            db.session.execute("ALTER TABLE questions ADD COLUMN IF NOT EXISTS order_num INTEGER")
+        
+        # Обновляем порядок вопросов
+        for question in questions:
+            if question.id in temp_order:
+                # Устанавливаем новый порядок
+                db.session.execute("UPDATE questions SET order_num = :order WHERE id = :id", 
+                                   {"order": temp_order[question.id], "id": question.id})
+        
+        db.session.commit()
+        log_activity(current_user.id, f'shuffle_questions_for_test_{test_id}')
+        flash('Порядок вопросов успешно перемешан.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при перемешивании вопросов: {e}', 'danger')
+        current_app.logger.error(f"Error shuffling questions: {e}")
+    
+    return redirect(url_for('teacher.manage_questions', test_id=test_id))
+
+@bp.route('/test/<int:test_id>/shuffle_options', methods=['POST'])
+@login_required
+@teacher_required
+def shuffle_question_options(test_id):
+    """Перемешивание вариантов ответов для всех вопросов теста.
+    Правильные ответы сохраняются, меняются только позиции вариантов."""
+    import random
+    from flask import request
+    
+    # Проверяем CSRF-токен
+    if not request.form.get('csrf_token'):
+        abort(400, description="CSRF token is missing")
+    
+    test = db.session.get(Test, test_id) or abort(404)
+    questions = test.questions.all()
+    
+    shuffled_count = 0  # Счетчик успешно перемешанных вопросов
+    
+    for question in questions:
+        # Получаем текущие варианты ответов и правильные ответы
+        options_dict = question.get_options_dict()
+        correct_answers = question.get_correct_answer_list()
+        
+        if not options_dict or len(options_dict) < 2 or not correct_answers:
+            continue  # Пропускаем вопросы без вариантов или с одним вариантом или без правильных ответов
+        
+        # Проверяем, является ли options_dict словарем или списком
+        if isinstance(options_dict, list):
+            # Если это список, преобразуем его в словарь
+            options_items = [(str(i), option) for i, option in enumerate(options_dict)]
+            correct_values = [options_dict[int(key)] if key.isdigit() and int(key) < len(options_dict) else None for key in correct_answers]
+            correct_values = [value for value in correct_values if value is not None]
+        else:
+            # Создаем список пар (ключ, значение) для перемешивания
+            options_items = list(options_dict.items())
+            
+            # Запоминаем, какие значения были правильными ответами
+            correct_values = [options_dict.get(key) for key in correct_answers if key in options_dict]
+        
+        # Перемешиваем варианты ответов
+        # Перемешиваем несколько раз, чтобы гарантировать изменение порядка
+        current_order = [item[0] for item in options_items]
+        new_order = current_order.copy()
+        
+        # Перемешиваем до тех пор, пока порядок не изменится
+        attempts = 0
+        while new_order == current_order and attempts < 5:
+            random.shuffle(options_items)
+            new_order = [item[0] for item in options_items]
+            attempts += 1
+        
+        # Если после 5 попыток порядок не изменился, просто меняем местами первый и последний элементы
+        if new_order == current_order and len(options_items) > 1:
+            options_items[0], options_items[-1] = options_items[-1], options_items[0]
+        
+        # Создаем новый словарь с перемешанными вариантами
+        new_options = {}
+        for i, (_, value) in enumerate(options_items):
+            key = chr(65 + i)  # A, B, C, D, E...
+            new_options[key] = value
+        
+        # Определяем новые правильные ответы
+        new_correct_answers = []
+        for value in correct_values:
+            for key, option_value in new_options.items():
+                if option_value == value:
+                    new_correct_answers.append(key)
+                    break
+        
+        # Проверяем, что все правильные ответы найдены
+        if len(new_correct_answers) != len(correct_values):
+            # Если не все правильные ответы найдены, проверяем еще раз с игнорированием регистра
+            for value in correct_values:
+                if not any(option_value.lower() == value.lower() for _, option_value in new_options.items()):
+                    # Если значение не найдено, добавляем его в первый вариант
+                    first_key = list(new_options.keys())[0]
+                    current_app.logger.warning(f"Correct answer value '{value}' not found in shuffled options. Using first option as correct.")
+                    new_correct_answers.append(first_key)
+        
+        # Убедимся, что у нас есть хотя бы один правильный ответ
+        if len(new_correct_answers) == 0 and len(new_options) > 0:
+            # Если нет правильных ответов, используем первый вариант
+            first_key = list(new_options.keys())[0]
+            new_correct_answers.append(first_key)
+            current_app.logger.warning(f"No correct answers found for question {question.id}. Using first option as correct.")
+        
+        # Сохраняем изменения
+        question.options = json.dumps(new_options, ensure_ascii=False)
+        if question.type == 'single_choice':
+            question.correct_answer = json.dumps(new_correct_answers[0])
+        elif question.type == 'multiple_choice':
+            question.correct_answer = json.dumps(sorted(new_correct_answers))
+        
+        shuffled_count += 1
+    
+    try:
+        db.session.commit()
+        log_activity(current_user.id, f'shuffle_options_for_test_{test_id}')
+        if shuffled_count > 0:
+            flash(f'Варианты ответов успешно перемешаны для {shuffled_count} вопросов.', 'success')
+        else:
+            flash('Нет вопросов с вариантами ответов для перемешивания.', 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при перемешивании вариантов: {e}', 'danger')
+        current_app.logger.error(f"Error shuffling options: {e}")
+    
+    return redirect(url_for('teacher.manage_questions', test_id=test_id))
 
 @bp.route('/test/<int:test_id>/questions/add', methods=['GET', 'POST'])
 @login_required
@@ -960,8 +1381,200 @@ def view_submission_details(submission_id):
                            score_10=score_10,
                            score_percent=score_percent)
 
+# --- Обновление термина глоссария через AJAX ---
+@bp.route('/glossary-item/<int:item_id>/update', methods=['POST'])
+@login_required
+@teacher_required
+def update_glossary_item(item_id):
+    """Обновление термина глоссария через AJAX."""
+    # Получаем данные из JSON-запроса
+    data = request.json
+    
+    # Находим элемент глоссария
+    glossary_item = db.session.get(GlossaryItem, item_id) or abort(404)
+    
+    try:
+        # Обновляем данные
+        glossary_item.word = data.get('term', '').strip()
+        glossary_item.definition_ru = data.get('russian_translation', '').strip()
+        # Сохраняем английский перевод, если он есть в запросе
+        if 'english_translation' in data:
+            glossary_item.definition_uz = data.get('english_translation', '').strip()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Термин успешно обновлен'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+# --- Генерация теста на основе глоссария ---
+@bp.route('/lesson/<int:lesson_id>/generate-glossary-test', methods=['POST'])
+@login_required
+@teacher_required
+def generate_glossary_test(lesson_id):
+    """Генерация теста на основе выбранных терминов глоссария."""
+    lesson = db.session.get(Lesson, lesson_id) or abort(404)
+    
+    # Получаем выбранные термины
+    selected_terms = request.form.getlist('selected_terms[]')
+    if not selected_terms:
+        flash('Выберите хотя бы один термин для генерации теста', 'warning')
+        return redirect(url_for('teacher.manage_glossary', lesson_id=lesson_id))
+    
+    # Получаем типы вопросов для генерации
+    question_types = request.form.getlist('question_types[]')
+    if not question_types:
+        flash('Выберите хотя бы один тип вопросов', 'warning')
+        return redirect(url_for('teacher.manage_glossary', lesson_id=lesson_id))
+    
+    # Создаем новый тест
+    test_title = request.form.get('test_title', f'Тест по словарю: {lesson.title}')
+    new_test = Test(
+        lesson_id=lesson_id,
+        title=test_title,
+        description=f'Автоматически сгенерированный тест на основе глоссария для урока "{lesson.title}"'
+    )
+    db.session.add(new_test)
+    db.session.flush()  # Получаем ID теста
+    
+    # Получаем выбранные термины из базы данных
+    glossary_items = GlossaryItem.query.filter(GlossaryItem.id.in_([int(id) for id in selected_terms])).all()
+    
+    # Создаем вопросы для теста
+    questions_created = 0
+    
+    for item in glossary_items:
+        # Создаем вопросы в зависимости от выбранных типов
+        if 'uz_to_ru' in question_types and item.definition_ru:
+            # Вопрос с переводом с узбекского на русский
+            question_uz_ru = Question(
+                test_id=new_test.id,
+                text=f'Quyidagi atama uchun rus tilidagi tarjimani tanlang: "{item.word}"',
+                type='single_choice',
+                correct_answer=item.definition_ru
+            )
+            
+            # Получаем неправильные варианты ответов
+            wrong_options = []
+            if item.wrong_option1:
+                wrong_options.append(item.wrong_option1)
+            if item.wrong_option2:
+                wrong_options.append(item.wrong_option2)
+            if item.wrong_option3:
+                wrong_options.append(item.wrong_option3)
+            
+            # Если недостаточно неправильных вариантов, добавляем из других слов
+            if len(wrong_options) < 3:
+                other_items = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3-len(wrong_options)).all()
+                for other_item in other_items:
+                    if other_item.definition_ru:
+                        wrong_options.append(other_item.definition_ru)
+            
+            # Формируем варианты ответов
+            options = [item.definition_ru] + wrong_options[:3]  # Ограничиваем до 3 неправильных вариантов
+            random.shuffle(options)  # Перемешиваем варианты
+            
+            question_uz_ru.options = json.dumps(options)
+            db.session.add(question_uz_ru)
+            questions_created += 1
+        
+        if 'ru_to_uz' in question_types and item.definition_ru:
+            # Вопрос с переводом с русского на узбекский
+            question_ru_uz = Question(
+                test_id=new_test.id,
+                text=f'Quyidagi rus tilidagi atama uchun o\'zbek tilidagi tarjimani tanlang: "{item.definition_ru}"',
+                type='single_choice',
+                correct_answer=item.word
+            )
+            
+            # Получаем неправильные варианты ответов
+            wrong_options_uz = []
+            other_items_uz = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3).all()
+            for other_item in other_items_uz:
+                wrong_options_uz.append(other_item.word)
+            
+            # Формируем варианты ответов
+            options_uz = [item.word] + wrong_options_uz[:3]  # Ограничиваем до 3 неправильных вариантов
+            random.shuffle(options_uz)  # Перемешиваем варианты
+            
+            question_ru_uz.options = json.dumps(options_uz)
+            db.session.add(question_ru_uz)
+            questions_created += 1
+        
+        if 'en_to_uz' in question_types and item.definition_uz:
+            # Вопрос с переводом с английского на узбекский
+            question_en_uz = Question(
+                test_id=new_test.id,
+                text=f'Quyidagi ingliz tilidagi atama uchun o\'zbek tilidagi tarjimani tanlang: "{item.definition_uz}"',
+                type='single_choice',
+                correct_answer=item.word
+            )
+            
+            # Получаем неправильные варианты ответов
+            wrong_options_en = []
+            other_items_en = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3).all()
+            for other_item in other_items_en:
+                wrong_options_en.append(other_item.word)
+            
+            # Формируем варианты ответов
+            options_en = [item.word] + wrong_options_en[:3]  # Ограничиваем до 3 неправильных вариантов
+            random.shuffle(options_en)  # Перемешиваем варианты
+            
+            question_en_uz.options = json.dumps(options_en)
+            db.session.add(question_en_uz)
+            questions_created += 1
+        
+        if 'uz_to_en' in question_types and item.definition_uz:
+            # Вопрос с переводом с узбекского на английский
+            question_uz_en = Question(
+                test_id=new_test.id,
+                text=f'Quyidagi atama uchun ingliz tilidagi tarjimani tanlang: "{item.word}"',
+                type='single_choice',
+                correct_answer=item.definition_uz
+            )
+            
+            # Получаем неправильные варианты ответов
+            wrong_options_uz_en = []
+            other_items_uz_en = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3).all()
+            for other_item in other_items_uz_en:
+                if other_item.definition_uz:
+                    wrong_options_uz_en.append(other_item.definition_uz)
+            
+            # Если недостаточно неправильных вариантов, добавляем из других слов
+            if len(wrong_options_uz_en) < 3:
+                more_items = GlossaryItem.query.filter(GlossaryItem.id != item.id, GlossaryItem.definition_uz != None).order_by(func.random()).limit(3-len(wrong_options_uz_en)).all()
+                for more_item in more_items:
+                    if more_item.definition_uz and more_item.definition_uz not in wrong_options_uz_en:
+                        wrong_options_uz_en.append(more_item.definition_uz)
+            
+            # Формируем варианты ответов
+            options_uz_en = [item.definition_uz] + wrong_options_uz_en[:3]  # Ограничиваем до 3 неправильных вариантов
+            random.shuffle(options_uz_en)  # Перемешиваем варианты
+            
+            question_uz_en.options = json.dumps(options_uz_en)
+            db.session.add(question_uz_en)
+            questions_created += 1
+    
+    db.session.commit()
+    
+    if questions_created > 0:
+        flash(f'Тест "{test_title}" успешно создан с {questions_created} вопросами', 'success')
+        return redirect(url_for('teacher.edit_test', test_id=new_test.id))
+    else:
+        db.session.delete(new_test)
+        db.session.commit()
+        flash('Не удалось создать вопросы для теста. Проверьте, что выбранные термины имеют переводы.', 'warning')
+        return redirect(url_for('teacher.manage_glossary', lesson_id=lesson_id))
+
 # --- Управление Запросами на Пересдачу ---
-@bp.route('/retake_requests')
+@bp.route('/retake-requests')
 @login_required
 @teacher_required
 def manage_retake_requests():

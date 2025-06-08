@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- Подключаем Chart.js для графиков -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+         <h1><i class="bi bi-speedometer2 me-2"></i>{{ title }}</h1>
+         <div>
+             <a href="{{ url_for('teacher.add_lesson') }}" class="btn btn-sm btn-primary me-2">
+                <i class="bi bi-plus-lg"></i> Dars qo'shish
+             </a>
+             <a href="{{ url_for('teacher.add_test') }}" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-lg"></i> Test qo'shish
+             </a>
+         </div>
+    </div>
+
+    <!-- Asosiy statistika kartalari -->
+    <div class="row g-4 mb-4">
+        <!-- Talabalar -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm hover-card h-100">
+                <div class="card-body bg-gradient-primary text-white rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">Talabalar</h5>
+                            <p class="card-text display-6 fw-bold mb-0">{{ stats.get('students', 0) }}</p>
+                        </div>
+                        <i class="bi bi-people-fill fs-1"></i>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span>Faol: {{ stats.get('active_students', 0) }}</span>
+                        <a href="{{ url_for('teacher.manage_students') }}" class="text-white">Boshqarish <i class="bi bi-arrow-right-circle"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Darslar -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm hover-card h-100">
+                <div class="card-body bg-gradient-success text-white rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">Darslar</h5>
+                            <p class="card-text display-6 fw-bold mb-0">{{ stats.get('lessons', 0) }}</p>
+                        </div>
+                        <i class="bi bi-book-half fs-1"></i>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span>Materiallar: {{ stats.get('materials', 0) }}</span>
+                        <a href="{{ url_for('teacher.manage_lessons') }}" class="text-white">Boshqarish <i class="bi bi-arrow-right-circle"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Testlar -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm hover-card h-100">
+                <div class="card-body bg-gradient-info text-white rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">Testlar</h5>
+                            <p class="card-text display-6 fw-bold mb-0">{{ stats.get('tests', 0) }}</p>
+                        </div>
+                        <i class="bi bi-clipboard-check-fill fs-1"></i>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span>Topshirishlar: {{ stats.get('submissions', 0) }}</span>
+                        <a href="{{ url_for('teacher.manage_tests') }}" class="text-white">Boshqarish <i class="bi bi-arrow-right-circle"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Qayta topshirish so'rovlari -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm hover-card h-100">
+                <div class="card-body bg-gradient-warning text-dark rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">Qayta topshirish</h5>
+                            <p class="card-text display-6 fw-bold mb-0">{{ stats.get('pending_retakes', 0) }}</p>
+                        </div>
+                        <i class="bi bi-arrow-clockwise fs-1"></i>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span>Tasdiqlangan: {{ stats.get('approved_retakes', 0) }}</span>
+                        <a href="{{ url_for('teacher.manage_retake_requests') }}" class="text-dark">Ko'rish <i class="bi bi-arrow-right-circle"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qo'shimcha statistika kartalari -->
+    <div class="row g-4 mb-4">
+        <!-- Baholash statistikasi -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm hover-card h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Baholash statistikasi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h3 class="mb-0">{{ stats.get('graded_submissions', 0) }}</h3>
+                                <p class="text-muted mb-0">Baholangan</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3 bg-light rounded text-center">
+                                <h3 class="mb-0">{{ stats.get('ungraded_submissions', 0) }}</h3>
+                                <p class="text-muted mb-0">Baholanmagan</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Диаграмма средних баллов по предметам -->
+                    <div class="mt-3">
+                        <canvas id="subjectScoresChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Talaba faolligi -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm hover-card h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0"><i class="bi bi-activity me-2 text-success"></i>Talaba faolligi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="mb-0">{{ stats.get('active_students', 0) }}</h3>
+                                <p class="text-muted mb-0">Faol talabalar</p>
+                                <small class="text-muted">(so'nggi 7 kun)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Здесь можно добавить дополнительную визуализацию активности -->
+                    <div class="progress mt-3" style="height: 25px;">
+                        {% set active_percent = (stats.get('active_students', 0) / stats.get('students', 1) * 100)|round|int if stats.get('students', 0) > 0 else 0 %}
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ active_percent }}%" 
+                             aria-valuenow="{{ active_percent }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ active_percent }}%
+                        </div>
+                    </div>
+                    <p class="text-center text-muted mt-2">Faol talabalar foizi</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- So'nggi ma'lumotlar -->
+    <div class="row g-4">
+        <!-- So'nggi test topshirishlari -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm hover-card">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-check me-2 text-primary"></i>So'nggi test topshirishlari</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_submissions %}
+                        <div class="list-group list-group-flush">
+                        {% for sub in recent_submissions %}
+                            <a href="{{ url_for('teacher.view_student_progress', student_id=sub.student_id) }}" class="list-group-item list-group-item-action border-0 py-3">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ sub.student.full_name or sub.student.username }}</h6>
+                                        <p class="mb-0 text-muted small">{{ sub.test.title if sub.test else 'Test o\'chirilgan' }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge {% if sub.is_graded %}bg-success{% else %}bg-secondary{% endif %} rounded-pill mb-1 d-block">
+                                            {% if sub.is_graded %}{{ "%.1f"|format(sub.score|float) }}%{% else %}Baholanmagan{% endif %}
+                                        </span>
+                                        <small class="text-muted">{{ sub.submitted_at.strftime('%d.%m.%y %H:%M') if sub.submitted_at else '-'}}</small>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-light m-3">So'nggi test topshirishlari yo'q.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- So'nggi faollik -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm hover-card">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0"><i class="bi bi-activity me-2 text-success"></i>So'nggi faollik</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_activity %}
+                        <div class="list-group list-group-flush">
+                            {% for log in recent_activity %}
+                                <div class="list-group-item border-0 py-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            {% if log.user %}
+                                                <span class="fw-bold">{{ log.user.full_name or log.user.username }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Anonim</span>
+                                            {% endif %}
+                                            - {{ log.action }}
+                                            {% if log.details %}<small class="text-muted ms-2">({{ log.details|truncate(50) }})</small>{% endif %}
+                                        </div>
+                                        <span class="badge bg-light text-dark timestamp">{{ log.timestamp.strftime('%d.%m.%y %H:%M') }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-light m-3">Faollik yozuvlari yo'q.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Инициализация графика средних баллов по предметам
+    document.addEventListener('DOMContentLoaded', function() {
+        // Получаем данные из Flask
+        const subjectLabels = {{ subject_labels|tojson|safe }};
+        const subjectAverages = {{ subject_averages|tojson|safe }};
+        
+        // Если есть данные, инициализируем график
+        if (subjectLabels && subjectLabels.length > 0) {
+            const ctx = document.getElementById('subjectScoresChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: subjectLabels,
+                    datasets: [{
+                        label: 'O\'rtacha ball (%)',
+                        data: subjectAverages,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+    
+    // Добавляем стили для карточек с эффектом при наведении
+    document.addEventListener('DOMContentLoaded', function() {
+        const hoverCards = document.querySelectorAll('.hover-card');
+        hoverCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 0.125rem 0.25rem rgba(0,0,0,0.075)';
+            });
+        });
+    });
+</script>
+
+<style>
+    /* Современные градиенты для карточек */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #6f42c1 0%, #007bff 100%);
+    }
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%);
+    }
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    }
+    
+    /* Эффекты для карточек */
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    /* Улучшенные стили для значков */
+    .badge {
+        padding: 0.5em 0.8em;
+        font-weight: 500;
+    }
+    
+    /* Улучшенные стили для списков */
+    .list-group-item {
+        transition: background-color 0.2s ease;
+    }
+    .list-group-item:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+</style>
+{% endblock %}
