@@ -5,10 +5,14 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-people-fill me-2"></i>{{ title }}</h1>
-        {# Talaba qo'shish tugmasi #}
-        <a href="{{ url_for('teacher.add_student') }}" class="btn btn-success">
-            <i class="bi bi-person-plus-fill me-1"></i> Talaba qo'shish
-        </a>
+        <div class="btn-group">
+            <a href="{{ url_for('groups.manage_groups') }}" class="btn btn-outline-primary">
+                <i class="bi bi-collection me-1"></i> Guruhlar
+            </a>
+            <a href="{{ url_for('teacher.add_student') }}" class="btn btn-success">
+                <i class="bi bi-person-plus-fill me-1"></i> Talaba qo'shish
+            </a>
+        </div>
     </div>
 
     {% if students %}

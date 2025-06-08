@@ -10,9 +10,10 @@
             <p class="mb-1">
                 <strong>Daraja:</strong>
                 {% set level_lower = assessment.level|lower if assessment.level else '' %}
-                {% if 'a\'lo' in level_lower or 'yuqori' in level_lower %} {% set level_color = 'success' %}
-                {% elif 'o\'rta' in level_lower %} {% set level_color = 'primary' %}
+                {% if 'transformativ' in level_lower %} {% set level_color = 'success' %}
+                {% elif 'puxta' in level_lower %} {% set level_color = 'primary' %}
                 {% elif 'asosiy' in level_lower %} {% set level_color = 'info' %}
+                {% elif 'boshlang' in level_lower %} {% set level_color = 'warning' %}
                 {% else %} {% set level_color = 'secondary' %}
                 {% endif %}
                  <span class="badge bg-{{ level_color }} ms-1">{{ assessment.level if assessment.level else '-' }}</span>

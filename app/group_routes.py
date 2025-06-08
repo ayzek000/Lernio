@@ -28,7 +28,7 @@ def manage_groups():
     """Управление группами студентов"""
     groups = StudentGroup.query.all()
     return render_template('teacher/manage_groups.html', 
-                          title='Управление группами студентов',
+                          title='Talaba guruhlarini boshqarish',
                           groups=groups)
 
 @bp.route('/create', methods=['GET', 'POST'])

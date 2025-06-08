@@ -103,7 +103,7 @@ def login():
         
         return redirect(next_page)
 
-    return render_template('login.html', title='Вход', form=form)
+    return render_template('login.html', title='Kirish', form=form)
 
 @bp.route('/logout')
 @login_required

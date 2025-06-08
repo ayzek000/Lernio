@@ -9,11 +9,11 @@
             {% if current_user.is_teacher %}
                 {# Кнопка управления глоссарием #}
                 <a href="{{ url_for('main.manage_glossary') }}" class="btn btn-primary">
-                    <i class="bi bi-gear-fill me-1"></i> Управление глоссарием
+                    <i class="bi bi-gear-fill me-1"></i> Lug'atni boshqarish
                 </a>
                 {# Кнопка добавления термина (ведет на форму добавления материала) #}
                 <a href="{{ url_for('teacher.add_material', lesson_id=0, material_type='glossary_term') }}" class="btn btn-success"> {# lesson_id=0 или ID спец. урока #}
-                    <i class="bi bi-plus-lg me-1"></i> Добавить термин
+                    <i class="bi bi-plus-lg me-1"></i> Termin qo'shish
                 </a>
             {% endif %}
         </div>

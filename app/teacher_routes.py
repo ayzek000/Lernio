@@ -155,7 +155,7 @@ def dashboard():
 def manage_students():
     students = User.query.filter_by(role='student').order_by(User.full_name).all()
     log_activity(current_user.id, 'view_manage_students')
-    return render_template('teacher/manage_students.html', title='Управление студентами', students=students)
+    return render_template('teacher/manage_students.html', title='Talabalarni boshqarish', students=students)
 
 @bp.route('/students/add', methods=['GET', 'POST'])
 @login_required
@@ -262,8 +262,47 @@ def delete_student(student_id):
     if student.role != 'student': abort(404)
     student_name = student.full_name or student.username
     try:
+        # Импортируем нужные модели
+        from app.models import (StudentWork, Submission, TransversalAssessment, LoginHistory, 
+                                ActivityLog, StudentAnswer, ChatParticipant, ChatMessage, 
+                                MessageReadStatus)
+        
+        # Сначала удаляем все связанные записи
+        # 1. Удаляем работы студента
+        StudentWork.query.filter_by(student_id=student_id).delete()
+        
+        # 2. Удаляем результаты тестов студента  
+        Submission.query.filter_by(student_id=student_id).delete()
+        
+        # 3. Удаляем оценки компетенций студента (как получателя)
+        TransversalAssessment.query.filter_by(student_id=student_id).delete()
+        
+        # 4. Удаляем историю входов студента
+        LoginHistory.query.filter_by(user_id=student_id).delete()
+        
+        # 5. Удаляем логи активности студента
+        ActivityLog.query.filter_by(user_id=student_id).delete()
+        
+        # 6. Удаляем ответы студента на вопросы
+        StudentAnswer.query.filter_by(student_id=student_id).delete()
+        
+        # 7. Удаляем участие в чатах
+        ChatParticipant.query.filter_by(user_id=student_id).delete()
+        
+        # 8. Удаляем отправленные сообщения в чатах
+        ChatMessage.query.filter_by(sender_id=student_id).delete()
+        
+        # 9. Удаляем статусы прочтения сообщений
+        MessageReadStatus.query.filter_by(user_id=student_id).delete()
+        
+        # 10. Обнуляем ссылки где студент был оценщиком (если такое возможно)
+        db.session.query(StudentWork).filter_by(graded_by_id=student_id).update(
+            {StudentWork.graded_by_id: None}, synchronize_session=False)
+        
+        # Теперь удаляем самого студента
         db.session.delete(student)
         db.session.commit()
+        
         log_activity(current_user.id, f'delete_student_{student_id}', f'Username: {student.username}')
         flash(f"Talaba {student_name} va barcha bog'liq ma'lumotlar o'chirildi.", 'info')
     except Exception as e:
@@ -296,7 +335,7 @@ def view_student_progress(student_id):
 def manage_lessons():
     lessons = Lesson.query.order_by(Lesson.order, Lesson.title).all()
     log_activity(current_user.id, 'view_manage_lessons')
-    return render_template('teacher/manage_lessons.html', title='Управление уроками', lessons=lessons)
+    return render_template('teacher/manage_lessons.html', title='Darslarni boshqarish', lessons=lessons)
 
 @bp.route('/lessons/add', methods=['GET', 'POST'])
 @login_required
@@ -735,7 +774,7 @@ def manage_tests():
             tests_by_lesson[None]['tests'].append(test)
     
     log_activity(current_user.id, 'view_manage_tests')
-    return render_template('teacher/manage_tests.html', title='Управление тестами', tests_by_lesson=tests_by_lesson)
+    return render_template('teacher/manage_tests.html', title='Testlarni boshqarish', tests_by_lesson=tests_by_lesson)
 
 @bp.route('/tests/add', methods=['GET', 'POST'])
 @login_required
@@ -1114,7 +1153,7 @@ def assess_transversal(student_id):
     previous_assessments = student.assessments_received.order_by(TransversalAssessment.assessment_date.desc()).all()
     log_activity(current_user.id, f'view_assess_transversal_form_for_student_{student_id}')
     return render_template('teacher/assess_transversal.html',
-                           title=f'Оценка компетенций: {student.full_name}',
+                           title=f'Kompetentsiyalarni baholash: {student.full_name}',
                            form=form, student=student, previous_assessments=previous_assessments)
 
 

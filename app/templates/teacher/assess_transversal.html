@@ -6,9 +6,9 @@
 {% block content %}
      <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_students') }}">Студенты</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('teacher.manage_students') }}">Talabalar</a></li>
         <li class="breadcrumb-item"><a href="{{ url_for('teacher.view_student_progress', student_id=student.id) }}">{{ student.full_name or student.username }}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Оценка компетенций</li>
+        <li class="breadcrumb-item active" aria-current="page">Kompetentsiyalarni baholash</li>
       </ol>
     </nav>
 

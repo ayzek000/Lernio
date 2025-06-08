@@ -5,25 +5,25 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>{{ title }}</h1>
         <a href="{{ url_for('groups.create_group') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Добавить группу
+            <i class="bi bi-plus-circle"></i> Guruh qo'shish
         </a>
     </div>
 
     {% if groups %}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
-            <h5 class="mb-0">Группы студентов</h5>
+            <h5 class="mb-0">Talaba guruhlari</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th>Название</th>
-                            <th>Описание</th>
-                            <th>Кол-во студентов</th>
-                            <th>Дата создания</th>
-                            <th>Действия</th>
+                            <th>Nomi</th>
+                            <th>Tavsif</th>
+                            <th>Talabalar soni</th>
+                            <th>Yaratilgan sana</th>
+                            <th>Amallar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -35,19 +35,19 @@
                             <td>{{ group.created_at.strftime('%d.%m.%Y') }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{{ url_for('groups.group_students', group_id=group.id) }}" class="btn btn-sm btn-outline-primary" title="Студенты группы">
+                                    <a href="{{ url_for('groups.group_students', group_id=group.id) }}" class="btn btn-sm btn-outline-primary" title="Guruh talabalari">
                                         <i class="bi bi-people"></i>
                                     </a>
-                                    <a href="{{ url_for('groups.group_access', group_id=group.id) }}" class="btn btn-sm btn-outline-info" title="Настройки доступа">
+                                    <a href="{{ url_for('groups.group_access', group_id=group.id) }}" class="btn btn-sm btn-outline-info" title="Kirish sozlamalari">
                                         <i class="bi bi-shield-lock"></i>
                                     </a>
-                                    <a href="{{ url_for('groups.edit_group', group_id=group.id) }}" class="btn btn-sm btn-outline-secondary" title="Редактировать">
+                                    <a href="{{ url_for('groups.edit_group', group_id=group.id) }}" class="btn btn-sm btn-outline-secondary" title="Tahrirlash">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <button type="button" class="btn btn-sm btn-outline-danger" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteGroupModal{{ group.id }}" 
-                                            title="Удалить">
+                                            title="O'chirish">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -57,7 +57,7 @@
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteGroupModalLabel{{ group.id }}">Подтверждение удаления</h5>
+                                                <h5 class="modal-title" id="deleteGroupModalLabel{{ group.id }}">O'chirishni tasdiqlash</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
                                             <div class="modal-body">

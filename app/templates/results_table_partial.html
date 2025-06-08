@@ -4,11 +4,11 @@
     <table class="table table-striped table-hover table-sm mb-0"> {# table-sm для компактности #}
         <thead class="table-light">
             <tr>
-                <th scope="col">Тест</th>
-                <th scope="col">Дата сдачи</th>
-                <th scope="col">Оценка</th>
-                <th scope="col">Статус</th>
-                <th scope="col">Действия</th>
+                <th scope="col">Test</th>
+                <th scope="col">Topshirish sanasi</th>
+                <th scope="col">Baho</th>
+                <th scope="col">Holat</th>
+                <th scope="col">Amallar</th>
             </tr>
         </thead>
         <tbody>
@@ -19,7 +19,7 @@
                             {{ sub.test.title }}
                             {% if sub.test.lesson %}<small class="text-muted d-block">({{ sub.test.lesson.title }})</small>{% endif %}
                         {% else %}
-                            <span class="text-danger fst-italic">Тест удален</span>
+                            <span class="text-danger fst-italic">Test o'chirilgan</span>
                         {% endif %}
                     </td>
                     <td title="{{ sub.submitted_at.strftime('%d.%m.%Y %H:%M:%S') if sub.submitted_at else '' }}">
@@ -38,15 +38,15 @@
                             {% set percent_display = "%.0f"|format(score_percent) if score_val <= 10 else "%.0f"|format(score_val) %}
                             <span class="badge bg-{{ score_color }}">{{ points_display }} ({{ percent_display }}%)</span>
                         {% else %}
-                            <span class="badge bg-secondary">Не оценено</span>
+                            <span class="badge bg-secondary">Baholanmagan</span>
                         {% endif %}
                     </td>
                     <td>
-                         {% if sub.is_graded %}<span class="text-success">Оценено</span>{% else %}<span class="text-muted">Ожидает</span>{% endif %}
+                         {% if sub.is_graded %}<span class="text-success">Baholangan</span>{% else %}<span class="text-muted">Kutmoqda</span>{% endif %}
                     </td>
                     <td>
                         {% if current_user.is_teacher and sub.is_graded %}
-                            <a href="{{ url_for('teacher.view_submission_details', submission_id=sub.id) }}" class="btn btn-sm btn-outline-info" title="Подробнее"><i class="bi bi-eye"></i> Детали</a>
+                            <a href="{{ url_for('teacher.view_submission_details', submission_id=sub.id) }}" class="btn btn-sm btn-outline-info" title="Batafsil"><i class="bi bi-eye"></i> Tafsilotlar</a>
                         {% endif %}
                     </td>
                 </tr>
