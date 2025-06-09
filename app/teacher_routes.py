@@ -839,6 +839,57 @@ def delete_test(test_id):
         current_app.logger.error(f"Error deleting test {test_id}: {e}")
     return redirect(url_for('teacher.manage_tests'))
 
+@bp.route('/tests/bulk-delete', methods=['POST'])
+@login_required
+@teacher_required
+def bulk_delete_tests():
+    """Массовое удаление тестов"""
+    test_ids_str = request.form.get('test_ids', '')
+    if not test_ids_str:
+        flash('Не выбраны тесты для удаления.', 'warning')
+        return redirect(url_for('teacher.manage_tests'))
+    
+    try:
+        test_ids = [int(id.strip()) for id in test_ids_str.split(',') if id.strip()]
+        if not test_ids:
+            flash('Не выбраны тесты для удаления.', 'warning')
+            return redirect(url_for('teacher.manage_tests'))
+        
+        # Получаем тесты для удаления
+        tests_to_delete = Test.query.filter(Test.id.in_(test_ids)).all()
+        
+        if not tests_to_delete:
+            flash('Выбранные тесты не найдены.', 'warning')
+            return redirect(url_for('teacher.manage_tests'))
+        
+        deleted_count = 0
+        deleted_titles = []
+        
+        for test in tests_to_delete:
+            deleted_titles.append(test.title)
+            try:
+                db.session.delete(test)
+                deleted_count += 1
+                log_activity(current_user.id, f'bulk_delete_test_{test.id}', f'Title: {test.title}')
+            except Exception as e:
+                current_app.logger.error(f"Error deleting test {test.id}: {e}")
+        
+        db.session.commit()
+        
+        if deleted_count > 0:
+            flash(f'Успешно удалено {deleted_count} тестов: {", ".join(deleted_titles[:3])}{"..." if len(deleted_titles) > 3 else ""}', 'success')
+        else:
+            flash('Не удалось удалить выбранные тесты.', 'danger')
+            
+    except ValueError:
+        flash('Неверный формат идентификаторов тестов.', 'danger')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при массовом удалении тестов: {e}', 'danger')
+        current_app.logger.error(f"Error bulk deleting tests: {e}")
+    
+    return redirect(url_for('teacher.manage_tests'))
+
 
 # --- Управление Вопросами Теста (CRUD) ---
 @bp.route('/test/<int:test_id>/questions', methods=['GET'])
@@ -1003,7 +1054,6 @@ def shuffle_question_options(test_id):
             first_key = list(new_options.keys())[0]
             new_correct_answers.append(first_key)
             current_app.logger.warning(f"No correct answers found for question {question.id}. Using first option as correct.")
-        
         # Сохраняем изменения
         question.options = json.dumps(new_options, ensure_ascii=False)
         if question.type == 'single_choice':
@@ -1464,152 +1514,139 @@ def generate_glossary_test(lesson_id):
     # Получаем выбранные термины
     selected_terms = request.form.getlist('selected_terms[]')
     if not selected_terms:
-        flash('Выберите хотя бы один термин для генерации теста', 'warning')
+        flash('Test yaratish uchun kamida bitta so\'zni tanlang', 'warning')
         return redirect(url_for('teacher.manage_glossary', lesson_id=lesson_id))
     
     # Получаем типы вопросов для генерации
     question_types = request.form.getlist('question_types[]')
     if not question_types:
-        flash('Выберите хотя бы один тип вопросов', 'warning')
+        flash('Kamida bitta savol turini tanlang', 'warning')
         return redirect(url_for('teacher.manage_glossary', lesson_id=lesson_id))
-    
-    # Создаем новый тест
-    test_title = request.form.get('test_title', f'Тест по словарю: {lesson.title}')
-    new_test = Test(
-        lesson_id=lesson_id,
-        title=test_title,
-        description=f'Автоматически сгенерированный тест на основе глоссария для урока "{lesson.title}"'
-    )
-    db.session.add(new_test)
-    db.session.flush()  # Получаем ID теста
     
     # Получаем выбранные термины из базы данных
     glossary_items = GlossaryItem.query.filter(GlossaryItem.id.in_([int(id) for id in selected_terms])).all()
     
-    # Создаем вопросы для теста
-    questions_created = 0
+    tests_created = []
     
-    for item in glossary_items:
-        # Создаем вопросы в зависимости от выбранных типов
-        if 'uz_to_ru' in question_types and item.definition_ru:
-            # Вопрос с переводом с узбекского на русский
-            question_uz_ru = Question(
-                test_id=new_test.id,
-                text=f'Quyidagi atama uchun rus tilidagi tarjimani tanlang: "{item.word}"',
-                type='single_choice',
-                correct_answer=item.definition_ru
-            )
-            
-            # Получаем неправильные варианты ответов
-            wrong_options = []
-            if item.wrong_option1:
-                wrong_options.append(item.wrong_option1)
-            if item.wrong_option2:
-                wrong_options.append(item.wrong_option2)
-            if item.wrong_option3:
-                wrong_options.append(item.wrong_option3)
-            
-            # Если недостаточно неправильных вариантов, добавляем из других слов
-            if len(wrong_options) < 3:
-                other_items = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3-len(wrong_options)).all()
+    # Создаем тесты для каждого типа вопросов
+    for question_type in question_types:
+        test_title = ""
+        questions_created = 0
+        
+        if question_type == 'uz_to_ru':
+            test_title = f"Rus tili bo'yicha lug'at testi: {lesson.title}"
+        elif question_type == 'uz_to_en':
+            test_title = f"Ingliz tili bo'yicha lug'at testi: {lesson.title}"
+        else:
+            continue  # Пропускаем неподдерживаемые типы
+        
+        # Создаем новый тест
+        new_test = Test(
+            lesson_id=lesson_id,
+            title=test_title,
+            description=f'Avtomatik yaratilgan lug\'at testi: {lesson.title}'
+        )
+        db.session.add(new_test)
+        db.session.flush()  # Получаем ID теста
+        
+        # Создаем вопросы для теста
+        for item in glossary_items:
+            if question_type == 'uz_to_ru' and item.definition_ru:
+                # Вопрос с переводом с узбекского на русский
+                question = Question(
+                    test_id=new_test.id,
+                    text=f'Quyidagi atama uchun rus tilidagi tarjimani tanlang: "{item.word}"',
+                    type='single_choice'
+                )
+                
+                # Получаем неправильные варианты ответов из других терминов
+                wrong_options = []
+                other_items = GlossaryItem.query.filter(
+                    GlossaryItem.id != item.id,
+                    GlossaryItem.definition_ru.isnot(None)
+                ).order_by(func.random()).limit(3).all()
+                
                 for other_item in other_items:
-                    if other_item.definition_ru:
+                    if other_item.definition_ru and other_item.definition_ru != item.definition_ru:
                         wrong_options.append(other_item.definition_ru)
-            
-            # Формируем варианты ответов
-            options = [item.definition_ru] + wrong_options[:3]  # Ограничиваем до 3 неправильных вариантов
-            random.shuffle(options)  # Перемешиваем варианты
-            
-            question_uz_ru.options = json.dumps(options)
-            db.session.add(question_uz_ru)
-            questions_created += 1
+                
+                # Формируем варианты ответов
+                options = [item.definition_ru] + wrong_options[:3]
+                random.shuffle(options)  # Перемешиваем варианты
+                
+                # Создаем словарь вариантов с ключами A, B, C, D
+                options_dict = {}
+                correct_key = None
+                for i, option in enumerate(options):
+                    key = chr(65 + i)  # A, B, C, D
+                    options_dict[key] = option
+                    if option == item.definition_ru:
+                        correct_key = key
+                
+                question.options = json.dumps(options_dict, ensure_ascii=False)
+                question.correct_answer = json.dumps(correct_key)
+                db.session.add(question)
+                questions_created += 1
+                
+            elif question_type == 'uz_to_en' and item.definition_uz:
+                # Вопрос с переводом с узбекского на английский
+                question = Question(
+                    test_id=new_test.id,
+                    text=f'Quyidagi atama uchun ingliz tilidagi tarjimani tanlang: "{item.word}"',
+                    type='single_choice'
+                )
+                
+                # Получаем неправильные варианты ответов из других терминов
+                wrong_options = []
+                other_items = GlossaryItem.query.filter(
+                    GlossaryItem.id != item.id,
+                    GlossaryItem.definition_uz.isnot(None)
+                ).order_by(func.random()).limit(3).all()
+                
+                for other_item in other_items:
+                    if other_item.definition_uz and other_item.definition_uz != item.definition_uz:
+                        wrong_options.append(other_item.definition_uz)
+                
+                # Формируем варианты ответов
+                options = [item.definition_uz] + wrong_options[:3]
+                random.shuffle(options)  # Перемешиваем варианты
+                
+                # Создаем словарь вариантов с ключами A, B, C, D
+                options_dict = {}
+                correct_key = None
+                for i, option in enumerate(options):
+                    key = chr(65 + i)  # A, B, C, D
+                    options_dict[key] = option
+                    if option == item.definition_uz:
+                        correct_key = key
+                
+                question.options = json.dumps(options_dict, ensure_ascii=False)
+                question.correct_answer = json.dumps(correct_key)
+                db.session.add(question)
+                questions_created += 1
         
-        if 'ru_to_uz' in question_types and item.definition_ru:
-            # Вопрос с переводом с русского на узбекский
-            question_ru_uz = Question(
-                test_id=new_test.id,
-                text=f'Quyidagi rus tilidagi atama uchun o\'zbek tilidagi tarjimani tanlang: "{item.definition_ru}"',
-                type='single_choice',
-                correct_answer=item.word
-            )
-            
-            # Получаем неправильные варианты ответов
-            wrong_options_uz = []
-            other_items_uz = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3).all()
-            for other_item in other_items_uz:
-                wrong_options_uz.append(other_item.word)
-            
-            # Формируем варианты ответов
-            options_uz = [item.word] + wrong_options_uz[:3]  # Ограничиваем до 3 неправильных вариантов
-            random.shuffle(options_uz)  # Перемешиваем варианты
-            
-            question_ru_uz.options = json.dumps(options_uz)
-            db.session.add(question_ru_uz)
-            questions_created += 1
-        
-        if 'en_to_uz' in question_types and item.definition_uz:
-            # Вопрос с переводом с английского на узбекский
-            question_en_uz = Question(
-                test_id=new_test.id,
-                text=f'Quyidagi ingliz tilidagi atama uchun o\'zbek tilidagi tarjimani tanlang: "{item.definition_uz}"',
-                type='single_choice',
-                correct_answer=item.word
-            )
-            
-            # Получаем неправильные варианты ответов
-            wrong_options_en = []
-            other_items_en = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3).all()
-            for other_item in other_items_en:
-                wrong_options_en.append(other_item.word)
-            
-            # Формируем варианты ответов
-            options_en = [item.word] + wrong_options_en[:3]  # Ограничиваем до 3 неправильных вариантов
-            random.shuffle(options_en)  # Перемешиваем варианты
-            
-            question_en_uz.options = json.dumps(options_en)
-            db.session.add(question_en_uz)
-            questions_created += 1
-        
-        if 'uz_to_en' in question_types and item.definition_uz:
-            # Вопрос с переводом с узбекского на английский
-            question_uz_en = Question(
-                test_id=new_test.id,
-                text=f'Quyidagi atama uchun ingliz tilidagi tarjimani tanlang: "{item.word}"',
-                type='single_choice',
-                correct_answer=item.definition_uz
-            )
-            
-            # Получаем неправильные варианты ответов
-            wrong_options_uz_en = []
-            other_items_uz_en = GlossaryItem.query.filter(GlossaryItem.id != item.id).order_by(func.random()).limit(3).all()
-            for other_item in other_items_uz_en:
-                if other_item.definition_uz:
-                    wrong_options_uz_en.append(other_item.definition_uz)
-            
-            # Если недостаточно неправильных вариантов, добавляем из других слов
-            if len(wrong_options_uz_en) < 3:
-                more_items = GlossaryItem.query.filter(GlossaryItem.id != item.id, GlossaryItem.definition_uz != None).order_by(func.random()).limit(3-len(wrong_options_uz_en)).all()
-                for more_item in more_items:
-                    if more_item.definition_uz and more_item.definition_uz not in wrong_options_uz_en:
-                        wrong_options_uz_en.append(more_item.definition_uz)
-            
-            # Формируем варианты ответов
-            options_uz_en = [item.definition_uz] + wrong_options_uz_en[:3]  # Ограничиваем до 3 неправильных вариантов
-            random.shuffle(options_uz_en)  # Перемешиваем варианты
-            
-            question_uz_en.options = json.dumps(options_uz_en)
-            db.session.add(question_uz_en)
-            questions_created += 1
+        if questions_created > 0:
+            tests_created.append((test_title, questions_created))
+        else:
+            # Если вопросы не созданы, удаляем тест
+            db.session.delete(new_test)
     
-    db.session.commit()
-    
-    if questions_created > 0:
-        flash(f'Тест "{test_title}" успешно создан с {questions_created} вопросами', 'success')
-        return redirect(url_for('teacher.edit_test', test_id=new_test.id))
-    else:
-        db.session.delete(new_test)
+    try:
         db.session.commit()
-        flash('Не удалось создать вопросы для теста. Проверьте, что выбранные термины имеют переводы.', 'warning')
+        
+        if tests_created:
+            for test_title, count in tests_created:
+                flash(f'Test "{test_title}" muvaffaqiyatli yaratildi {count} ta savol bilan', 'success')
+            # Перенаправляем на страницу управления тестами
+            return redirect(url_for('teacher.manage_tests'))
+        else:
+            flash('Testlar yaratilmadi. Tanlangan atamalar uchun tarjimalar mavjud emasligini tekshiring.', 'warning')
+            return redirect(url_for('teacher.manage_glossary', lesson_id=lesson_id))
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Test yaratishda xatolik: {e}', 'danger')
+        current_app.logger.error(f"Error creating glossary test: {e}")
         return redirect(url_for('teacher.manage_glossary', lesson_id=lesson_id))
 
 # --- Управление Запросами на Пересдачу ---

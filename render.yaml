@@ -20,5 +20,5 @@ services:
         mountPath: /opt/render/project/src/instance
         sizeGB: 0.5
       - name: uploads
-        mountPath: /opt/render/project/src/uploads
+        mountPath: /opt/render/project/src/app/static/uploads
         sizeGB: 0.5

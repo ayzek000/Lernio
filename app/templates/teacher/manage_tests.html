@@ -5,9 +5,29 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-clipboard-check-fill me-2"></i>{{ title }}</h1>
-        <a href="{{ url_for('teacher.add_test') }}" class="btn btn-success">
-            <i class="bi bi-plus-lg me-1"></i> Создать тест
-        </a>
+        <div>
+            <!-- Кнопки массовых действий -->
+            <div class="btn-group me-2" id="bulkActions" style="display: none;">
+                <button type="button" class="btn btn-outline-secondary" id="selectAllBtn">
+                    <i class="bi bi-check-all"></i> Tanlash
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="deselectAllBtn">
+                    <i class="bi bi-x-circle"></i> Bekor qilish
+                </button>
+                <button type="button" class="btn btn-outline-danger" id="deleteSelectedBtn">
+                    <i class="bi bi-trash-fill"></i> Tanlangan testlarni o'chirish
+                </button>
+            </div>
+            <a href="{{ url_for('teacher.add_test') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg me-1"></i> Создать тест
+            </a>
+        </div>
+    </div>
+
+    <!-- Счетчик выбранных элементов -->
+    <div id="selectedCounter" class="alert alert-info" style="display: none;">
+        <i class="bi bi-info-circle me-2"></i>
+        <span id="selectedCount">0</span> ta test tanlandi
     </div>
 
     {% if tests_by_lesson %}
@@ -30,18 +50,24 @@
                                 {% for test in lesson_data.tests %}
                                     <div class="list-group-item">
                                         <div class="d-flex w-100 justify-content-between">
-                                            <div>
-                                                <h5 class="mb-1">
-                                                    <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="text-decoration-none">{{ test.title }}</a>
-                                                </h5>
-                                                {% if test.description %}
-                                                    <p class="mb-1 text-muted">{{ test.description|truncate(150, True) }}</p>
-                                                {% endif %}
-                                                <small class="text-muted">
-                                                    <i class="bi bi-patch-question-fill"></i> {{ test.questions.count() }} вопросов
-                                                    | <i class="bi bi-file-earmark-check-fill"></i> {{ test.submissions.count() }} сдач
-                                                    | <i class="bi bi-calendar-plus"></i> Создан: {{ test.created_at.strftime('%d.%m.%Y') if test.created_at else '-'}}
-                                                </small>
+                                            <div class="d-flex align-items-start">
+                                                <div class="form-check me-3">
+                                                    <input class="form-check-input test-checkbox" type="checkbox" value="{{ test.id }}" id="test_{{ test.id }}">
+                                                    <label class="form-check-label" for="test_{{ test.id }}"></label>
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-1">
+                                                        <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="text-decoration-none">{{ test.title }}</a>
+                                                    </h5>
+                                                    {% if test.description %}
+                                                        <p class="mb-1 text-muted">{{ test.description|truncate(150, True) }}</p>
+                                                    {% endif %}
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-patch-question-fill"></i> {{ test.questions.count() }} вопросов
+                                                        | <i class="bi bi-file-earmark-check-fill"></i> {{ test.submissions.count() }} сдач
+                                                        | <i class="bi bi-calendar-plus"></i> Создан: {{ test.created_at.strftime('%d.%m.%Y') if test.created_at else '-'}}
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
                                         {# Кнопки управления тестом #}
@@ -77,18 +103,24 @@
                                 {% for test in tests_by_lesson[none].tests %}
                                     <div class="list-group-item">
                                         <div class="d-flex w-100 justify-content-between">
-                                            <div>
-                                                <h5 class="mb-1">
-                                                    <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="text-decoration-none">{{ test.title }}</a>
-                                                </h5>
-                                                {% if test.description %}
-                                                    <p class="mb-1 text-muted">{{ test.description|truncate(150, True) }}</p>
-                                                {% endif %}
-                                                <small class="text-muted">
-                                                    <i class="bi bi-patch-question-fill"></i> {{ test.questions.count() }} вопросов
-                                                    | <i class="bi bi-file-earmark-check-fill"></i> {{ test.submissions.count() }} сдач
-                                                    | <i class="bi bi-calendar-plus"></i> Создан: {{ test.created_at.strftime('%d.%m.%Y') if test.created_at else '-'}}
-                                                </small>
+                                            <div class="d-flex align-items-start">
+                                                <div class="form-check me-3">
+                                                    <input class="form-check-input test-checkbox" type="checkbox" value="{{ test.id }}" id="test_{{ test.id }}">
+                                                    <label class="form-check-label" for="test_{{ test.id }}"></label>
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-1">
+                                                        <a href="{{ url_for('teacher.manage_questions', test_id=test.id) }}" class="text-decoration-none">{{ test.title }}</a>
+                                                    </h5>
+                                                    {% if test.description %}
+                                                        <p class="mb-1 text-muted">{{ test.description|truncate(150, True) }}</p>
+                                                    {% endif %}
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-patch-question-fill"></i> {{ test.questions.count() }} вопросов
+                                                        | <i class="bi bi-file-earmark-check-fill"></i> {{ test.submissions.count() }} сдач
+                                                        | <i class="bi bi-calendar-plus"></i> Создан: {{ test.created_at.strftime('%d.%m.%Y') if test.created_at else '-'}}
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
                                         {# Кнопки управления тестом #}
@@ -119,4 +151,81 @@
             Тесты еще не созданы. <a href="{{ url_for('teacher.add_test') }}" class="alert-link">Создать первый тест?</a>
         </div>
     {% endif %}
+
+    <!-- Форма для массового удаления -->
+    <form id="bulkDeleteForm" method="POST" style="display: none;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="test_ids" id="bulkDeleteTestIds">
+    </form>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.test-checkbox');
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCounter = document.getElementById('selectedCounter');
+        const selectedCount = document.getElementById('selectedCount');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+        const bulkDeleteTestIds = document.getElementById('bulkDeleteTestIds');
+
+        function updateBulkActions() {
+            const checkedBoxes = document.querySelectorAll('.test-checkbox:checked');
+            const count = checkedBoxes.length;
+            
+            if (count > 0) {
+                bulkActions.style.display = 'block';
+                selectedCounter.style.display = 'block';
+                selectedCount.textContent = count;
+            } else {
+                bulkActions.style.display = 'none';
+                selectedCounter.style.display = 'none';
+            }
+        }
+
+        // Обработчики событий для чекбоксов
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkActions);
+        });
+
+        // Обработчик для кнопки "Выбрать все"
+        selectAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateBulkActions();
+        });
+
+        // Обработчик для кнопки "Снять выбор"
+        deselectAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateBulkActions();
+        });
+
+        // Обработчик для кнопки массового удаления
+        deleteSelectedBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.test-checkbox:checked');
+            
+            if (checkedBoxes.length === 0) {
+                alert('Iltimos, o\'chirish uchun kamida bitta testni tanlang.');
+                return;
+            }
+            
+            const testIds = Array.from(checkedBoxes).map(cb => cb.value);
+            const confirmMessage = `Siz rostdan ham ${testIds.length} ta testni va ularning barcha savollar va natijalarini o'chirmoqchimisiz?`;
+            
+            if (confirm(confirmMessage)) {
+                bulkDeleteTestIds.value = testIds.join(',');
+                bulkDeleteForm.action = "{{ url_for('teacher.bulk_delete_tests') }}";
+                bulkDeleteForm.submit();
+            }
+        });
+
+        // Начальная проверка
+        updateBulkActions();
+    });
+    </script>
 {% endblock %}

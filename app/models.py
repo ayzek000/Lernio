@@ -439,7 +439,7 @@ class GlossaryItem(db.Model):
     material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), nullable=False, index=True)
     word = db.Column(db.String(100), nullable=False, index=True)  # Термин на узбекском
     definition_ru = db.Column(db.String(100), nullable=True)  # Перевод на русский
-    definition_uz = db.Column(db.String(100), nullable=True)  # Перевод на узбекский
+    definition_uz = db.Column(db.String(100), nullable=True)  # Перевод на английский
     wrong_option1 = db.Column(db.String(100), nullable=True)  # Неправильный вариант 1
     wrong_option2 = db.Column(db.String(100), nullable=True)  # Неправильный вариант 2
     wrong_option3 = db.Column(db.String(100), nullable=True)  # Неправильный вариант 3
