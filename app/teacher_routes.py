@@ -12,7 +12,9 @@ from functools import wraps
 from wtforms.validators import Optional, Length, EqualTo, DataRequired # Импортируем нужные валидаторы
 from app import db
 from app.models import (User, Lesson, Material, Test, Question, Submission,
-                       TransversalAssessment, ActivityLog, GlossaryItem, MaterialLink)
+                       TransversalAssessment, ActivityLog, GlossaryItem, MaterialLink,
+                       StudentWork, MaterialAnswer, LoginHistory, ChatParticipant, 
+                       ChatMessage, MessageReadStatus)
 from app.forms import (UserForm, LessonForm, MaterialForm, TestForm, QuestionForm,
                      TransversalAssessmentForm, GlossaryItemForm, GlossaryUploadForm)
 from app.utils import log_activity # Импортируем из utils
@@ -262,10 +264,6 @@ def delete_student(student_id):
     if student.role != 'student': abort(404)
     student_name = student.full_name or student.username
     try:
-        # Импортируем нужные модели
-        from app.models import (StudentWork, Submission, TransversalAssessment, LoginHistory, 
-                                ActivityLog, StudentAnswer, ChatParticipant, ChatMessage, 
-                                MessageReadStatus)
         
         # Сначала удаляем все связанные записи
         # 1. Удаляем работы студента
@@ -284,7 +282,7 @@ def delete_student(student_id):
         ActivityLog.query.filter_by(user_id=student_id).delete()
         
         # 6. Удаляем ответы студента на вопросы
-        StudentAnswer.query.filter_by(student_id=student_id).delete()
+        MaterialAnswer.query.filter_by(student_id=student_id).delete()
         
         # 7. Удаляем участие в чатах
         ChatParticipant.query.filter_by(user_id=student_id).delete()

@@ -99,11 +99,11 @@
                             <i class="bi bi-plus-circle me-1"></i> Material qo'shish
                         </a>
                         <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#reorderMaterialsModal">
-                            <i class="bi bi-arrow-down-up me-1"></i> Изменить порядок материалов
+                            <i class="bi bi-arrow-down-up me-1"></i> Materiallar tartibini o'zgartirish
                         </button>
                         <form action="{{ url_for('admin.delete_lesson', lesson_id=lesson.id) }}" method="post" class="delete-form">
                             <button type="submit" class="btn btn-outline-danger">
-                                <i class="bi bi-trash me-1"></i> Удалить урок
+                                <i class="bi bi-trash me-1"></i> Darsni o'chirish
                             </button>
                         </form>
                     </div>
@@ -112,18 +112,18 @@
         </div>
     </div>
 
-    <!-- Список материалов -->
+    <!-- Materiallar ro'yxati -->
     <div class="row">
         <div class="col-12">
             <div class="card admin-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Материалы урока</h5>
+                    <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Dars materiallari</h5>
                     <div>
                         <button type="button" class="btn btn-sm btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#materialTypesModal">
-                            <i class="bi bi-info-circle me-1"></i> Типы материалов
+                            <i class="bi bi-info-circle me-1"></i> Material turlari
                         </button>
                         <a href="{{ url_for('admin.new_material', lesson_id=lesson.id) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-circle me-1"></i> Добавить материал
+                            <i class="bi bi-plus-circle me-1"></i> Material qo'shish
                         </a>
                     </div>
                 </div>
@@ -134,11 +134,11 @@
                             <thead>
                                 <tr>
                                     <th width="5%">#</th>
-                                    <th width="35%">Название</th>
-                                    <th width="15%">Тип</th>
-                                    <th width="15%">Дополнительно</th>
-                                    <th width="15%">Дата создания</th>
-                                    <th width="15%">Действия</th>
+                                    <th width="35%">Nomi</th>
+                                    <th width="15%">Turi</th>
+                                    <th width="15%">Qo'shimcha</th>
+                                    <th width="15%">Yaratilgan sana</th>
+                                    <th width="15%">Harakatlar</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -150,34 +150,34 @@
                                     </td>
                                     <td>
                                         {% if material.type == 'text' %}
-                                        <span class="badge bg-primary">Текст</span>
+                                        <span class="badge bg-primary">Matn</span>
                                         {% elif material.type == 'video' %}
-                                        <span class="badge bg-danger">Видео</span>
+                                        <span class="badge bg-danger">Video</span>
                                         {% elif material.type == 'file' %}
-                                        <span class="badge bg-success">Файл</span>
+                                        <span class="badge bg-success">Fayl</span>
                                         {% elif material.type == 'quiz' %}
-                                        <span class="badge bg-warning">Тест</span>
+                                        <span class="badge bg-warning">Test</span>
                                         {% elif material.type == 'glossary' %}
-                                        <span class="badge bg-info">Словарь</span>
+                                        <span class="badge bg-info">Lug'at</span>
                                         {% else %}
                                         <span class="badge bg-secondary">{{ material.type }}</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if material.is_video_lesson %}
-                                        <span class="badge bg-danger">Видеоурок</span>
+                                        <span class="badge bg-danger">Videodars</span>
                                         {% endif %}
                                         
                                         {% if material.questions.count() > 0 %}
-                                        <span class="badge bg-info">{{ material.questions.count() }} вопр.</span>
+                                        <span class="badge bg-info">{{ material.questions.count() }} savol</span>
                                         {% endif %}
                                         
                                         {% if material.glossary_items.count() > 0 %}
-                                        <span class="badge bg-success">{{ material.glossary_items.count() }} слов</span>
+                                        <span class="badge bg-success">{{ material.glossary_items.count() }} so'z</span>
                                         {% endif %}
                                         
                                         {% if material.evaluation_criteria %}
-                                        <span class="badge bg-warning">Критерии</span>
+                                        <span class="badge bg-warning">Mezonlar</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -208,8 +208,8 @@
                     </div>
                     {% else %}
                     <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i> В этом уроке еще нет материалов. 
-                        <a href="{{ url_for('admin.new_material', lesson_id=lesson.id) }}" class="alert-link">Добавить первый материал</a>.
+                        <i class="bi bi-info-circle me-2"></i> Bu darsda hali materiallar yo'q. 
+                        <a href="{{ url_for('admin.new_material', lesson_id=lesson.id) }}" class="alert-link">Birinchi materialni qo'shish</a>.
                     </div>
                     {% endif %}
                 </div>
@@ -218,17 +218,17 @@
     </div>
 </div>
 
-<!-- Модальное окно для изменения порядка материалов -->
+<!-- Materiallar tartibini o'zgartirish uchun modal oyna -->
 <div class="modal fade" id="reorderMaterialsModal" tabindex="-1" aria-labelledby="reorderMaterialsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reorderMaterialsModalLabel">Изменение порядка материалов</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="reorderMaterialsModalLabel">Materiallar tartibini o'zgartirish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Yopish"></button>
             </div>
             <div class="modal-body">
                 {% if materials %}
-                <p>Перетащите материалы, чтобы изменить их порядок:</p>
+                <p>Tartibni o'zgartirish uchun materiallarni sudrab olib o'ting:</p>
                 <div class="list-group sortable-materials" id="sortableMaterials">
                     {% for material in materials %}
                     <div class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ material.id }}">
@@ -237,15 +237,15 @@
                             <span>{{ material.title }}</span>
                             <small class="text-muted ms-2">
                                 {% if material.type == 'text' %}
-                                <i class="bi bi-file-text"></i> Текст
+                                <i class="bi bi-file-text"></i> Matn
                                 {% elif material.type == 'video' %}
-                                <i class="bi bi-film"></i> Видео
+                                <i class="bi bi-film"></i> Video
                                 {% elif material.type == 'file' %}
-                                <i class="bi bi-file-earmark"></i> Файл
+                                <i class="bi bi-file-earmark"></i> Fayl
                                 {% elif material.type == 'quiz' %}
-                                <i class="bi bi-question-circle"></i> Тест
+                                <i class="bi bi-question-circle"></i> Test
                                 {% elif material.type == 'glossary' %}
-                                <i class="bi bi-book"></i> Словарь
+                                <i class="bi bi-book"></i> Lug'at
                                 {% else %}
                                 <i class="bi bi-file"></i> {{ material.type }}
                                 {% endif %}
@@ -257,89 +257,89 @@
                 </div>
                 {% else %}
                 <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i> В этом уроке еще нет материалов.
+                    <i class="bi bi-info-circle me-2"></i> Bu darsda hali materiallar yo'q.
                 </div>
                 {% endif %}
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="button" class="btn btn-primary" id="saveOrder" {% if not materials %}disabled{% endif %}>Сохранить порядок</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" id="saveOrder" {% if not materials %}disabled{% endif %}>Tartibni saqlash</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно с информацией о типах материалов -->
+<!-- Material turlari haqida ma'lumot uchun modal oyna -->
 <div class="modal fade" id="materialTypesModal" tabindex="-1" aria-labelledby="materialTypesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="materialTypesModalLabel">Типы материалов</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="materialTypesModalLabel">Material turlari</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Yopish"></button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Тип</th>
-                                <th>Описание</th>
-                                <th>Возможности</th>
+                                <th>Turi</th>
+                                <th>Ta'rifi</th>
+                                <th>Imkoniyatlari</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="badge bg-primary">Текст</span></td>
-                                <td>Текстовый материал с форматированием</td>
+                                <td><span class="badge bg-primary">Matn</span></td>
+                                <td>Formatlangan matnli material</td>
                                 <td>
                                     <ul class="mb-0 ps-3">
-                                        <li>Форматированный текст</li>
-                                        <li>Изображения</li>
-                                        <li>Таблицы</li>
+                                        <li>Formatlangan matn</li>
+                                        <li>Rasmlar</li>
+                                        <li>Jadvallar</li>
                                     </ul>
                                 </td>
                             </tr>
                             <tr>
-                                <td><span class="badge bg-danger">Видео</span></td>
-                                <td>Видеоматериал</td>
+                                <td><span class="badge bg-danger">Video</span></td>
+                                <td>Video material</td>
                                 <td>
                                     <ul class="mb-0 ps-3">
-                                        <li>Загрузка видео</li>
-                                        <li>Ссылка на YouTube/Vimeo</li>
-                                        <li>Видеоурок с описанием</li>
+                                        <li>Video yuklash</li>
+                                        <li>YouTube/Vimeo havola</li>
+                                        <li>Tavsifli videodars</li>
                                     </ul>
                                 </td>
                             </tr>
                             <tr>
-                                <td><span class="badge bg-success">Файл</span></td>
-                                <td>Загружаемый файл</td>
+                                <td><span class="badge bg-success">Fayl</span></td>
+                                <td>Yuklanadigan fayl</td>
                                 <td>
                                     <ul class="mb-0 ps-3">
-                                        <li>PDF, DOC, XLS, PPT и др.</li>
-                                        <li>Изображения</li>
-                                        <li>Архивы</li>
+                                        <li>PDF, DOC, XLS, PPT va b.</li>
+                                        <li>Rasmlar</li>
+                                        <li>Arxivlar</li>
                                     </ul>
                                 </td>
                             </tr>
                             <tr>
-                                <td><span class="badge bg-warning">Тест</span></td>
-                                <td>Проверка знаний</td>
+                                <td><span class="badge bg-warning">Test</span></td>
+                                <td>Bilimni tekshirish</td>
                                 <td>
                                     <ul class="mb-0 ps-3">
-                                        <li>Различные типы вопросов</li>
-                                        <li>Автоматическая проверка</li>
-                                        <li>Статистика результатов</li>
+                                        <li>Turli xil savol turlari</li>
+                                        <li>Avtomatik tekshirish</li>
+                                        <li>Natijalar statistikasi</li>
                                     </ul>
                                 </td>
                             </tr>
                             <tr>
-                                <td><span class="badge bg-info">Словарь</span></td>
-                                <td>Глоссарий терминов</td>
+                                <td><span class="badge bg-info">Lug'at</span></td>
+                                <td>Atamalar lug'ati</td>
                                 <td>
                                     <ul class="mb-0 ps-3">
-                                        <li>Термины и определения</li>
-                                        <li>Перевод на разные языки</li>
-                                        <li>Интерактивные упражнения</li>
+                                        <li>Atamalar va ta'riflar</li>
+                                        <li>Turli tillarga tarjima</li>
+                                        <li>Interaktiv mashqlar</li>
                                     </ul>
                                 </td>
                             </tr>
@@ -348,7 +348,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Понятно</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Tushunarli</button>
             </div>
         </div>
     </div>
@@ -359,29 +359,29 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Подтверждение удаления урока
+        // Darsni o'chirishni tasdiqlash
         const deleteForm = document.querySelector('.delete-form');
         if (deleteForm) {
             deleteForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                if (confirm('Вы уверены, что хотите удалить этот урок? Это действие нельзя отменить.')) {
+                if (confirm('Bu darsni o\'chirishni xohlaysizmi? Bu amalni bekor qilib bo\'lmaydi.')) {
                     this.submit();
                 }
             });
         }
         
-        // Подтверждение удаления материала
+        // Materialni o'chirishni tasdiqlash
         const deleteMaterialForms = document.querySelectorAll('.delete-material-form');
         deleteMaterialForms.forEach(form => {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                if (confirm('Вы уверены, что хотите удалить этот материал? Это действие нельзя отменить.')) {
+                if (confirm('Bu materialni o\'chirishni xohlaysizmi? Bu amalni bekor qilib bo\'lmaydi.')) {
                     this.submit();
                 }
             });
         });
         
-        // Сортировка материалов
+        // Materiallarni tartiblash
         const sortableList = document.getElementById('sortableMaterials');
         if (sortableList) {
             new Sortable(sortableList, {
@@ -389,7 +389,7 @@
                 ghostClass: 'bg-light'
             });
             
-            // Сохранение нового порядка
+            // Yangi tartibni saqlash
             document.getElementById('saveOrder').addEventListener('click', function() {
                 const items = sortableList.querySelectorAll('.list-group-item');
                 const order = Array.from(items).map((item, index) => {
@@ -399,7 +399,7 @@
                     };
                 });
                 
-                // Отправка данных на сервер
+                // Ma'lumotlarni serverga yuborish
                 fetch('{{ url_for("admin.reorder_materials", lesson_id=lesson.id) }}', {
                     method: 'POST',
                     headers: {
@@ -411,10 +411,10 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Порядок материалов успешно обновлен');
+                        alert('Materiallar tartibi muvaffaqiyatli yangilandi');
                         location.reload();
                     } else {
-                        alert('Произошла ошибка при обновлении порядка материалов');
+                        alert('Materiallar tartibini yangilashda xatolik yuz berdi');
                     }
                 })
                 .catch(error => {

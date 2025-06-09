@@ -215,7 +215,7 @@
                                             {{ material.title }}
                                         </h5>
                                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleCollapse('#videoViewer{{ material.id }}', this)">
-                                            <i class="bi bi-arrows-collapse"></i> Свернуть/Развернуть
+                                            <i class="bi bi-arrows-collapse"></i> Yig'ish / Yoyish
                                         </button>
                                     </div>
                                     <div class="collapse" id="videoViewer{{ material.id }}">
@@ -235,7 +235,7 @@
                                             {{ material.title }}
                                         </h5>
                                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleCollapse('#linksViewer{{ material.id }}', this)">
-                                            <i class="bi bi-arrows-collapse"></i> Свернуть/Развернуть
+                                            <i class="bi bi-arrows-collapse"></i> Yig‘ish / Yoyish
                                         </button>
                                     </div>
                                     <div class="collapse" id="linksViewer{{ material.id }}">
@@ -276,10 +276,10 @@
                                                 </h5>
                                                 <div class="btn-group">
                                                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleCollapse('#pdfViewer{{ material.id }}', this)">
-                                                        <i class="bi bi-arrows-collapse"></i> Свернуть/Развернуть
+                                                        <i class="bi bi-arrows-collapse"></i> Yig‘ish / Yoyish
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-outline-primary pdf-open-btn" data-pdf-url="{{ url_for('main.view_pdf', filename=material.file_path) }}">
-                                                        <i class="bi bi-box-arrow-up-right"></i> Открыть в новом окне
+                                                        <i class="bi bi-box-arrow-up-right"></i> Yangi oynada ochish
                                                     </button>
                                                 </div>
                                             </div>
@@ -327,7 +327,7 @@
                                                     Файл: {{ material.file_path.split('/')[-1] }}
                                                 </h5>
                                                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleCollapse('#fileViewer{{ material.id }}', this)">
-                                                    <i class="bi bi-arrows-collapse"></i> Свернуть/Развернуть
+                                                    <i class="bi bi-arrows-collapse"></i> Yig‘ish / Yoyish
                                                 </button>
                                             </div>
                                             <div class="collapse" id="fileViewer{{ material.id }}">

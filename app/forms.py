@@ -223,19 +223,19 @@ class TransversalAssessmentForm(FlaskForm):
     # Лучше вынести список компетенций в конфиг или модель настроек
     COMPETENCIES = [
         ('', '--- Kompetentsiyani tanlang ---'),
-        ('Tanqidiy va innovatsion', 'Tanqidiy va innovatsion'),
+        ('Tanqidiy va innovatsion fikrlash', 'Tanqidiy va innovatsion firklash'),
         ('Interpersonal ko\'nikmalar', 'Interpersonal ko\'nikmalar'),
-        ('Interpersonal ko\'nikmalar', 'Interpersonal ko\'nikmalar'),
-        ('Raqamli texnologiyalar', 'Raqamli texnologiyalar'),
+        ('Intrapersonal ko\'nikmalar', 'Intrapersonal ko\'nikmalar'),
+        ('Raqamli savodxonlik', 'Raqamli savodxonlik'),
         ('Global fuqarolik', 'Global fuqarolik'),
-        ('Tadbirkorlik va tavsiyalar', 'Tadbirkorlik va tavsiyalar'),
-        ('Xalqaro tillarni bilish', 'Xalqaro tillarni bilish'),
+        ('Texnik va texnologik kompetensiyalar', 'Texnik va texnologik kompetensiyalar'),
+        ('Xorijiy tillarni bilish', 'Xorijiy tillarni bilish'),
     ]
     LEVELS = [
         ('', '--- Darajani tanlang ---'),
-        ('Boshlang\'ich', 'Boshlang\'ich'),
-        ('Asosiy', 'Asosiy'),
-        ('Puxta darajadagi', 'Puxta darajadagi'),
+        ('Reproduktiv', 'Reproduktiv'),
+        ('Adaptiv', 'Adaptiv'),
+        ('Produktiv', 'Produktiv'),
         ('Transformativ', 'Transformativ'),
     ]
     competency_name = SelectField('Kompetentsiya', choices=COMPETENCIES,
