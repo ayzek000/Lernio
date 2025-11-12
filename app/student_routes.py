@@ -171,7 +171,7 @@ def my_results():
     works = StudentWork.query.filter_by(student_id=current_user.id).order_by(StudentWork.submitted_at.desc()).all()
     
     log_activity(current_user.id, 'view_my_results')
-    return render_template('results.html', title='Мои результаты',
+    return render_template('results.html', title='Mening natijalarim',
                            submissions=submissions, assessments=assessments, works=works)
 
 # --- Прохождение Теста ---
