@@ -75,6 +75,43 @@
         </div>
     </div>
 
+    {# --- Davlat ro'yxatidan o'tkazilganligi to'g'risidagi guvohnoma --- #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-warning shadow-sm">
+                <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-award-fill text-warning fs-4 me-2"></i>
+                        <span class="fw-bold fs-5">Davlat ro'yxatidan o'tkazilganligi to'g'risidagi guvohnoma</span>
+                    </div>
+                    <span class="badge bg-warning text-dark">№ DGU 53246</span>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <p class="mb-1"><strong>Dastur nomi:</strong> "Texnik ijodkorlik va konstruksiyalash" fanidan web-platforma</p>
+                            <p class="mb-1"><strong>Huquq egasi:</strong> Muxidova Olima Nurilloyevna</p>
+                            <p class="mb-1"><strong>Ro'yxatga olingan sana:</strong> 27.06.2025</p>
+                            <p class="mb-0 text-muted small">O'zbekiston Respublikasi Adliya vazirligi tomonidan rasman ro'yxatdan o'tkazilgan</p>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <a href="{{ url_for('static', filename='certificates/guvohnoma.pdf') }}"
+                               target="_blank"
+                               class="btn btn-warning me-2">
+                                <i class="bi bi-eye-fill me-1"></i> Ko'rish
+                            </a>
+                            <a href="{{ url_for('static', filename='certificates/guvohnoma.pdf') }}"
+                               download="DGU_guvohnoma.pdf"
+                               class="btn btn-outline-warning">
+                                <i class="bi bi-download me-1"></i> Yuklab olish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {# --- So'nggi voqealar ro'yxati --- #}
     <div class="row g-4">
         {# So'nggi test topshirishlari #}
