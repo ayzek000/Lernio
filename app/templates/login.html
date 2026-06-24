@@ -4,16 +4,74 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6 col-lg-4">
+<div class="row justify-content-center mt-4 g-4">
+
+    {# --- Chap: Login forma --- #}
+    <div class="col-md-5 col-lg-4">
         <div class="login-form">
             <h2 class="form-title"><i class="bi bi-box-arrow-in-right me-2"></i>{{ title }}</h2>
             <p class="form-subtitle">Lernio ta'lim platformasiga xush kelibsiz</p>
             {{ wtf.quick_form(form, action=url_for('auth.login', next=request.args.get('next')), button_map={'submit': 'btn-primary w-100'}) }}
-            <div class="form-footer mt-4 text-center">
-                <p>Lernio ta'lim platformasiga xush kelibsiz</p>
+
+            {# --- Test kirish ma'lumotlari --- #}
+            <div class="mt-4">
+                <p class="text-muted small text-center mb-2"><i class="bi bi-info-circle me-1"></i>Test uchun kirish ma'lumotlari:</p>
+                <div class="card border-success mb-2" style="cursor:pointer" onclick="fillLogin('Olima','1234567890')" title="Bosib kirish uchun to'ldiring">
+                    <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-success me-2">O'qituvchi</span>
+                            <span class="small fw-bold">Olima</span>
+                        </div>
+                        <span class="text-muted small font-monospace">1234567890</span>
+                    </div>
+                </div>
+                <div class="card border-primary" style="cursor:pointer" onclick="fillLogin('123','123456')" title="Bosib kirish uchun to'ldiring">
+                    <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary me-2">Talaba</span>
+                            <span class="small fw-bold">123</span>
+                        </div>
+                        <span class="text-muted small font-monospace">123456</span>
+                    </div>
+                </div>
+                <p class="text-muted" style="font-size:0.7rem; text-align:center; margin-top:4px;">Kartochkani bosing — ma'lumotlar avtomatik to'ldiriladi</p>
             </div>
         </div>
     </div>
+
+    {# --- O'ng: Guvohnoma --- #}
+    <div class="col-md-5 col-lg-4 d-flex align-items-center">
+        <div class="card border-warning shadow-sm w-100">
+            <div class="card-header bg-warning bg-opacity-10 text-center">
+                <i class="bi bi-award-fill text-warning fs-3"></i>
+                <div class="fw-bold">Davlat guvohnomasi</div>
+                <span class="badge bg-warning text-dark">№ DGU 53246</span>
+            </div>
+            <div class="card-body text-center">
+                <p class="small mb-1"><strong>"Texnik ijodkorlik va konstruksiyalash"</strong></p>
+                <p class="small mb-1">fanidan web-platforma</p>
+                <p class="small text-muted mb-1">Muallif: Muxidova Olima Nurilloyevna</p>
+                <p class="small text-muted mb-3">Ro'yxatga olingan: <strong>27.06.2025</strong></p>
+                <a href="{{ url_for('static', filename='certificates/guvohnoma.pdf') }}"
+                   target="_blank" class="btn btn-warning btn-sm me-1">
+                    <i class="bi bi-eye-fill me-1"></i>Ko'rish
+                </a>
+                <a href="{{ url_for('static', filename='certificates/guvohnoma.pdf') }}"
+                   download="DGU_guvohnoma.pdf" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-download me-1"></i>Yuklab olish
+                </a>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+function fillLogin(username, password) {
+    const u = document.querySelector('input[name="username"], input[id*="username"], input[id*="login"]');
+    const p = document.querySelector('input[type="password"]');
+    if (u) u.value = username;
+    if (p) p.value = password;
+}
+</script>
 {% endblock %}
